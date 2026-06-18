@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Settings | TrackIQ Pro</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Geist:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary": "#1000a9",
+                        "tertiary-container": "#68788f",
+                        "secondary": "#bec6e0",
+                        "error-container": "#93000a",
+                        "surface-bright": "#2f3a4c",
+                        "on-surface-variant": "#c7c4d7",
+                        "outline": "#908fa0",
+                        "on-tertiary-fixed-variant": "#38485d",
+                        "inverse-on-surface": "#263143",
+                        "primary-fixed": "#e1e0ff",
+                        "on-error-container": "#ffdad6",
+                        "on-tertiary-fixed": "#0b1c30",
+                        "on-tertiary": "#213145",
+                        "inverse-primary": "#494bd6",
+                        "secondary-container": "#3f465c",
+                        "on-error": "#690005",
+                        "surface-dim": "#081425",
+                        "on-secondary-fixed": "#131b2e",
+                        "surface-variant": "#2a3548",
+                        "on-background": "#d8e3fb",
+                        "tertiary-fixed-dim": "#b7c8e1",
+                        "inverse-surface": "#d8e3fb",
+                        "outline-variant": "#464554",
+                        "surface": "#081425",
+                        "on-primary-fixed-variant": "#2f2ebe",
+                        "surface-container-lowest": "#040e1f",
+                        "on-tertiary-container": "#000510",
+                        "on-secondary-container": "#adb4ce",
+                        "surface-container-highest": "#2a3548",
+                        "secondary-fixed-dim": "#bec6e0",
+                        "surface-tint": "#c0c1ff",
+                        "tertiary-fixed": "#d3e4fe",
+                        "on-secondary": "#283044",
+                        "on-primary-fixed": "#07006c",
+                        "surface-container": "#152031",
+                        "on-primary-container": "#0d0096",
+                        "background": "#081425",
+                        "error": "#ffb4ab",
+                        "surface-container-high": "#1f2a3c",
+                        "on-secondary-fixed-variant": "#3f465c",
+                        "surface-container-low": "#111c2d",
+                        "tertiary": "#b7c8e1",
+                        "primary": "#c0c1ff",
+                        "primary-fixed-dim": "#c0c1ff",
+                        "on-surface": "#d8e3fb",
+                        "primary-container": "#8083ff",
+                        "secondary-fixed": "#dae2fd"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "1rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack_xs": "4px",
+                        "sidebar_collapsed": "64px",
+                        "stack_sm": "8px",
+                        "gutter": "24px",
+                        "margin_page": "40px",
+                        "stack_md": "16px",
+                        "stack_lg": "24px",
+                        "sidebar_width": "256px"
+                    },
+                    "fontFamily": {
+                        "display-lg": ["Geist"],
+                        "label-md": ["JetBrains Mono"],
+                        "headline-lg": ["Geist"],
+                        "body-sm": ["Inter"],
+                        "body-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-md": ["Geist"],
+                        "headline-lg-mobile": ["Geist"]
+                    },
+                    "fontSize": {
+                        "display-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                        "label-md": ["12px", {"lineHeight": "1.4", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                        "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                        "body-sm": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                        "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                        "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "headline-md": ["24px", {"lineHeight": "1.3", "letterSpacing": "-0.01em", "fontWeight": "500"}],
+                        "headline-lg-mobile": ["28px", {"lineHeight": "1.2", "fontWeight": "600"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            background-color: #081425;
+            color: #d8e3fb;
+            -webkit-font-smoothing: antialiased;
+        }
+        .glass-panel {
+            background: rgba(21, 32, 49, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #464554;
+            border-radius: 10px;
+        }
+        .inset-input {
+            background-color: #040e1f;
+            border: 1px solid #464554;
+            transition: all 0.2s ease;
+        }
+        .inset-input:focus {
+            border-color: #c0c1ff;
+            box-shadow: 0 0 0 2px rgba(192, 193, 255, 0.2);
+            outline: none;
+        }
+    </style>
+</head>
+<body class="flex min-h-screen overflow-hidden">
+<!-- SideNavBar (Shared Component) -->
+<aside class="fixed left-0 top-0 h-screen w-sidebar_width bg-surface dark:bg-surface border-r border-outline-variant flex flex-col py-stack_lg px-stack_md z-50">
+<div class="mb-10">
+<h1 class="font-display-lg text-headline-md font-semibold text-primary tracking-tight">TrackIQ Pro</h1>
+<p class="font-body-sm text-on-surface-variant text-[12px] mt-1 opacity-70">Premium Tier</p>
+</div>
+<nav class="flex-1 space-y-2">
+<!-- Dashboard -->
+<a class="flex items-center gap-3 px-4 py-2 rounded-lg text-on-surface-variant font-medium hover:bg-surface-container-high hover:text-on-surface transition-colors active:scale-95 duration-100" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="dashboard">dashboard</span>
+<span class="font-body-md">Dashboard</span>
+</a>
+<!-- Jobs -->
+<a class="flex items-center gap-3 px-4 py-2 rounded-lg text-on-surface-variant font-medium hover:bg-surface-container-high hover:text-on-surface transition-colors active:scale-95 duration-100" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="work">work</span>
+<span class="font-body-md">Jobs</span>
+</a>
+<!-- Offers -->
+<a class="flex items-center gap-3 px-4 py-2 rounded-lg text-on-surface-variant font-medium hover:bg-surface-container-high hover:text-on-surface transition-colors active:scale-95 duration-100" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="stars">stars</span>
+<span class="font-body-md">Offers</span>
+</a>
+<!-- Notes -->
+<a class="flex items-center gap-3 px-4 py-2 rounded-lg text-on-surface-variant font-medium hover:bg-surface-container-high hover:text-on-surface transition-colors active:scale-95 duration-100" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="description">description</span>
+<span class="font-body-md">Notes</span>
+</a>
+<!-- Settings (Active) -->
+<a class="flex items-center gap-3 px-4 py-2 rounded-lg text-primary font-bold border-l-2 border-primary bg-primary/5 active:scale-95 duration-100" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="settings">settings</span>
+<span class="font-body-md">Settings</span>
+</a>
+</nav>
+<div class="mt-auto pt-6 border-t border-outline-variant/30">
+<button class="w-full py-3 bg-primary-container text-on-primary-container rounded-xl font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity active:scale-[0.98]">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+<span>Add New Track</span>
+</button>
+<div class="mt-6 flex items-center gap-3 px-2">
+<img alt="User Profile Avatar" class="w-10 h-10 rounded-full border border-outline-variant bg-surface-container" src="https://lh3.googleusercontent.com/aida-public/AB6AXuARu21b9dheu3IIzkVy7IuVIlgntxnYzfmZLAn1Pt-XZq1kgqopGfPR2RzSIXH1wVtGW8CTFktHCpqSLOc1C8ZDEhxW0YBLIjchTubNEj8SfnT3aaiI1t3E-4jdXNWHFzoxlwA6czIs204XV1_AWuUiu7-lZmoT3VaoqToh9wiGtJ5bDU6AkmRja1UFgYnYzsWu3R5yCN70DOGfkuIjzQDR1AEliR7LAmOaC3MMRPwBWqKMlBSU7WSgA35ZbLZ-3xNaeyLI-bfMFOo"/>
+<div class="overflow-hidden">
+<p class="font-body-md font-semibold truncate">Alex Chen</p>
+<p class="font-label-md text-on-surface-variant truncate">alex@trackiq.pro</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Shell -->
+<div class="flex-1 ml-sidebar_width flex flex-col relative h-screen">
+<!-- TopNavBar (Shared Component) -->
+<header class="sticky top-0 z-40 w-full bg-surface/80 backdrop-blur-md flex justify-between items-center h-16 px-margin_page border-b border-outline-variant">
+<div class="flex items-center gap-4">
+<h2 class="font-headline-md text-headline-md font-bold text-on-surface">Settings</h2>
+<div class="h-4 w-[1px] bg-outline-variant"></div>
+<nav class="flex gap-6">
+<a class="font-label-md text-label-md text-primary border-b-2 border-primary pb-1" href="#">Overview</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-opacity" href="#">Analytics</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm" data-icon="search">search</span>
+<input class="pl-9 pr-4 py-1.5 rounded-full bg-surface-container-low border border-outline-variant text-body-sm w-64 focus:w-80 transition-all focus:outline-none focus:ring-1 focus:ring-primary" placeholder="Search settings..." type="text"/>
+</div>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors" data-icon="notifications">notifications</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors" data-icon="help_outline">help_outline</button>
+<button class="px-4 py-1.5 bg-primary text-on-primary rounded-lg font-semibold text-label-md hover:bg-opacity-90 active:opacity-80 transition-all">Upgrade</button>
+</div>
+</header>
+<!-- Scrollable Canvas -->
+<main class="flex-1 overflow-y-auto custom-scrollbar bg-surface text-on-surface pb-20">
+<div class="max-w-4xl mx-auto py-12 px-margin_page space-y-12">
+<!-- Section 1: Profile -->
+<section class="space-y-6" id="profile">
+<div class="flex items-center justify-between">
+<div class="space-y-1">
+<h3 class="font-headline-md text-headline-md font-semibold text-on-surface">Profile</h3>
+<p class="font-body-sm text-on-surface-variant">Manage your public presence and contact information.</p>
+</div>
+</div>
+<div class="glass-panel p-6 rounded-2xl flex flex-col md:flex-row gap-8">
+<div class="flex flex-col items-center gap-4">
+<div class="relative group cursor-pointer">
+<img alt="Profile" class="w-32 h-32 rounded-full border-4 border-surface-container-high bg-surface-container group-hover:opacity-80 transition-opacity" data-alt="A detailed digital 3D avatar of a professional young man with glasses and a stylish haircut, set against a vibrant tech-inspired background with soft glowing geometric patterns and a deep blue and indigo color scheme that matches the TrackIQ Pro brand identity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAIymnhDu1yhrBlI968mZc433V7oDSjbqPe1w094WIzk5QbDajOxvvo7CpKWrQVuNLlCdYEYWJ90CvZNxmjZgArruezxy8tA96ys0CR7S-dlVyadJih7sA_i40wCqfYAuJOZKvWjmiHcdD-CPAFyvE64e2a7zSDQcBSnyDu9HpBvqKcmunZdJEWrJ5L3LWFhrr1yC0fJLMsnqHrDSUGdoS5K7m9odtL6sMnWB1Xe6nDRahuKz-lcBaTs0cXXSubyfqtTi8LBiUUM0c"/>
+<div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-white" data-icon="photo_camera">photo_camera</span>
+</div>
+</div>
+<button class="text-label-md font-medium text-primary hover:underline">Change Photo</button>
+</div>
+<div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="space-y-2">
+<label class="font-label-md text-on-surface-variant block">Full Name</label>
+<input class="w-full px-4 py-2.5 rounded-xl inset-input text-body-md text-on-surface" type="text" value="Alex Chen"/>
+</div>
+<div class="space-y-2">
+<label class="font-label-md text-on-surface-variant block">Email Address</label>
+<input class="w-full px-4 py-2.5 rounded-xl inset-input text-body-md text-on-surface" type="email" value="alex@trackiq.pro"/>
+</div>
+<div class="md:col-span-2 space-y-2">
+<label class="font-label-md text-on-surface-variant block">Bio</label>
+<textarea class="w-full px-4 py-2.5 rounded-xl inset-input text-body-md text-on-surface resize-none" rows="3">Product Designer specialized in data visualization systems. Currently tracking career milestones with TrackIQ Pro.</textarea>
+<p class="text-[12px] text-on-surface-variant italic">Brief description for your profile. Maximum 250 characters.</p>
+</div>
+</div>
+</div>
+</section>
+<hr class="border-outline-variant/30"/>
+<!-- Section 2: Preferences -->
+<section class="space-y-6" id="preferences">
+<div class="space-y-1">
+<h3 class="font-headline-md text-headline-md font-semibold text-on-surface">Preferences</h3>
+<p class="font-body-sm text-on-surface-variant">Customize your workspace experience and alerts.</p>
+</div>
+<div class="glass-panel rounded-2xl divide-y divide-outline-variant/20">
+<!-- Theme Toggle -->
+<div class="p-6 flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" data-icon="dark_mode">dark_mode</span>
+</div>
+<div>
+<p class="font-body-md font-semibold">Interface Theme</p>
+<p class="font-body-sm text-on-surface-variant">Select your preferred visual mode.</p>
+</div>
+</div>
+<div class="flex p-1 bg-surface-container-lowest rounded-xl border border-outline-variant/30">
+<button class="px-4 py-1.5 rounded-lg text-label-md font-medium text-on-surface-variant hover:text-on-surface">Light</button>
+<button class="px-4 py-1.5 rounded-lg text-label-md font-medium bg-primary text-on-primary shadow-lg">Dark</button>
+<button class="px-4 py-1.5 rounded-lg text-label-md font-medium text-on-surface-variant hover:text-on-surface">System</button>
+</div>
+</div>
+<!-- Language -->
+<div class="p-6 flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" data-icon="language">language</span>
+</div>
+<div>
+<p class="font-body-md font-semibold">Language</p>
+<p class="font-body-sm text-on-surface-variant">Set the language for the entire interface.</p>
+</div>
+</div>
+<select class="px-4 py-2 rounded-lg bg-surface-container-low border border-outline-variant text-label-md text-on-surface min-w-[140px] focus:ring-1 focus:ring-primary outline-none">
+<option>English (US)</option>
+<option>German</option>
+<option>Spanish</option>
+<option>Japanese</option>
+</select>
+</div>
+<!-- Notifications -->
+<div class="p-6 flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" data-icon="notifications_active">notifications_active</span>
+</div>
+<div>
+<p class="font-body-md font-semibold">Push Notifications</p>
+<p class="font-body-sm text-on-surface-variant">Receive alerts for job updates and offer deadlines.</p>
+</div>
+</div>
+<div class="relative inline-flex items-center cursor-pointer group">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-surface-container-highest rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</div>
+</div>
+</div>
+</section>
+<hr class="border-outline-variant/30"/>
+<!-- Section 3: Plan & Billing -->
+<section class="space-y-6" id="billing">
+<div class="flex items-center justify-between">
+<div class="space-y-1">
+<h3 class="font-headline-md text-headline-md font-semibold text-on-surface">Plan &amp; Billing</h3>
+<p class="font-body-sm text-on-surface-variant">Manage your subscription and payment methods.</p>
+</div>
+<a class="text-label-md font-medium text-primary hover:underline flex items-center gap-1" href="#">
+                            View Pricing 
+                            <span class="material-symbols-outlined text-[16px]" data-icon="open_in_new">open_in_new</span>
+</a>
+</div>
+<div class="relative overflow-hidden p-8 rounded-2xl glass-panel border-l-4 border-primary">
+<!-- Decorative background glow -->
+<div class="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-64 h-64 bg-primary/10 blur-[80px] pointer-events-none"></div>
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+<div class="space-y-4">
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded bg-primary/10 text-primary font-label-md text-[10px] uppercase tracking-widest border border-primary/20">Active</span>
+<h4 class="font-headline-md text-display-lg text-[28px] leading-tight">Pro Plan</h4>
+</div>
+<div class="space-y-1">
+<p class="font-body-md text-on-surface">Next billing cycle: <span class="font-semibold text-primary">October 12, 2024</span></p>
+<p class="font-body-sm text-on-surface-variant">Currently billed $24.00/month via Visa ending in 4242.</p>
+</div>
+</div>
+<div class="flex flex-col sm:flex-row gap-3">
+<button class="px-6 py-2.5 rounded-xl border border-outline-variant bg-surface-container-low text-on-surface font-semibold hover:bg-surface-container-high transition-colors">Switch to Annual</button>
+<button class="px-6 py-2.5 rounded-xl bg-primary text-on-primary font-semibold hover:opacity-90 shadow-lg shadow-primary/20 transition-all">Manage Subscription</button>
+</div>
+</div>
+</div>
+</section>
+<hr class="border-outline-variant/30"/>
+<!-- Section 4: Security -->
+<section class="space-y-6" id="security">
+<div class="space-y-1">
+<h3 class="font-headline-md text-headline-md font-semibold text-on-surface">Security</h3>
+<p class="font-body-sm text-on-surface-variant">Protect your account with advanced safety measures.</p>
+</div>
+<div class="glass-panel rounded-2xl p-6 space-y-8">
+<div class="flex flex-col md:flex-row gap-8">
+<div class="flex-1 space-y-4">
+<p class="font-body-md font-semibold">Change Password</p>
+<div class="space-y-4">
+<input class="w-full px-4 py-2.5 rounded-xl inset-input text-body-md" placeholder="Current password" type="password"/>
+<input class="w-full px-4 py-2.5 rounded-xl inset-input text-body-md" placeholder="New password" type="password"/>
+<button class="px-5 py-2 bg-surface-container-highest rounded-lg text-on-surface font-medium text-label-md hover:bg-outline-variant transition-colors">Update Password</button>
+</div>
+</div>
+<div class="w-px bg-outline-variant/20 hidden md:block"></div>
+<div class="flex-1 space-y-4">
+<p class="font-body-md font-semibold">Two-Factor Authentication</p>
+<p class="font-body-sm text-on-surface-variant">Add an extra layer of security to your account by requiring more than just a password to log in.</p>
+<button class="px-5 py-2 bg-primary/10 border border-primary/30 text-primary rounded-lg font-medium text-label-md hover:bg-primary/20 transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]" data-icon="verified_user">verified_user</span>
+                                    Enable 2FA
+                                </button>
+</div>
+</div>
+<div class="pt-6 border-t border-outline-variant/20">
+<p class="font-body-md font-semibold mb-4">Active Sessions</p>
+<div class="space-y-3">
+<div class="flex items-center justify-between p-4 bg-surface-container-low rounded-xl border border-outline-variant/20">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="laptop_mac">laptop_mac</span>
+<div>
+<p class="font-body-sm font-medium">MacBook Pro 14" • San Francisco, USA</p>
+<p class="text-[12px] text-primary">Current Session</p>
+</div>
+</div>
+<button class="text-label-md text-on-surface-variant hover:text-error transition-colors">Log out</button>
+</div>
+<div class="flex items-center justify-between p-4 bg-surface-container-low rounded-xl border border-outline-variant/20">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="smartphone">smartphone</span>
+<div>
+<p class="font-body-sm font-medium">iPhone 15 Pro • San Francisco, USA</p>
+<p class="text-[12px] text-on-surface-variant">Last active: 2 hours ago</p>
+</div>
+</div>
+<button class="text-label-md text-on-surface-variant hover:text-error transition-colors">Log out</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+<hr class="border-outline-variant/30"/>
+<!-- Section 5: Data & Privacy -->
+<section class="space-y-6" id="privacy">
+<div class="space-y-1">
+<h3 class="font-headline-md text-headline-md font-semibold text-on-surface">Data &amp; Privacy</h3>
+<p class="font-body-sm text-on-surface-variant">Control your personal data and account status.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="glass-panel p-6 rounded-2xl space-y-4">
+<div class="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center">
+<span class="material-symbols-outlined text-tertiary" data-icon="file_download">file_download</span>
+</div>
+<div>
+<p class="font-body-md font-semibold">Export Data</p>
+<p class="font-body-sm text-on-surface-variant mt-1">Download a copy of all your tracked jobs, notes, and profile data.</p>
+</div>
+<div class="flex gap-2 pt-2">
+<button class="flex-1 py-2 bg-surface-container-low border border-outline-variant rounded-lg text-label-md hover:bg-surface-container-high transition-colors">Export JSON</button>
+<button class="flex-1 py-2 bg-surface-container-low border border-outline-variant rounded-lg text-label-md hover:bg-surface-container-high transition-colors">Export CSV</button>
+</div>
+</div>
+<div class="bg-on-error/5 border border-on-error/20 p-6 rounded-2xl space-y-4">
+<div class="w-10 h-10 rounded-lg bg-on-error/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-error" data-icon="delete_forever">delete_forever</span>
+</div>
+<div>
+<p class="font-body-md font-semibold text-on-surface">Delete Account</p>
+<p class="font-body-sm text-on-surface-variant mt-1">Permanently remove all data and close your account. This action is irreversible.</p>
+</div>
+<button class="w-full py-2 bg-on-error/10 text-error border border-on-error/20 rounded-lg text-label-md font-semibold hover:bg-on-error/20 transition-all mt-2">Delete TrackIQ Account</button>
+</div>
+</div>
+</section>
+<!-- Footer Meta -->
+<div class="text-center pt-8 opacity-40">
+<p class="font-label-md text-[10px] uppercase tracking-widest">TrackIQ Pro v2.4.1 • Build 8829</p>
+</div>
+</div>
+</main>
+</div>
+<!-- Micro-interaction Scripts -->
+<script>
+        // Smooth scrolling for sidebar navigation
+        document.querySelectorAll('aside nav a').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                // For demo purpose, we only scroll if the href starts with #
+                const targetId = this.getAttribute('href');
+                if (targetId && targetId.startsWith('#')) {
+                    e.preventDefault();
+                    document.querySelector(targetId).scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+
+        // Simple Toggle Behavior
+        const toggles = document.querySelectorAll('.peer');
+        toggles.forEach(toggle => {
+            toggle.addEventListener('change', function() {
+                console.log('Preference updated:', this.checked);
+            });
+        });
+
+        // Input Focus Visuals
+        const inputs = document.querySelectorAll('input, textarea, select');
+        inputs.forEach(input => {
+            input.addEventListener('focus', () => {
+                input.parentElement.querySelector('label')?.classList.add('text-primary');
+            });
+            input.addEventListener('blur', () => {
+                input.parentElement.querySelector('label')?.classList.remove('text-primary');
+            });
+        });
+    </script>
+</body></html>

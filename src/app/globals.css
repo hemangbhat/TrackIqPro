@@ -1,26 +1,228 @@
 @import "tailwindcss";
 
+/* Enable class-based dark mode for Tailwind v4 (next-themes sets .dark). */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #f6f7fb;
+  --surface: #ffffff;
+  --surface-2: #f1f3f9;
+  --text: #0f172a;
+  --text-muted: #475569;
+  --border: #e2e8f0;
+  --accent: #6366f1;
+  --accent-strong: #4f46e5;
+
+  /* Premium effects (light) */
+  --glass-bg: rgba(255, 255, 255, 0.72);
+  --glass-border: rgba(15, 23, 42, 0.08);
+  --hero-glow: rgba(99, 102, 241, 0.12);
+  --cta-from: #4f46e5;
+  --cta-via: #6366f1;
+  --cta-to: #7c83ff;
+
+  /* Type system (self-hosted via next/font; variables set on <html>) */
+  --font-display: var(--font-geist), ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", sans-serif;
+  --font-body: var(--font-inter), ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo,
+    monospace;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+.dark {
+  /* Deep-navy premium palette (Stitch reference) */
+  --bg: #081425;
+  --surface: #152031;
+  --surface-2: #1f2a3c;
+  --text: #e7eefc;
+  --text-muted: #9fb0cc;
+  --border: #2a3548;
+  --accent: #c0c1ff;
+  --accent-strong: #818cf8;
+
+  /* Premium effects (dark) */
+  --glass-bg: rgba(21, 32, 49, 0.55);
+  --glass-border: rgba(255, 255, 255, 0.07);
+  --hero-glow: rgba(99, 102, 241, 0.18);
+  --cta-from: #1e1b4b;
+  --cta-via: #312e81;
+  --cta-to: #4338ca;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  color-scheme: light dark;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Display type for headings / brand */
+.font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+/* Mono label type (uppercase eyebrow labels) */
+.font-mono-label {
+  font-family: var(--font-mono);
+  letter-spacing: 0.06em;
+}
+
+/* Reusable surface tokens used across the app */
+.surface {
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.surface-2 {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+
+.text-muted {
+  color: var(--text-muted);
+}
+
+/* ----------------------- Premium glassmorphism ----------------------- */
+/* Frosted panel used for cards, sidebars, and topbars across surfaces. */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+}
+
+/* Radial brand glow behind hero / featured content. */
+.hero-gradient {
+  background: radial-gradient(
+    circle at 50% -20%,
+    var(--hero-glow) 0%,
+    transparent 70%
+  );
+}
+
+/* Soft blurred accent orb (decorative). */
+.accent-orb {
+  background: radial-gradient(circle, var(--hero-glow) 0%, transparent 70%);
+  filter: blur(60px);
+}
+
+/* Indigo gradient used for the closing call-to-action band. */
+.cta-gradient {
+  background: linear-gradient(
+    135deg,
+    var(--cta-from) 0%,
+    var(--cta-via) 50%,
+    var(--cta-to) 100%
+  );
+}
+
+/* Subtle 1px gradient hairline border for premium cards. */
+.gradient-border {
+  position: relative;
+}
+.gradient-border::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    to bottom,
+    rgba(148, 163, 184, 0.25),
+    rgba(148, 163, 184, 0.04)
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/*
+ * Accessibility: global focus-visible fallback (Requirement 15.2).
+ * Guarantees every keyboard-focused interactive element shows a visible indigo
+ * focus ring of at least 2px, even if a component omits its own ring utility.
+ * Components that define their own focus-visible ring override this harmlessly.
+ * Drawn with box-shadow (plus a small offset) so the ring is not clipped.
+ */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+/* Inputs/selects/textareas show a ring on plain :focus as well. */
+a:focus-visible,
+button:focus-visible,
+[role="button"]:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Subtle scrollbar */
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 9999px;
+}
+
+/* Shimmer for skeleton loaders */
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface-2);
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(148, 163, 184, 0.15),
+    transparent
+  );
+  animation: shimmer 1.4s infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton::after {
+    animation: none;
+  }
+
+  /*
+   * Global reduced-motion guard (Requirement 16.3).
+   *
+   * Collapses every CSS transition and animation app-wide — page/section
+   * reveals, list-item entrances, and hover color/opacity transitions — to its
+   * final visual state within 0.01s. framer-motion is additionally guarded via
+   * MotionProvider (reducedMotion="user") and the per-component motion presets.
+   */
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

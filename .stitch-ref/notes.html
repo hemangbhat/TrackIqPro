@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Notes | TrackIQ Pro</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Geist:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary-fixed-dim": "#c0c1ff",
+                    "secondary-container": "#3f465c",
+                    "inverse-on-surface": "#263143",
+                    "secondary": "#bec6e0",
+                    "tertiary-fixed": "#d3e4fe",
+                    "on-primary-fixed": "#07006c",
+                    "surface-dim": "#081425",
+                    "on-tertiary-fixed-variant": "#38485d",
+                    "tertiary-container": "#68788f",
+                    "inverse-surface": "#d8e3fb",
+                    "error": "#ffb4ab",
+                    "surface-variant": "#2a3548",
+                    "tertiary-fixed-dim": "#b7c8e1",
+                    "on-error": "#690005",
+                    "on-surface": "#d8e3fb",
+                    "inverse-primary": "#494bd6",
+                    "surface-container-highest": "#2a3548",
+                    "error-container": "#93000a",
+                    "tertiary": "#b7c8e1",
+                    "on-surface-variant": "#c7c4d7",
+                    "surface-tint": "#c0c1ff",
+                    "background": "#081425",
+                    "on-tertiary-container": "#000510",
+                    "on-tertiary": "#213145",
+                    "primary-container": "#8083ff",
+                    "surface-container": "#152031",
+                    "primary-fixed": "#e1e0ff",
+                    "on-primary": "#1000a9",
+                    "secondary-fixed-dim": "#bec6e0",
+                    "on-primary-container": "#0d0096",
+                    "on-secondary-fixed-variant": "#3f465c",
+                    "on-tertiary-fixed": "#0b1c30",
+                    "surface-container-low": "#111c2d",
+                    "surface-container-high": "#1f2a3c",
+                    "on-primary-fixed-variant": "#2f2ebe",
+                    "surface": "#081425",
+                    "on-secondary-container": "#adb4ce",
+                    "surface-bright": "#2f3a4c",
+                    "outline": "#908fa0",
+                    "primary": "#c0c1ff",
+                    "outline-variant": "#464554",
+                    "on-error-container": "#ffdad6",
+                    "on-secondary-fixed": "#131b2e",
+                    "surface-container-lowest": "#040e1f",
+                    "on-secondary": "#283044",
+                    "on-background": "#d8e3fb",
+                    "secondary-fixed": "#dae2fd"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px",
+                    "2xl": "1rem"
+            },
+            "spacing": {
+                    "stack_sm": "8px",
+                    "margin_page": "40px",
+                    "sidebar_collapsed": "64px",
+                    "stack_xs": "4px",
+                    "stack_lg": "24px",
+                    "stack_md": "16px",
+                    "gutter": "24px",
+                    "sidebar_width": "256px"
+            },
+            "fontFamily": {
+                    "display-lg": ["Geist"],
+                    "body-md": ["Inter"],
+                    "headline-lg": ["Geist"],
+                    "body-sm": ["Inter"],
+                    "headline-md": ["Geist"],
+                    "body-lg": ["Inter"],
+                    "label-md": ["JetBrains Mono"]
+            },
+            "fontSize": {
+                    "display-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                    "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                    "body-sm": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "headline-md": ["24px", {"lineHeight": "1.3", "letterSpacing": "-0.01em", "fontWeight": "500"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "label-md": ["12px", {"lineHeight": "1.4", "letterSpacing": "0.05em", "fontWeight": "500"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #081425;
+            color: #d8e3fb;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .glass-panel {
+            background: rgba(21, 32, 49, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .editor-container blockquote {
+            border-left: 3px solid #c0c1ff;
+            padding-left: 1rem;
+            margin: 1rem 0;
+            color: #c7c4d7;
+            font-style: italic;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #2a3548; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #464554; }
+
+        .masonry-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            grid-auto-rows: minmax(150px, auto);
+            gap: 24px;
+        }
+    </style>
+</head>
+<body class="flex min-h-screen">
+<!-- SideNavBar Anchor -->
+<aside class="fixed left-0 top-0 h-full w-sidebar_width bg-surface-container border-r border-outline-variant flex flex-col py-stack_lg px-stack_md z-50">
+<div class="mb-10 px-2">
+<h1 class="font-display-lg text-headline-md font-bold text-primary tracking-tight">TrackIQ Pro</h1>
+<p class="font-label-md text-on-surface-variant text-[10px] uppercase tracking-widest mt-1">Enterprise Plan</p>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-on-surface-variant hover:bg-primary/10 transition-colors" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-body-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-on-surface-variant hover:bg-primary/10 transition-colors" href="#">
+<span class="material-symbols-outlined">work</span>
+<span class="font-body-md">Jobs</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-on-surface-variant hover:bg-primary/10 transition-colors" href="#">
+<span class="material-symbols-outlined">stars</span>
+<span class="font-body-md">Offers</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-primary font-bold border-l-2 border-primary bg-primary/5" href="#">
+<span class="material-symbols-outlined">description</span>
+<span class="font-body-md">Notes</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-on-surface-variant hover:bg-primary/10 transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-body-md">Settings</span>
+</a>
+</nav>
+<div class="mt-auto space-y-1 border-t border-outline-variant pt-6">
+<button class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-on-surface-variant hover:bg-primary/10 transition-colors">
+<span class="material-symbols-outlined">help</span>
+<span class="font-body-md">Help</span>
+</button>
+<button class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-on-surface-variant hover:bg-primary/10 transition-colors">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-body-md">Logout</span>
+</button>
+</div>
+</aside>
+<!-- Main Canvas -->
+<main class="flex-1 ml-[256px] min-h-screen flex flex-col relative">
+<!-- TopNavBar Anchor -->
+<header class="sticky top-0 z-40 w-full bg-surface/80 backdrop-blur-md border-b border-outline-variant">
+<div class="flex justify-between items-center h-16 px-margin_page max-w-[1440px] mx-auto">
+<div class="flex items-center gap-8 flex-1">
+<div class="relative w-full max-w-md">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full bg-surface-container-low border-none rounded-full py-2 pl-10 pr-4 text-body-sm focus:ring-2 focus:ring-primary/50 text-on-surface placeholder:text-outline" placeholder="Search your notes, interviews, or tags..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="hidden md:flex items-center gap-6 text-on-surface-variant font-body-md">
+<a class="hover:text-primary transition-all" href="#">Overview</a>
+<a class="hover:text-primary transition-all" href="#">Analytics</a>
+<a class="hover:text-primary transition-all" href="#">Reports</a>
+</div>
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors">notifications</button>
+<div class="h-8 w-8 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container font-bold overflow-hidden border border-outline-variant">
+<img alt="User Profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB5lJvPQmnlL4aGGs7qyI43BemMNttR8ZRzw2IUjCDNj0f-dAIpFqAkp8PcAhdgZOJTUta0XDSBhY6GZHMiaBJ6FZygaTEtLWAGZ6z8yB-xg5PGyUhDBW21_u2SrQUVQW7-e5RFI0pFpAu0lfYTXNvv8Gee0uw8Hiq6_a5FYchL9Uy3gdA4bDF_XtO96Hui9iLaj7bjRHQ_KDyjtNXKuVc4JfDt4gupG4TRVXlkNgh-GmNUYStgimdmdE94Qy4Q8aBLPD0Fp9q35lo"/>
+</div>
+</div>
+</div>
+</div>
+</header>
+<!-- Content Area -->
+<div class="flex-1 px-margin_page py-stack_lg max-w-[1440px] mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Left Column: Notes List & Categories -->
+<div class="lg:col-span-4 flex flex-col gap-6">
+<div class="flex items-center justify-between">
+<h2 class="font-headline-md text-on-surface">Recent Notes</h2>
+<button class="bg-primary text-on-primary px-4 py-2 rounded-lg flex items-center gap-2 font-body-md font-semibold hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined">add</span>
+                        New Note
+                    </button>
+</div>
+<!-- Tag Filter -->
+<div class="flex flex-wrap gap-2"><button class="px-3 py-1 rounded-md text-label-md bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors">All</button><button class="px-3 py-1 rounded-md text-label-md bg-surface-container-highest/40 text-on-surface-variant border border-outline-variant/30 hover:border-primary/40 transition-colors">Technical</button><button class="px-3 py-1 rounded-md text-label-md bg-surface-container-highest/40 text-on-surface-variant border border-outline-variant/30 hover:border-primary/40 transition-colors">Behavioral</button><button class="px-3 py-1 rounded-md text-label-md bg-surface-container-highest/40 text-on-surface-variant border border-outline-variant/30 hover:border-primary/40 transition-colors">Recruiter Call</button></div>
+<!-- Masonry-like Grid for Side List (Simplified for list view) -->
+<div class="space-y-4 overflow-y-auto max-h-[calc(100vh-280px)] pr-2">
+<!-- Note Card Active -->
+<div class="bg-primary/5 p-4 rounded-xl border border-primary/30 cursor-pointer transition-all relative before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:bg-primary before:rounded-r-full">
+<div class="flex justify-between items-start mb-2">
+<span class="text-label-md text-primary font-bold">Technical</span>
+<span class="text-body-sm text-on-surface-variant">2h ago</span>
+</div>
+<h3 class="font-body-md font-bold text-on-surface mb-2">System Design: Uber Dispatcher</h3>
+<p class="text-body-sm text-on-surface-variant line-clamp-2">Discussed consistent hashing, quadtrees for location-based services, and handling peak loads during events...</p>
+</div>
+<!-- Note Card -->
+<div class="glass-panel p-4 rounded-2xl hover:bg-surface-container-high transition-colors cursor-pointer group">
+<div class="flex justify-between items-start mb-2">
+<span class="text-label-md text-on-secondary-container/80">Recruiter Call</span>
+<span class="text-body-sm text-on-surface-variant">Oct 12</span>
+</div>
+<h3 class="font-body-md font-bold text-on-surface mb-2">Stripe Phone Screen</h3>
+<p class="text-body-sm text-on-surface-variant line-clamp-2">Clarified equity structure and hybrid remote policy. Next step: Technical deep dive with the Billing team...</p>
+</div>
+<!-- Note Card -->
+<div class="glass-panel p-4 rounded-2xl hover:bg-surface-container-high transition-colors cursor-pointer group">
+<div class="flex justify-between items-start mb-2">
+<span class="text-label-md text-on-secondary-container/80">Behavioral</span>
+<span class="text-body-sm text-on-surface-variant">Oct 10</span>
+</div>
+<h3 class="font-body-md font-bold text-on-surface mb-2">Conflict Resolution Story</h3>
+<p class="text-body-sm text-on-surface-variant line-clamp-2">The time I had to manage diverging opinions on microservices vs monolith for the legacy migration project...</p>
+</div>
+<!-- Note Card -->
+<div class="glass-panel p-4 rounded-2xl hover:bg-surface-container-high transition-colors cursor-pointer group">
+<div class="flex justify-between items-start mb-2">
+<span class="text-label-md text-on-secondary-container/80">Technical</span>
+<span class="text-body-sm text-on-surface-variant">Oct 08</span>
+</div>
+<h3 class="font-body-md font-bold text-on-surface mb-2">React 18 Concurrent Mode</h3>
+<p class="text-body-sm text-on-surface-variant line-clamp-2">Key takeaway: useTransition for non-urgent updates. Remember to mention hydration mismatches in large apps...</p>
+</div>
+</div>
+</div>
+<!-- Right Column: Rich Text Editor Canvas -->
+<div class="lg:col-span-8">
+<div class="glass-panel h-full rounded-2xl flex flex-col overflow-hidden shadow-2xl">
+<!-- Editor Toolbar -->
+<div class="flex items-center justify-between px-6 py-2 border-b border-outline-variant/30 bg-surface-container-low">
+<div class="flex items-center gap-4 text-on-surface-variant">
+<button class="material-symbols-outlined hover:text-primary transition-colors p-1" title="Bold">format_bold</button>
+<button class="material-symbols-outlined hover:text-primary transition-colors p-1" title="Italic">format_italic</button>
+<button class="material-symbols-outlined hover:text-primary transition-colors p-1" title="List">format_list_bulleted</button>
+<button class="material-symbols-outlined hover:text-primary transition-colors p-1" title="Checklist">checklist</button>
+<div class="w-[1px] h-4 bg-outline-variant"></div>
+<button class="material-symbols-outlined hover:text-primary transition-colors p-1" title="Link">link</button>
+<button class="material-symbols-outlined hover:text-primary transition-colors p-1" title="Image">image</button>
+<button class="material-symbols-outlined hover:text-primary transition-colors p-1" title="Code">code</button>
+</div>
+<div class="flex items-center gap-3">
+<span class="text-label-md text-on-surface-variant">Autosaved</span>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-error transition-colors">delete</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors">more_vert</button>
+</div>
+</div>
+<!-- Editor Content -->
+<div class="flex-1 overflow-y-auto p-12 editor-container">
+<div class="max-w-2xl mx-auto space-y-6">
+<div class="space-y-4">
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded-md text-[10px] font-label-md bg-primary/10 text-primary border border-primary/20 uppercase tracking-wider">Technical Interview</span>
+<span class="text-body-sm text-on-surface-variant">Created on Oct 14, 2023</span>
+<span class="text-[10px] text-outline uppercase tracking-widest ml-auto">Last edited 2m ago</span></div>
+<h1 class="font-display-lg text-display-lg text-on-surface outline-none tracking-tight font-bold mb-2">System Design: Uber Dispatcher</h1>
+</div>
+<div class="space-y-6 text-body-lg text-on-surface/90 leading-relaxed outline-none">
+<p>The objective of the dispatcher service is to match a rider's request with the nearest available driver. The system must handle high throughput and remain responsive even during local flash traffic (concerts, sporting events).</p>
+<blockquote>
+                                    "Latency is king here. A match that takes 30 seconds is a lost customer." — Interviewer Note
+                                </blockquote>
+<h3 class="font-headline-md text-on-surface pt-4">Core Components</h3>
+<ul class="list-disc pl-6 space-y-2">
+<li><strong>Geo-Index:</strong> Using Google S2 library or Quadtrees to segment the map into manageable cells.</li>
+<li><strong>Websockets:</strong> To maintain persistent connections with both driver and rider apps for real-time updates.</li>
+<li><strong>Redis:</strong> For ephemeral storage of driver locations, updated every 4 seconds.</li>
+</ul>
+<p>We discussed handling "hot spots" where thousands of people request a ride at once. The solution proposed was to distribute the load across multiple cell-shards and use a distributed locking mechanism for driver allocation to prevent double-booking.</p>
+<div class="p-4 bg-surface-container-lowest rounded-lg border border-outline-variant/50 flex items-center gap-4 group hover:border-primary/50 transition-all cursor-pointer max-w-xl">
+<div class="h-12 w-12 bg-surface-container-high rounded flex items-center justify-center text-on-surface-variant group-hover:text-primary transition-colors">
+<span class="material-symbols-outlined">schema</span>
+</div>
+<div>
+<h4 class="font-body-md font-bold">Architecture_Diagram_V1.pdf</h4>
+<p class="text-body-sm text-on-surface-variant">2.4 MB • Exported from Excalidraw</p>
+</div>
+<button class="ml-auto material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors">download</button>
+</div>
+<p>Next steps: Deep dive into the billing engine and transaction isolation levels in the second half of the round.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Floating Action Button for Mobile / Small Actions -->
+<button class="fixed bottom-8 right-8 h-14 w-14 rounded-full bg-primary text-on-primary shadow-xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all z-50">
+<span class="material-symbols-outlined text-3xl">edit</span>
+</button>
+</main>
+<!-- Visual Polish: Atmosphere Background Elements -->
+<div class="fixed top-[-10%] right-[-5%] w-[40%] h-[40%] bg-primary/5 blur-[120px] pointer-events-none z-0"></div>
+<div class="fixed bottom-[-10%] left-[-5%] w-[30%] h-[30%] bg-secondary/5 blur-[100px] pointer-events-none z-0"></div>
+<script>
+        // Simple Interaction logic for "Rich Text Editor" feel
+        const editor = document.querySelector('[contenteditable="true"]');
+        
+        // Auto-save simulation
+        let saveTimeout;
+        const autoSaveStatus = document.querySelector('.text-label-md');
+        
+        if(editor) {
+            editor.addEventListener('input', () => {
+                autoSaveStatus.textContent = "Typing...";
+                clearTimeout(saveTimeout);
+                saveTimeout = setTimeout(() => {
+                    autoSaveStatus.textContent = "Autosaved";
+                }, 1000);
+            });
+        }
+
+        // Basic toggle for note selection
+        document.querySelectorAll('.glass-panel.cursor-pointer').forEach(card => {
+            card.addEventListener('click', () => {
+                document.querySelectorAll('.glass-panel.cursor-pointer').forEach(c => {
+                    c.classList.remove('border-l-4', 'border-l-primary');
+                    c.classList.add('hover:bg-surface-container-high');
+                });
+                card.classList.add('border-l-4', 'border-l-primary');
+                card.classList.remove('hover:bg-surface-container-high');
+            });
+        });
+    </script>
+</body></html>

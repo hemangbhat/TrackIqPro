@@ -1,0 +1,21 @@
+{
+  "mcpServers": {
+    "stitch": {
+      "command": "node",
+      "args": ["./mcp/stitch-mcp.js"],
+      "env": {
+        "GOOGLE_CLOUD_PROJECT": "project-6f9af12d-507c-4ba0-af2"
+      },
+      "disabled": false,
+      "autoApprove": [
+        "list_projects",
+        "list_screens",
+        "get_project",
+        "get_screen",
+        "extract_design_context",
+        "fetch_screen_code",
+        "fetch_screen_image"
+      ]
+    }
+  }
+}
