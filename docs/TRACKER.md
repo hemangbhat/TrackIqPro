@@ -113,6 +113,7 @@ Legend: ✅ done · � partial · ⬜ not started
 | Rate limiting (Upstash, env-gated) | ✅ | `lib/rate-limit.ts`; mutation/billing/default tiers; no-op without env |
 | Transactional email (Resend, env-gated) | ✅ | `lib/email.ts` + welcome template; no-op without env |
 | Welcome email on registration | ✅ | Svix-verified Clerk webhook `/api/clerk/webhook` |
+| Scheduled follow-up reminder emails | ✅ | Daily Vercel cron `/api/cron/follow-up-reminders` (CRON_SECRET-secured, Upstash dedupe) |
 | Lint warnings cleared | ✅ | Unused imports/directives removed |
 | Next.js security patch | ✅ | Pinned 15.4.11 |
 | Production setup guide | ✅ | `docs/PRODUCTION_SETUP.md` |
@@ -124,4 +125,4 @@ Legend: ✅ done · � partial · ⬜ not started
 | Stripe live keys + webhook registered | 🟡 | User (see PRODUCTION_SETUP.md) |
 | Resend domain verified + keys in Vercel | 🟡 | User (optional; enables email) |
 | Upstash Redis keys in Vercel | 🟡 | User (optional; enables rate limiting) |
-| Email follow-up reminders (scheduled) | ⬜ | — (welcome email done) |
+| Email follow-up reminders (scheduled) | ✅ | Daily Vercel cron + digest email |

@@ -67,6 +67,20 @@ Already working for auth. To enable the **welcome email**:
    tiers) and return `429` with `RateLimit-*` + `Retry-After` headers when
    exceeded. If these vars are unset, limiting is a transparent no-op.
 
+## 6. Scheduled follow-up reminders (Vercel Cron)
+
+A daily cron (`vercel.json`, 08:00 UTC) calls `/api/cron/follow-up-reminders`,
+which emails each user a digest of their overdue follow-ups (using the existing
+Priority Queue engine + Resend). Per-user dedupe via Upstash prevents repeats.
+
+1. Generate a long random string and set **`CRON_SECRET`** in Vercel.
+   Vercel automatically sends it as `Authorization: Bearer <CRON_SECRET>` to the
+   cron path; the endpoint refuses to run without it (returns 401).
+2. Requires `RESEND_API_KEY` (to send) — if unset, the job no-ops.
+3. The schedule lives in `vercel.json` (`"0 8 * * *"`). Change the cron
+   expression there for a different cadence (e.g. weekly `"0 8 * * 1"`).
+4. Cron is enabled automatically on deploy (Vercel Hobby supports daily crons).
+
 ---
 
 ## Env var checklist (Vercel)
@@ -86,6 +100,7 @@ Already working for auth. To enable the **welcome email**:
 | `EMAIL_FROM` | optional | Sender identity |
 | `UPSTASH_REDIS_REST_URL` | optional | Rate limiting |
 | `UPSTASH_REDIS_REST_TOKEN` | optional | Rate limiting |
+| `CRON_SECRET` | optional | Authorizes the follow-up reminder cron |
 
 ## Post-deploy smoke test
 

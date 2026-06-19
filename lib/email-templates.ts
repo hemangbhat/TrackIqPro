@@ -70,3 +70,61 @@ export function renderWelcomeEmail(params: { firstName?: string; appUrl: string 
       </td></tr>`;
     return shell(body);
 }
+
+export interface DigestItem {
+    title: string;
+    company: string;
+    stage: string;
+    action: string;
+    daysStale: number;
+    impact: "high" | "medium" | "low";
+}
+
+const IMPACT_COLOR: Record<DigestItem["impact"], string> = {
+    high: "#e11d48", // rose
+    medium: "#d97706", // amber
+    low: INDIGO,
+};
+
+/** Daily/weekly follow-up reminder digest. */
+export function renderFollowUpDigestEmail(params: {
+    firstName?: string;
+    items: DigestItem[];
+    appUrl: string;
+}): string {
+    const name = params.firstName ? escapeHtml(params.firstName) : "there";
+    const dashUrl = `${params.appUrl.replace(/\/$/, "")}/dashboard/intelligence`;
+    const count = params.items.length;
+
+    const rows = params.items
+        .map(
+            (it) => `
+        <tr><td style="padding:12px 0;border-bottom:1px solid ${BORDER};">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+              <td>
+                <span style="font-size:14px;font-weight:600;color:${TEXT};">${escapeHtml(it.company)}</span>
+                <span style="font-size:12px;color:${MUTED};"> · ${escapeHtml(it.title)}</span>
+                <span style="display:inline-block;margin-left:6px;font-size:11px;font-weight:600;color:${IMPACT_COLOR[it.impact]};text-transform:capitalize;">${it.impact}</span>
+                <div style="font-size:13px;color:${MUTED};margin-top:3px;">${escapeHtml(it.action)} — quiet for ${it.daysStale} day${it.daysStale === 1 ? "" : "s"}.</div>
+              </td>
+            </tr>
+          </table>
+        </td></tr>`
+        )
+        .join("");
+
+    const body = `
+      <tr><td style="padding:20px 32px 0 32px;">
+        <h1 style="margin:0;font-size:22px;line-height:1.3;color:${TEXT};">${count} follow-up${count === 1 ? "" : "s"} due today, ${name}.</h1>
+        <p style="margin:12px 0 0 0;font-size:14px;line-height:1.6;color:${MUTED};">
+          These applications have gone quiet past their usual response window. A timely nudge
+          measurably improves your odds.
+        </p>
+      </td></tr>
+      <tr><td style="padding:12px 32px 0 32px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${rows}</table>
+      </td></tr>
+      <tr><td style="padding:24px 32px 0 32px;">${button(dashUrl, "Review in TrackIQ")}</td></tr>`;
+    return shell(body);
+}

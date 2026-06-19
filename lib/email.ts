@@ -7,7 +7,7 @@
 // enable real delivery.
 
 import { Resend } from "resend";
-import { renderWelcomeEmail } from "./email-templates";
+import { renderWelcomeEmail, renderFollowUpDigestEmail, type DigestItem } from "./email-templates";
 
 const apiKey = process.env.RESEND_API_KEY;
 const FROM = process.env.EMAIL_FROM || "TrackIQ <onboarding@resend.dev>";
@@ -46,4 +46,22 @@ export async function sendWelcomeEmail(params: {
 }): Promise<SendResult> {
     const html = renderWelcomeEmail({ firstName: params.firstName, appUrl: APP_URL });
     return send(params.to, "Welcome to TrackIQ — your job search command center", html);
+}
+
+/** Follow-up reminder digest (sent by the scheduled cron job). */
+export async function sendFollowUpDigest(params: {
+    to: string;
+    firstName?: string;
+    items: DigestItem[];
+}): Promise<SendResult> {
+    if (params.items.length === 0) return { sent: false, skipped: true };
+    const html = renderFollowUpDigestEmail({
+        firstName: params.firstName,
+        items: params.items,
+        appUrl: APP_URL,
+    });
+    const subject = `${params.items.length} follow-up${
+        params.items.length === 1 ? "" : "s"
+    } due on TrackIQ`;
+    return send(params.to, subject, html);
 }
