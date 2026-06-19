@@ -8,6 +8,7 @@ const isPublicRoute = createRouteMatcher([
     "/demo(.*)",
     "/api/health",
     "/api/stripe/webhook",
+    "/api/clerk/webhook",
 ]);
 
 export const middleware = clerkMiddleware((auth, req) => {

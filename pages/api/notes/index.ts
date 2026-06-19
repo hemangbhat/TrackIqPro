@@ -8,6 +8,7 @@ import {
     successResponse,
     AuthenticatedRequest,
 } from "../../../lib/api-helpers";
+import { enforceRateLimit } from "../../../lib/rate-limit";
 
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     const { userId } = req;
@@ -20,6 +21,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     }
 
     if (req.method === "GET") {
+        if (await enforceRateLimit(req, res, { tier: "default", userId })) return;
         try {
             const { jobId } = req.query;
             const filter: Record<string, unknown> = { userId };
@@ -34,6 +36,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     }
 
     if (req.method === "POST") {
+        if (await enforceRateLimit(req, res, { tier: "mutation", userId })) return;
         try {
             const { title, content, jobId, round } = req.body;
             if (!title || !content) {

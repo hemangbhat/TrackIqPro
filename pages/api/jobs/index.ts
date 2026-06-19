@@ -3,6 +3,7 @@ import Job from "../../../models/Job";
 import { NextApiResponse } from "next";
 import { withAuth, methodNotAllowed, errorResponse, successResponse, AuthenticatedRequest } from "../../../lib/api-helpers";
 import { getUserPlan } from "../../../lib/stripe";
+import { enforceRateLimit } from "../../../lib/rate-limit";
 
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     const { userId } = req;
@@ -15,6 +16,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     }
 
     if (req.method === "GET") {
+        if (await enforceRateLimit(req, res, { tier: "default", userId })) return;
         try {
             const jobs = await Job.find({ userId })
                 .sort({ createdAt: -1 })
@@ -27,6 +29,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     } 
     
     else if (req.method === "POST") {
+        if (await enforceRateLimit(req, res, { tier: "mutation", userId })) return;
         try {
             const { plan } = await getUserPlan(userId);
             

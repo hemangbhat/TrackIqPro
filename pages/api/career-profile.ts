@@ -3,6 +3,7 @@ import { getAuth } from "@clerk/nextjs/server";
 import { connectDB } from "../../lib/db";
 import CareerProfile from "../../models/CareerProfile";
 import { errorResponse, successResponse, methodNotAllowed } from "../../lib/api-helpers";
+import { enforceRateLimit } from "../../lib/rate-limit";
 
 const ALLOWED_SENIORITY = ["intern", "junior", "mid", "senior", "staff", "lead"];
 
@@ -28,6 +29,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         await connectDB();
 
         if (req.method === "GET") {
+            if (await enforceRateLimit(req, res, { tier: "default", userId })) return;
             const profile = (await CareerProfile.findOne({ userId }).lean()) as CareerProfileDoc | null;
             return successResponse(res, {
                 skills: profile?.skills ?? [],
@@ -37,6 +39,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
 
         if (req.method === "PUT") {
+            if (await enforceRateLimit(req, res, { tier: "mutation", userId })) return;
             const body = (req.body ?? {}) as {
                 skills?: unknown;
                 targetRole?: unknown;

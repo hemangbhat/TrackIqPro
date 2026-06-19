@@ -3,7 +3,7 @@ import React, { useMemo } from "react";
 import type { Job } from "../../types";
 import { computeJobFit, type JobFitResult } from "../../lib/career-fit";
 import type { CareerProfileData } from "../../hooks/useCareerProfile";
-import { Card, Badge, EmptyState } from "../ui/primitives";
+import { Card, EmptyState } from "../ui/primitives";
 import { TargetIcon, BookOpenIcon, SparklesIcon } from "../ui/icons";
 import { ScoreRing } from "./ScoreRing";
 

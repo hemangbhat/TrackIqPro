@@ -214,7 +214,6 @@ export default function JobFormDrawer({
             setErrors({});
             setSubmitting(false);
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open, initial, mode]);
 
     // Advisory free-limit gate: only blocks creating new jobs (Req 4.2).

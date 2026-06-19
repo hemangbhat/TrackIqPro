@@ -9,6 +9,7 @@ import {
     generateId,
     AuthenticatedRequest,
 } from "../../../lib/api-helpers";
+import { enforceRateLimit } from "../../../lib/rate-limit";
 
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     const { userId } = req;
@@ -21,6 +22,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     }
 
     if (req.method === "GET") {
+        if (await enforceRateLimit(req, res, { tier: "default", userId })) return;
         try {
             const offers = await Offer.find({ userId }).sort({ createdAt: -1 }).lean();
             return successResponse(res, offers);
@@ -31,6 +33,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     }
 
     if (req.method === "POST") {
+        if (await enforceRateLimit(req, res, { tier: "mutation", userId })) return;
         try {
             const {
                 company,

@@ -1,6 +1,7 @@
 import Stripe from "stripe";
 import { NextApiRequest, NextApiResponse } from "next";
 import { getAuth, clerkClient } from "@clerk/nextjs/server";
+import { enforceRateLimit } from "../../../lib/rate-limit";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
     apiVersion: "2025-07-30.basil",
@@ -19,6 +20,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!userId) {
         return res.status(401).json({ error: "Unauthorized" });
     }
+
+    if (await enforceRateLimit(req, res, { tier: "billing", userId })) return;
 
     try {
         let email: string | undefined;

@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import type { ReflectionResult, ReflectionInsight, ConfidencePoint } from "../../lib/interview-reflection";
-import { Card, Badge, EmptyState } from "../ui/primitives";
+import { Card, EmptyState } from "../ui/primitives";
 import { BrainIcon, TrendingUpIcon } from "../ui/icons";
 
 type TrendDir = ReflectionResult["trendDirection"];

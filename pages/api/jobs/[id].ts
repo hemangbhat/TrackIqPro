@@ -2,6 +2,7 @@ import { connectDB } from "../../../lib/db";
 import Job from "../../../models/Job";
 import { NextApiResponse } from "next";
 import { withAuth, methodNotAllowed, errorResponse, successResponse, AuthenticatedRequest } from "../../../lib/api-helpers";
+import { enforceRateLimit } from "../../../lib/rate-limit";
 
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     const { userId } = req;
@@ -19,6 +20,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     }
 
     if (req.method === "GET") {
+        if (await enforceRateLimit(req, res, { tier: "default", userId })) return;
         try {
             const job = await Job.findOne({ _id: id, userId }).lean();
             if (!job) {
@@ -32,6 +34,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     } 
     
     else if (req.method === "PUT" || req.method === "PATCH") {
+        if (await enforceRateLimit(req, res, { tier: "mutation", userId })) return;
         try {
             const update = req.body;
             delete update._id;
@@ -55,6 +58,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     } 
     
     else if (req.method === "DELETE") {
+        if (await enforceRateLimit(req, res, { tier: "mutation", userId })) return;
         try {
             const result = await Job.deleteOne({ _id: id, userId });
             

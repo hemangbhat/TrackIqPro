@@ -8,6 +8,7 @@ import {
     successResponse,
     AuthenticatedRequest,
 } from "../../../lib/api-helpers";
+import { enforceRateLimit } from "../../../lib/rate-limit";
 
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     const { userId } = req;
@@ -25,6 +26,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     }
 
     if (req.method === "GET") {
+        if (await enforceRateLimit(req, res, { tier: "default", userId })) return;
         try {
             const note = await Note.findOne({ _id: id, userId }).lean();
             if (!note) return errorResponse(res, 404, "Note not found");
@@ -36,6 +38,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     }
 
     if (req.method === "PUT" || req.method === "PATCH") {
+        if (await enforceRateLimit(req, res, { tier: "mutation", userId })) return;
         try {
             const { title, content, round, jobId } = req.body;
             if (!title || !content) {
@@ -56,6 +59,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     }
 
     if (req.method === "DELETE") {
+        if (await enforceRateLimit(req, res, { tier: "mutation", userId })) return;
         try {
             const result = await Note.deleteOne({ _id: id, userId });
             if (result.deletedCount === 0) {

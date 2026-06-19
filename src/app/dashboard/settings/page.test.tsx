@@ -13,7 +13,7 @@ import React from "react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import userEvent from "@testing-library/user-event";
 import { act, fireEvent } from "@testing-library/react";
-import { renderWithTheme, screen, waitFor, within } from "../../../../test/render";
+import { renderWithTheme, screen, within } from "../../../../test/render";
 import { ToastProvider } from "../../../../components/ui/Toast";
 
 // ---------------------------------------------------------------------------

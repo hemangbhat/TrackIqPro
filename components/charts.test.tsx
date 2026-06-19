@@ -26,7 +26,29 @@ import React from "react";
 // ---------------------------------------------------------------------------
 // Mock react-chartjs-2: capture the props passed to each chart kind.
 // ---------------------------------------------------------------------------
-type Captured = { data: any; options: any };
+interface ChartDataset {
+  label: string;
+  borderColor: string;
+  pointStyle?: string;
+  pointRadius?: number;
+}
+interface ChartData {
+  labels: string[];
+  datasets: ChartDataset[];
+}
+interface ChartOptions {
+  scales: {
+    x: { ticks: { color: string }; border: { color: string } };
+    y: { ticks: { color: string }; grid: { color: string } };
+  };
+  plugins: {
+    legend: {
+      display: boolean;
+      labels: { color: string; usePointStyle: boolean; pointStyle: string };
+    };
+  };
+}
+type Captured = { data: ChartData; options: ChartOptions };
 
 const captured: { doughnut: Captured[]; line: Captured[] } = {
   doughnut: [],
@@ -36,7 +58,10 @@ const captured: { doughnut: Captured[]; line: Captured[] } = {
 vi.mock("react-chartjs-2", () => {
   const makeChart = (key: "doughnut" | "line") =>
     function MockChart(props: { data?: unknown; options?: unknown }) {
-      captured[key].push({ data: props.data, options: props.options });
+      captured[key].push({
+        data: props.data as ChartData,
+        options: props.options as ChartOptions,
+      });
       return React.createElement("div", { "data-testid": `mock-${key}` });
     };
   return {

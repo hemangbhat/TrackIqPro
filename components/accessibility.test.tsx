@@ -1,6 +1,6 @@
 import React from "react";
 import { describe, it, expect, beforeAll, afterAll, vi } from "vitest";
-import { axe, configureAxe } from "vitest-axe";
+import { configureAxe } from "vitest-axe";
 import * as axeMatchers from "vitest-axe/matchers";
 import { renderWithTheme, screen, within } from "../test/render";
 import { ToastProvider } from "./ui/Toast";

@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 import type { Seniority } from "../../lib/career-fit";
 import type { CareerProfileData } from "../../hooks/useCareerProfile";
 import { useToast } from "../ui/Toast";
-import { Card, Button, Field, Label, Input, Select } from "../ui/primitives";
+import { Card, Button, Field, Input, Select } from "../ui/primitives";
 import { UserIcon, XIcon, SparklesIcon } from "../ui/icons";
 
 const SENIORITY_OPTIONS: { value: Seniority; label: string }[] = [
