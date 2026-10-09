@@ -24,7 +24,7 @@
   /* Type system (self-hosted via next/font; variables set on <html>) */
   --font-display: var(--font-geist), ui-sans-serif, system-ui, -apple-system,
     "Segoe UI", sans-serif;
-  --font-body: var(--font-inter), ui-sans-serif, system-ui, -apple-system,
+  --font-body: var(--font-geist), var(--font-inter), ui-sans-serif, system-ui, -apple-system,
     "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --font-mono: var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo,
     monospace;
@@ -52,21 +52,65 @@
 
 html {
   color-scheme: light dark;
+  scroll-behavior: smooth;
 }
 
 body {
   margin: 0;
-  min-height: 100vh;
+  min-height: 100dvh;
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
 }
 
+/* Headings balance their lines; body copy avoids single-word orphans. */
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+p {
+  text-wrap: pretty;
+}
+
+/* Tabular figures so KPIs and scores don't jitter between values. */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/*
+ * Film-grain overlay. A fixed, non-interactive noise layer that breaks the
+ * digital flatness of large dark surfaces. Pure inline SVG — no network.
+ */
+.grain::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.dark .grain::before {
+  opacity: 0.06;
+}
+
+/* Hairline dot grid used behind the hero (fades out toward the edges). */
+.dot-grid {
+  background-image: radial-gradient(
+    rgba(148, 163, 184, 0.22) 1px,
+    transparent 1px
+  );
+  background-size: 22px 22px;
+  -webkit-mask-image: radial-gradient(ellipse at 30% 40%, #000 20%, transparent 70%);
+  mask-image: radial-gradient(ellipse at 30% 40%, #000 20%, transparent 70%);
+}
+
 /* Display type for headings / brand */
 .font-display {
   font-family: var(--font-display);
-  letter-spacing: -0.02em;
+  letter-spacing: -0.025em;
 }
 
 /* Mono label type (uppercase eyebrow labels) */
@@ -114,14 +158,16 @@ body {
   filter: blur(60px);
 }
 
-/* Indigo gradient used for the closing call-to-action band. */
+/*
+ * Closing call-to-action band: a deep, ink-tinted surface lit by a single
+ * off-center radial light — not a 3-stop purple gradient.
+ */
 .cta-gradient {
-  background: linear-gradient(
-    135deg,
-    var(--cta-from) 0%,
-    var(--cta-via) 50%,
-    var(--cta-to) 100%
-  );
+  background:
+    radial-gradient(ellipse 70% 90% at 85% 0%, rgba(99, 102, 241, 0.45), transparent 60%),
+    radial-gradient(ellipse 50% 60% at 0% 100%, rgba(16, 185, 129, 0.12), transparent 60%),
+    #0d1530;
+  box-shadow: 0 30px 80px -30px rgba(30, 27, 75, 0.6);
 }
 
 /* Subtle 1px gradient hairline border for premium cards. */

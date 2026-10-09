@@ -169,7 +169,7 @@ export default function HeroPreview() {
                                 </li>
                             ))}
                         </ol>
-                        <p className="mt-auto flex items-start gap-1.5 border-t border-[var(--border)] pt-3 text-left text-[11px] leading-relaxed text-[var(--text-muted)]">
+                        <p className="mt-5 flex items-start gap-1.5 border-t border-[var(--border)] pt-3 text-left text-[11px] leading-relaxed text-[var(--text-muted)]">
                             <SparklesIcon size={13} className="mt-0.5 shrink-0 text-indigo-500" />
                             <span className="line-clamp-3">{offerRanking.rationale.whyTop}</span>
                         </p>

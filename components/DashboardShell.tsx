@@ -16,7 +16,7 @@ import {
     MenuIcon,
     PlusIcon,
     SearchIcon,
-    HelpIcon,
+    ShieldIcon,
     BrainIcon,
 } from "./ui/icons";
 
@@ -116,12 +116,12 @@ function SidebarBody({ onNavigate }: { onNavigate?: () => void }) {
             <NavList onNavigate={onNavigate} />
             <div className="mt-auto space-y-3 border-t border-[var(--border)] px-1 pt-4">
                 <Link
-                    href="/dashboard/settings"
+                    href="/privacy"
                     onClick={onNavigate}
                     className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-2)] hover:text-[var(--text)]"
                 >
-                    <HelpIcon size={18} />
-                    Help &amp; support
+                    <ShieldIcon size={18} />
+                    Privacy &amp; data
                 </Link>
                 <div className="px-3">
                     <PlanBadge />
@@ -158,7 +158,13 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     const [mobileOpen, setMobileOpen] = useState(false);
 
     return (
-        <div className="flex min-h-screen">
+        <div className="flex min-h-dvh">
+            <a
+                href="#main"
+                className="sr-only rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white focus:not-sr-only focus:fixed focus:left-4 focus:top-3 focus:z-50"
+            >
+                Skip to content
+            </a>
             {/* Desktop sidebar (>= 1024px) */}
             <aside className="glass-panel fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-[var(--border)] p-4 lg:flex">
                 <SidebarBody />
@@ -178,7 +184,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
             </Drawer>
 
             {/* Main column */}
-            <div className="flex min-h-screen flex-1 flex-col lg:pl-64">
+            <div className="flex min-h-dvh flex-1 flex-col lg:pl-64">
                 <header className="glass-panel sticky top-0 z-20 flex h-16 items-center justify-between gap-3 border-b border-[var(--border)] px-4 sm:px-6">
                     <div className="flex items-center gap-3">
                         {/* Drawer-trigger: keyboard + pointer operable, hidden on lg+ */}
@@ -208,7 +214,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
                         <UserButton afterSignOutUrl="/" />
                     </div>
                 </header>
-                <main className="flex-1">{children}</main>
+                <main id="main" className="flex-1">{children}</main>
             </div>
         </div>
     );

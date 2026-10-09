@@ -47,7 +47,7 @@ export default function StatCard({
                     )}
                 </div>
             </div>
-            <div className="font-display mt-4 text-3xl font-semibold tracking-tight text-[var(--text)]">
+            <div className="font-display tabular mt-4 text-3xl font-semibold tracking-tight text-[var(--text)]">
                 {value}
             </div>
             {hint && <div className="mt-1 text-xs text-[var(--text-muted)]">{hint}</div>}

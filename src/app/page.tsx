@@ -38,17 +38,17 @@ import { revealPreset, staggerItemPreset } from "../../components/motion";
 
 const steps = [
     {
-        icon: <PlusIcon />,
+        icon: <PlusIcon size={18} />,
         title: "Add your applications",
         body: "Log roles in seconds with company, stage, salary, and links — no spreadsheet wrangling.",
     },
     {
-        icon: <SearchIcon />,
+        icon: <SearchIcon size={18} />,
         title: "Track and take notes",
         body: "Move applications through stages and keep private interview notes attached to each one.",
     },
     {
-        icon: <TrophyIcon />,
+        icon: <TrophyIcon size={18} />,
         title: "Compare and decide",
         body: "Weigh offers across salary, equity, growth, and brand to see your clear best fit.",
     },
@@ -144,31 +144,48 @@ export default function Home() {
 
             {/* ------------------------------ Hero ------------------------------ */}
             <section className="hero-gradient relative overflow-hidden">
+                <div aria-hidden className="dot-grid pointer-events-none absolute inset-0" />
                 <div
                     aria-hidden
-                    className="accent-orb pointer-events-none absolute left-1/2 top-[-10%] h-[440px] w-[760px] -translate-x-1/2"
+                    className="accent-orb pointer-events-none absolute right-[-10%] top-[-20%] h-[520px] w-[720px]"
                 />
-                <div className="relative mx-auto max-w-6xl px-6 pb-24 pt-20 text-center sm:pt-24">
+                <div className="relative mx-auto grid max-w-7xl items-center gap-14 px-6 pb-24 pt-16 sm:pt-20 lg:grid-cols-12 lg:gap-10 lg:px-8 lg:pb-32 lg:pt-24">
                     <motion.div
+                        className="lg:col-span-5"
                         initial={hero.initial}
                         animate={hero.animate}
                         transition={hero.transition}
                     >
-                        <span className="font-mono-label inline-flex items-center gap-2 rounded-full border border-indigo-500/30 bg-indigo-500/5 px-4 py-1.5 text-xs uppercase text-indigo-500 dark:text-indigo-300">
-                            <SparklesIcon size={14} /> The intelligent job tracker
-                        </span>
-                        <h1 className="font-display mx-auto mt-6 max-w-4xl text-4xl font-bold tracking-tight text-[var(--text)] sm:text-6xl">
+                        <Link
+                            href="/demo"
+                            className="group inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)]/70 py-1 pl-1 pr-3 text-xs text-[var(--text-muted)] transition-colors duration-200 hover:border-indigo-500/40 hover:text-[var(--text)]"
+                        >
+                            <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 font-semibold text-emerald-700 dark:text-emerald-300">
+                                Live
+                            </span>
+                            Every score explains itself
+                            <ArrowRightIcon size={13} className="transition-transform duration-200 group-hover:translate-x-0.5" />
+                        </Link>
+                        <h1 className="font-display mt-6 text-[2.6rem] font-bold leading-[1.02] tracking-[-0.035em] text-[var(--text)] sm:text-6xl lg:text-[4.1rem]">
                             The command center for your{" "}
-                            <span className="bg-gradient-to-r from-indigo-500 to-violet-500 bg-clip-text text-transparent">
+                            <span className="relative whitespace-nowrap text-indigo-600 dark:text-indigo-300">
                                 job search
+                                <svg
+                                    aria-hidden
+                                    viewBox="0 0 300 12"
+                                    preserveAspectRatio="none"
+                                    className="absolute -bottom-1.5 left-0 h-2.5 w-full text-indigo-500/40"
+                                >
+                                    <path d="M2 9 C 80 2, 220 2, 298 7" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+                                </svg>
                             </span>
                         </h1>
-                        <p className="mx-auto mt-6 max-w-2xl text-lg text-[var(--text-muted)]">
+                        <p className="mt-6 max-w-[34rem] text-lg leading-relaxed text-[var(--text-muted)]">
                             Track applications, keep private interview notes, and compare offers
                             with a weighted decision engine. Stop juggling spreadsheets and make
                             better career decisions.
                         </p>
-                        <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
+                        <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
                             <Button
                                 size="md"
                                 className="px-6 py-3 text-base"
@@ -185,18 +202,20 @@ export default function Home() {
                                 See pricing
                             </Button>
                         </div>
-                        <div className="mt-5 flex justify-center">
-                            <Link
-                                href="/demo"
-                                className="inline-flex items-center gap-1.5 text-sm font-semibold text-indigo-600 transition-colors duration-200 hover:text-indigo-500 dark:text-indigo-300"
-                            >
-                                Explore the demo <ArrowRightIcon size={16} />
-                            </Link>
-                        </div>
+                        <Link
+                            href="/demo"
+                            className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-indigo-600 transition-colors duration-200 hover:text-indigo-500 dark:text-indigo-300"
+                        >
+                            Explore the demo <ArrowRightIcon size={16} />
+                        </Link>
+                        <p className="mt-8 flex items-center gap-2 text-xs text-[var(--text-muted)]">
+                            <CheckIcon size={14} className="text-emerald-500" />
+                            Free for up to {FREE_JOB_LIMIT} applications. No card required.
+                        </p>
                     </motion.div>
 
                     <motion.div
-                        className="relative mx-auto mt-16 max-w-5xl"
+                        className="relative lg:col-span-7 lg:-mr-10 xl:-mr-20"
                         initial={revealPreset(reduced, 0.1).initial}
                         animate={revealPreset(reduced, 0.1).animate}
                         transition={revealPreset(reduced, 0.1).transition}
@@ -220,7 +239,7 @@ export default function Home() {
                                 </span>
                                 <dt className="sr-only">{p.label}</dt>
                                 <dd className="mt-3">
-                                    <span className="font-display block text-2xl font-bold tracking-tight text-[var(--text)]">
+                                    <span className="font-display tabular block text-2xl font-bold tracking-tight text-[var(--text)]">
                                         {p.value}
                                     </span>
                                     <span className="mt-1 block text-sm text-[var(--text-muted)]">
@@ -234,8 +253,8 @@ export default function Home() {
             </section>
 
             {/* --------------------------- Feature grid -------------------------- */}
-            <section id="features" className="mx-auto max-w-6xl px-6 py-24">
-                <div className="mx-auto max-w-2xl text-center">
+            <section id="features" className="mx-auto max-w-6xl scroll-mt-20 px-6 py-24">
+                <div className="max-w-2xl">
                     <h2 className="font-display text-3xl font-bold tracking-tight text-[var(--text)] sm:text-4xl">
                         Everything your search needs
                     </h2>
@@ -363,7 +382,7 @@ export default function Home() {
                 <div className="mt-20">
                     <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
                         <div>
-                            <span className="font-mono-label inline-flex items-center gap-2 text-xs uppercase text-indigo-500 dark:text-indigo-300">
+                            <span className="inline-flex items-center gap-2 text-sm font-semibold text-indigo-600 dark:text-indigo-300">
                                 <SparklesIcon size={14} /> Career intelligence
                             </span>
                             <h3 className="font-display mt-2 text-2xl font-bold tracking-tight text-[var(--text)] sm:text-3xl">
@@ -409,44 +428,44 @@ export default function Home() {
             {/* --------------------------- How it works -------------------------- */}
             <section
                 id="how-it-works"
-                className="border-y border-[var(--border)] bg-[var(--surface-2)]/40"
+                className="scroll-mt-20 border-y border-[var(--border)] bg-[var(--surface-2)]/40"
             >
-                <div className="mx-auto max-w-6xl px-6 py-24">
-                    <div className="mx-auto max-w-2xl text-center">
-                        <h2 className="font-display text-3xl font-bold tracking-tight text-[var(--text)] sm:text-4xl">
-                            How it works
-                        </h2>
-                        <p className="mt-3 text-[var(--text-muted)]">
-                            From scattered applications to a confident decision in three steps.
-                        </p>
+                <div className="mx-auto grid max-w-6xl gap-12 px-6 py-24 lg:grid-cols-12 lg:gap-16">
+                    <div className="lg:col-span-5">
+                        <div className="lg:sticky lg:top-28">
+                            <h2 className="font-display text-3xl font-bold tracking-tight text-[var(--text)] sm:text-4xl">
+                                How it works
+                            </h2>
+                            <p className="mt-3 max-w-sm text-[var(--text-muted)]">
+                                From scattered applications to a confident decision in three steps.
+                            </p>
+                        </div>
                     </div>
-                    <ol className="relative mt-16 grid gap-12 md:grid-cols-3">
-                        {/* Connecting line */}
-                        <div
-                            aria-hidden
-                            className="absolute left-0 top-7 hidden h-px w-full bg-gradient-to-r from-transparent via-indigo-500/40 to-transparent md:block"
-                        />
+                    <ol className="relative space-y-4 lg:col-span-7">
                         {steps.map((s, i) => (
                             <motion.li
                                 key={s.title}
-                                className="relative z-10 text-center"
+                                className="group relative flex gap-5 rounded-2xl border border-transparent p-5 transition-colors duration-200 hover:border-[var(--border)] hover:bg-[var(--surface)]"
                                 initial={staggerItemPreset(reduced, i).initial}
                                 whileInView={staggerItemPreset(reduced, i).animate}
                                 viewport={{ once: true }}
                                 transition={staggerItemPreset(reduced, i).transition}
                             >
-                                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface)] text-indigo-500 shadow-sm">
-                                    {s.icon}
+                                <span className="font-display tabular text-5xl font-bold leading-none tracking-tighter text-[var(--border)] transition-colors duration-200 group-hover:text-indigo-500/60">
+                                    {String(i + 1).padStart(2, "0")}
+                                </span>
+                                <div className="pt-1">
+                                    <div className="flex items-center gap-2 text-indigo-500 dark:text-indigo-300">
+                                        {s.icon}
+                                        <span className="sr-only">Step {i + 1}</span>
+                                    </div>
+                                    <h3 className="font-display mt-2 text-xl font-semibold text-[var(--text)]">
+                                        {s.title}
+                                    </h3>
+                                    <p className="mt-1.5 max-w-md text-sm leading-relaxed text-[var(--text-muted)]">
+                                        {s.body}
+                                    </p>
                                 </div>
-                                <div className="font-mono-label mt-4 text-xs uppercase text-indigo-500">
-                                    Step {String(i + 1).padStart(2, "0")}
-                                </div>
-                                <h3 className="font-display mt-2 text-xl font-semibold text-[var(--text)]">
-                                    {s.title}
-                                </h3>
-                                <p className="mx-auto mt-2 max-w-xs text-sm text-[var(--text-muted)]">
-                                    {s.body}
-                                </p>
                             </motion.li>
                         ))}
                     </ol>
@@ -511,7 +530,7 @@ export default function Home() {
             <section className="border-y border-[var(--border)] bg-[var(--surface-2)]/40">
                 <div className="mx-auto grid max-w-6xl items-center gap-12 px-6 py-24 lg:grid-cols-2">
                     <div>
-                        <span className="font-mono-label text-xs uppercase text-indigo-500 dark:text-indigo-300">
+                        <span className="text-sm font-semibold text-indigo-600 dark:text-indigo-300">
                             Transparent by design
                         </span>
                         <h2 className="font-display mt-3 text-3xl font-bold tracking-tight text-[var(--text)] sm:text-4xl">
@@ -545,7 +564,7 @@ export default function Home() {
                             <span>Sample data</span>
                         </figcaption>
                         <div className="mt-4 flex items-baseline gap-3">
-                            <span className="font-display text-5xl font-bold tracking-tight text-[var(--text)]">
+                            <span className="font-display tabular text-5xl font-bold tracking-tight text-[var(--text)]">
                                 {heroJobFit.score}
                             </span>
                             <span className="text-sm text-[var(--text-muted)]">/ 100 · {heroTopJob.title}</span>

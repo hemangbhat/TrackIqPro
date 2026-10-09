@@ -23,7 +23,7 @@ export function Button({
 }: ButtonProps) {
     const variants: Record<string, string> = {
         primary:
-            "bg-indigo-600 text-white hover:bg-indigo-500 focus-visible:ring-indigo-500 shadow-sm",
+            "bg-indigo-600 text-white hover:bg-indigo-500 focus-visible:ring-indigo-500 shadow-[0_8px_20px_-8px_rgba(79,70,229,0.6)] hover:shadow-[0_10px_24px_-8px_rgba(79,70,229,0.7)]",
         secondary:
             "bg-[var(--surface-2)] text-[var(--text)] border border-[var(--border)] hover:bg-[var(--border)]/40 focus-visible:ring-indigo-500",
         ghost:
@@ -44,7 +44,7 @@ export function Button({
         <button
             disabled={disabled || loading}
             className={cx(
-                "inline-flex items-center justify-center gap-2 rounded-lg font-semibold transition-colors duration-200 cursor-pointer",
+                "inline-flex items-center justify-center gap-2 rounded-lg font-semibold transition-[color,background-color,box-shadow,transform] duration-200 cursor-pointer active:translate-y-px active:scale-[0.98]",
                 "focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)]",
                 "disabled:opacity-50 disabled:cursor-not-allowed",
                 variants[variant],

@@ -20,7 +20,7 @@ const inter = Inter({
 
 const geist = Geist({
     subsets: ["latin"],
-    weight: ["500", "600", "700", "800"],
+    weight: ["400", "500", "600", "700", "800"],
     variable: "--font-geist",
     display: "swap",
 });
@@ -32,10 +32,20 @@ const jetbrainsMono = JetBrains_Mono({
     display: "swap",
 });
 
+const description =
+    "Track applications, keep private interview notes, and compare offers with explainable scoring engines. Every score shows its work.";
+
 export const metadata: Metadata = {
-    title: "TrackIQ — Job Search Command Center",
-    description:
-        "Track applications, organize interview notes, and compare offers with a weighted decision engine. The job-search workspace for serious candidates.",
+    title: { default: "TrackIQ — Job Search Command Center", template: "%s · TrackIQ" },
+    description,
+    applicationName: "TrackIQ",
+    openGraph: {
+        type: "website",
+        siteName: "TrackIQ",
+        title: "TrackIQ — Job Search Command Center",
+        description,
+    },
+    twitter: { card: "summary", title: "TrackIQ — Job Search Command Center", description },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -51,7 +61,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 suppressHydrationWarning
                 className={`${inter.variable} ${geist.variable} ${jetbrainsMono.variable}`}
             >
-                <body className="min-h-screen antialiased">
+                <body className="grain min-h-dvh antialiased">
                     <Providers>{children}</Providers>
                 </body>
             </html>
