@@ -6,7 +6,9 @@ Legend: ✅ done · � partial · ⬜ not started
 | Item | Status | Notes |
 |------|--------|-------|
 | `npm run build` passes | ✅ | Exit 0, no errors/warnings |
-| Automated tests | ✅ | 233 tests / 33 files passing (vitest + fast-check) |
+| Automated tests | ✅ | 260 tests / 36 files passing (vitest + fast-check + vitest-axe) |
+| `tsc --noEmit` clean (incl. tests) | ✅ | `npm run typecheck` |
+| CI pipeline | ✅ | GitHub Actions: lint, typecheck, test, build |
 | No dead files / empty stubs | ✅ | Removed ~15 stubs |
 | Typed code, no blocking `any` | ✅ | Remaining `any` are warnings |
 | No console spam | ✅ | DB logs trimmed |
@@ -35,6 +37,8 @@ Legend: ✅ done · � partial · ⬜ not started
 | All 8 surfaces redesigned | ✅ | Landing, Dashboard, Jobs, Job Details, Offers, Notes, Pricing, Settings |
 | Pricing FAQ accordion + footer nav (new) | ✅ | Working interactive features |
 | Stitch reference HTML cached | ✅ | `.stitch-ref/` |
+| Landing preview uses real engines | ✅ | `components/landing/HeroPreview.tsx` |
+| No invented social proof | ✅ | Replaced with verifiable facts + explainability section |
 
 ## Auth & Security
 | Item | Status | Notes |
@@ -115,7 +119,10 @@ Legend: ✅ done · � partial · ⬜ not started
 | Welcome email on registration | ✅ | Svix-verified Clerk webhook `/api/clerk/webhook` |
 | Scheduled follow-up reminder emails | ✅ | Daily Vercel cron `/api/cron/follow-up-reminders` (CRON_SECRET-secured, Upstash dedupe) |
 | Lint warnings cleared | ✅ | Unused imports/directives removed |
-| Next.js security patch | ✅ | Pinned 15.4.11 |
+| Next.js security patch | ✅ | Pinned 15.5.27; prod audit 0 critical |
+| Fail-closed Stripe status mapping | ✅ | `planFromSubscriptionStatus` — only active/trialing grant Pro |
+| ObjectId validation + update whitelist | ✅ | Malformed ids → 400; job updates limited to editable fields |
+| CSV export without `xlsx` | ✅ | `lib/csv.ts`, formula-injection safe; offers JS 275→188 kB |
 | Production setup guide | ✅ | `docs/PRODUCTION_SETUP.md` |
 
 ## Known Blockers / Follow-ups
@@ -126,3 +133,6 @@ Legend: ✅ done · � partial · ⬜ not started
 | Resend domain verified + keys in Vercel | 🟡 | User (optional; enables email) |
 | Upstash Redis keys in Vercel | 🟡 | User (optional; enables rate limiting) |
 | Email follow-up reminders (scheduled) | ✅ | Daily Vercel cron + digest email |
+| Browser E2E (Playwright, seeded DB) | ⬜ | Next testing layer |
+| Webhook event ordering (ignore stale events) | ⬜ | Store last `event.created` per user |
+| Atomic free-tier limit (count-then-insert race) | ⬜ | Transaction or conditional counter |

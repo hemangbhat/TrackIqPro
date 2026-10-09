@@ -17,9 +17,15 @@ dark mode and Stripe-powered subscriptions.
 - **Polished UX** — light/dark mode, toasts, skeleton loaders, empty states,
   accessible forms, and an SVG icon system.
 
+## Quality
+
+- 260 tests (Vitest, Testing Library, fast-check property tests, vitest-axe).
+- GitHub Actions CI runs lint, typecheck, tests, and a production build.
+- Presenting this project? See [`docs/INTERVIEW_GUIDE.md`](docs/INTERVIEW_GUIDE.md).
+
 ## Tech stack
 
-- **Next.js 15** (App Router for UI, Pages Router for API routes)
+- **Next.js 15.5** (App Router for UI, Pages Router for API routes)
 - **TypeScript**, **Tailwind CSS v4**
 - **MongoDB** + **Mongoose**
 - **Clerk** for authentication
@@ -97,3 +103,5 @@ Use the printed signing secret as `STRIPE_WEBHOOK_SECRET`.
 | `npm run build` | Production build |
 | `npm run start` | Run the production build |
 | `npm run lint` | Lint the project |
+| `npm run typecheck` | Type-check the whole project, tests included |
+| `npm test` | Run the test suite |
