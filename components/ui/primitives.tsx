@@ -7,7 +7,7 @@ function cx(...classes: (string | false | null | undefined)[]) {
 
 /* ----------------------------- Button ----------------------------- */
 type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
-    variant?: "primary" | "secondary" | "ghost" | "danger";
+    variant?: "primary" | "secondary" | "ghost" | "danger" | "inverse";
     size?: "sm" | "md";
     loading?: boolean;
 };
@@ -30,6 +30,9 @@ export function Button({
             "text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)] focus-visible:ring-indigo-500",
         danger:
             "bg-rose-600 text-white hover:bg-rose-500 focus-visible:ring-rose-500 shadow-sm",
+        // For use on saturated brand backgrounds (e.g. the indigo CTA band).
+        inverse:
+            "bg-white text-indigo-700 hover:bg-indigo-50 focus-visible:ring-white shadow-sm",
     };
     // Touch targets are at least 44x44 CSS px (Requirement 15.9): every size
     // enforces min-h-11 (44px) so controls remain comfortably tappable.

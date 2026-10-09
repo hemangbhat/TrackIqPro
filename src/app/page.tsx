@@ -17,7 +17,19 @@ import {
     TrophyIcon,
     CheckIcon,
     XIcon,
+    TargetIcon,
+    ActivityIcon,
+    ClockIcon,
+    BrainIcon,
+    ShieldIcon,
+    SlidersIcon,
+    CreditCardIcon,
 } from "../../components/ui/icons";
+import HeroPreview, {
+    heroJobFit,
+    heroOfferRanking,
+    heroTopJob,
+} from "../../components/landing/HeroPreview";
 import { FREE_JOB_LIMIT } from "../../lib/plans";
 import { useReducedMotion } from "../../components/useReducedMotion";
 import { revealPreset, staggerItemPreset } from "../../components/motion";
@@ -42,7 +54,36 @@ const steps = [
     },
 ];
 
-const institutions = ["Stanford", "MIT", "Harvard", "UC Berkeley", "Georgia Tech"];
+// Honest, verifiable engineering facts — no invented logos or testimonials.
+const proofPoints = [
+    { icon: <BrainIcon size={18} />, value: "6", label: "explainable scoring engines" },
+    { icon: <ShieldIcon size={18} />, value: "100%", label: "server-derived, user-isolated data" },
+    { icon: <CheckIcon size={18} />, value: "250+", label: "automated + property-based tests" },
+    { icon: <CreditCardIcon size={18} />, value: "Webhook", label: "verified Stripe plan changes" },
+];
+
+const intelligence = [
+    {
+        icon: <TargetIcon size={20} />,
+        title: "Job Fit Score",
+        body: "Scores each role against your skills, target title, and seniority — with what helped and what hurt.",
+    },
+    {
+        icon: <SlidersIcon size={20} />,
+        title: "What-if simulator",
+        body: "Re-weight six offer dimensions and watch the ranking re-order live, with the reason for every move.",
+    },
+    {
+        icon: <ActivityIcon size={20} />,
+        title: "Career Health",
+        body: "One grade from five weighted pipeline metrics, plus the single next action that moves it most.",
+    },
+    {
+        icon: <ClockIcon size={20} />,
+        title: "Follow-up queue",
+        body: "Stale applications ranked by value, so the follow-ups most likely to pay off come first.",
+    },
+];
 
 const pricingPreview: { label: string; free: boolean | string; pro: boolean | string }[] = [
     { label: "Application tracking", free: `Up to ${FREE_JOB_LIMIT}`, pro: "Unlimited" },
@@ -60,102 +101,6 @@ function PreviewCell({ value }: { value: boolean | string }) {
         <CheckIcon size={18} className="text-emerald-500" aria-label="Included" />
     ) : (
         <XIcon size={18} className="text-[var(--text-muted)]/50" aria-label="Not included" />
-    );
-}
-
-/* Decorative SVG avatar for the testimonial (no emoji). */
-function AvatarMark() {
-    return (
-        <span
-            aria-hidden="true"
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-indigo-500/10 text-indigo-500"
-        >
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="8" r="4" />
-                <path d="M4 21a8 8 0 0 1 16 0" />
-            </svg>
-        </span>
-    );
-}
-
-/* Premium product-preview mockup (pure markup, no external image). */
-function ProductPreview() {
-    const bars = [40, 64, 52, 78, 60, 88, 72];
-    return (
-        <div className="glass-panel gradient-border overflow-hidden rounded-2xl p-3 shadow-2xl">
-            <div className="rounded-xl border border-[var(--border)] bg-[var(--bg)]/60">
-                {/* Window chrome */}
-                <div className="flex items-center gap-2 border-b border-[var(--border)] px-4 py-3">
-                    <span className="h-3 w-3 rounded-full bg-rose-400/70" />
-                    <span className="h-3 w-3 rounded-full bg-amber-400/70" />
-                    <span className="h-3 w-3 rounded-full bg-emerald-400/70" />
-                    <span className="ml-3 inline-flex items-center gap-2 rounded-md bg-[var(--surface-2)] px-2.5 py-1 text-xs text-[var(--text-muted)]">
-                        <TrendingUpIcon size={13} /> TrackIQ dashboard
-                    </span>
-                </div>
-
-                <div className="grid gap-4 p-4 sm:grid-cols-3">
-                    {/* Stat tiles */}
-                    {[
-                        { label: "Active", value: "24", tone: "text-indigo-500" },
-                        { label: "Interviews", value: "6", tone: "text-violet-500" },
-                        { label: "Offers", value: "3", tone: "text-emerald-500" },
-                    ].map((s) => (
-                        <div
-                            key={s.label}
-                            className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 text-left"
-                        >
-                            <div className="font-mono-label text-[10px] uppercase text-[var(--text-muted)]">
-                                {s.label}
-                            </div>
-                            <div className={`mt-1 text-2xl font-bold ${s.tone}`}>{s.value}</div>
-                        </div>
-                    ))}
-                </div>
-
-                <div className="grid gap-4 px-4 pb-5 sm:grid-cols-5">
-                    {/* Mini bar chart */}
-                    <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 sm:col-span-3">
-                        <div className="mb-3 flex items-center justify-between">
-                            <span className="text-sm font-semibold text-[var(--text)]">
-                                Applications
-                            </span>
-                            <span className="font-mono-label text-[10px] uppercase text-[var(--text-muted)]">
-                                Last 7 weeks
-                            </span>
-                        </div>
-                        <div className="flex h-28 items-end gap-2">
-                            {bars.map((h, i) => (
-                                <div
-                                    key={i}
-                                    className="flex-1 rounded-t-md bg-gradient-to-t from-indigo-500/40 to-indigo-500"
-                                    style={{ height: `${h}%` }}
-                                />
-                            ))}
-                        </div>
-                    </div>
-                    {/* Pipeline list */}
-                    <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 sm:col-span-2">
-                        <span className="text-sm font-semibold text-[var(--text)]">Pipeline</span>
-                        <ul className="mt-3 space-y-2.5">
-                            {[
-                                { c: "Vercel", s: "Interview", dot: "bg-violet-500" },
-                                { c: "Linear", s: "Offer", dot: "bg-emerald-500" },
-                                { c: "Stripe", s: "Applied", dot: "bg-blue-500" },
-                            ].map((row) => (
-                                <li key={row.c} className="flex items-center justify-between">
-                                    <span className="text-sm text-[var(--text)]">{row.c}</span>
-                                    <span className="inline-flex items-center gap-1.5 text-xs text-[var(--text-muted)]">
-                                        <span className={`h-2 w-2 rounded-full ${row.dot}`} />
-                                        {row.s}
-                                    </span>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
     );
 }
 
@@ -256,27 +201,35 @@ export default function Home() {
                         animate={revealPreset(reduced, 0.1).animate}
                         transition={revealPreset(reduced, 0.1).transition}
                     >
-                        <ProductPreview />
+                        <HeroPreview />
                     </motion.div>
                 </div>
             </section>
 
-            {/* --------------------------- Trust wall --------------------------- */}
-            <section className="border-y border-[var(--border)]">
-                <div className="mx-auto max-w-6xl px-6 py-12">
+            {/* --------------------------- Proof strip -------------------------- */}
+            <section className="border-y border-[var(--border)] bg-[var(--surface-2)]/30">
+                <div className="mx-auto max-w-6xl px-6 py-10">
                     <p className="font-mono-label text-center text-xs uppercase tracking-widest text-[var(--text-muted)]">
-                        Trusted by students at leading institutions
+                        Built like production software
                     </p>
-                    <div className="mt-8 flex flex-wrap items-center justify-center gap-x-12 gap-y-6">
-                        {institutions.map((name) => (
-                            <span
-                                key={name}
-                                className="font-display text-lg font-bold text-[var(--text-muted)]/70 transition-colors duration-300 hover:text-[var(--text)]"
-                            >
-                                {name}
-                            </span>
+                    <dl className="mt-7 grid grid-cols-2 gap-x-6 gap-y-8 md:grid-cols-4">
+                        {proofPoints.map((p) => (
+                            <div key={p.label} className="flex flex-col items-center text-center">
+                                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-500 dark:text-indigo-300">
+                                    {p.icon}
+                                </span>
+                                <dt className="sr-only">{p.label}</dt>
+                                <dd className="mt-3">
+                                    <span className="font-display block text-2xl font-bold tracking-tight text-[var(--text)]">
+                                        {p.value}
+                                    </span>
+                                    <span className="mt-1 block text-sm text-[var(--text-muted)]">
+                                        {p.label}
+                                    </span>
+                                </dd>
+                            </div>
                         ))}
-                    </div>
+                    </dl>
                 </div>
             </section>
 
@@ -405,6 +358,52 @@ export default function Home() {
                         </div>
                     </motion.div>
                 </div>
+
+                {/* Career Intelligence layer */}
+                <div className="mt-20">
+                    <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
+                        <div>
+                            <span className="font-mono-label inline-flex items-center gap-2 text-xs uppercase text-indigo-500 dark:text-indigo-300">
+                                <SparklesIcon size={14} /> Career intelligence
+                            </span>
+                            <h3 className="font-display mt-2 text-2xl font-bold tracking-tight text-[var(--text)] sm:text-3xl">
+                                Not just a tracker — a second opinion
+                            </h3>
+                            <p className="mt-2 max-w-xl text-[var(--text-muted)]">
+                                Deterministic, explainable engines turn your pipeline into
+                                decisions. No black box: every score ships its reasoning.
+                            </p>
+                        </div>
+                        <Link
+                            href="/demo"
+                            className="inline-flex shrink-0 items-center gap-1.5 text-sm font-semibold text-indigo-600 transition-colors duration-200 hover:text-indigo-500 dark:text-indigo-300"
+                        >
+                            See it on sample data <ArrowRightIcon size={16} />
+                        </Link>
+                    </div>
+                    <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                        {intelligence.map((f, i) => (
+                            <motion.div
+                                key={f.title}
+                                initial={staggerItemPreset(reduced, i).initial}
+                                whileInView={staggerItemPreset(reduced, i).animate}
+                                viewport={{ once: true }}
+                                transition={staggerItemPreset(reduced, i).transition}
+                                className="glass-panel gradient-border group rounded-2xl p-6 transition-colors duration-200 hover:border-indigo-500/40"
+                            >
+                                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500/15 to-violet-500/15 text-indigo-500 dark:text-indigo-300">
+                                    {f.icon}
+                                </span>
+                                <h4 className="font-display mt-5 text-lg font-semibold text-[var(--text)]">
+                                    {f.title}
+                                </h4>
+                                <p className="mt-2 text-sm leading-relaxed text-[var(--text-muted)]">
+                                    {f.body}
+                                </p>
+                            </motion.div>
+                        ))}
+                    </div>
+                </div>
             </section>
 
             {/* --------------------------- How it works -------------------------- */}
@@ -508,35 +507,90 @@ export default function Home() {
                 </div>
             </section>
 
-            {/* --------------------------- Social proof -------------------------- */}
+            {/* -------------------------- Explainability ------------------------- */}
             <section className="border-y border-[var(--border)] bg-[var(--surface-2)]/40">
-                <div className="mx-auto max-w-3xl px-6 py-24">
-                    <div className="mx-auto max-w-2xl text-center">
-                        <h2 className="font-display text-3xl font-bold tracking-tight text-[var(--text)] sm:text-4xl">
-                            Loved by focused job seekers
+                <div className="mx-auto grid max-w-6xl items-center gap-12 px-6 py-24 lg:grid-cols-2">
+                    <div>
+                        <span className="font-mono-label text-xs uppercase text-indigo-500 dark:text-indigo-300">
+                            Transparent by design
+                        </span>
+                        <h2 className="font-display mt-3 text-3xl font-bold tracking-tight text-[var(--text)] sm:text-4xl">
+                            Every score shows its work
                         </h2>
+                        <p className="mt-4 text-[var(--text-muted)]">
+                            A number you can&apos;t question is a number you can&apos;t trust. Each
+                            TrackIQ score breaks down into signed, point-by-point contributions —
+                            so you can see exactly why one role or offer ranks above another, and
+                            what would change it.
+                        </p>
+                        <ul className="mt-6 space-y-3 text-sm text-[var(--text)]">
+                            {[
+                                "Pure, unit-tested scoring functions — same input, same answer",
+                                "Weights you control, normalized across your real offers",
+                                "A concrete “path to #1” for every runner-up",
+                            ].map((t) => (
+                                <li key={t} className="flex items-start gap-3">
+                                    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-300">
+                                        <CheckIcon size={12} />
+                                    </span>
+                                    {t}
+                                </li>
+                            ))}
+                        </ul>
                     </div>
-                    <div className="glass-panel gradient-border mt-12 rounded-3xl p-8 sm:p-10">
-                        <figure>
-                            <SparklesIcon size={22} className="text-indigo-500" />
-                            <blockquote className="mt-4 text-xl leading-relaxed text-[var(--text)]">
-                                &ldquo;TrackIQ turned my chaotic spreadsheet into a calm command
-                                center. The offer comparison alone made my final decision
-                                obvious.&rdquo;
-                            </blockquote>
-                            <figcaption className="mt-6 flex items-center gap-3">
-                                <AvatarMark />
-                                <div>
-                                    <div className="text-sm font-semibold text-[var(--text)]">
-                                        Maya Chen
+
+                    <figure className="glass-panel gradient-border rounded-3xl p-6 sm:p-8">
+                        <figcaption className="font-mono-label flex items-center justify-between text-[10px] uppercase text-[var(--text-muted)]">
+                            <span>Job fit · {heroTopJob.company}</span>
+                            <span>Sample data</span>
+                        </figcaption>
+                        <div className="mt-4 flex items-baseline gap-3">
+                            <span className="font-display text-5xl font-bold tracking-tight text-[var(--text)]">
+                                {heroJobFit.score}
+                            </span>
+                            <span className="text-sm text-[var(--text-muted)]">/ 100 · {heroTopJob.title}</span>
+                        </div>
+                        {[
+                            { title: "What helped", items: heroJobFit.whatHelped },
+                            { title: "What held it back", items: heroJobFit.whatReduced },
+                        ]
+                            .filter((g) => g.items.length > 0)
+                            .map((g) => (
+                                <div key={g.title} className="mt-5">
+                                    <div className="font-mono-label mb-2 text-[10px] uppercase text-[var(--text-muted)]">
+                                        {g.title}
                                     </div>
-                                    <div className="text-sm text-[var(--text-muted)]">
-                                        Software Engineer
-                                    </div>
+                                    <ul className="space-y-2">
+                                        {g.items.map((r) => (
+                                            <li
+                                                key={r.label}
+                                                className="flex items-start justify-between gap-4 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3.5 py-2.5"
+                                            >
+                                                <span className="text-sm text-[var(--text-muted)]">{r.label}</span>
+                                                <span
+                                                    className={`font-mono-label shrink-0 text-sm font-semibold ${
+                                                        r.impact >= 0
+                                                            ? "text-emerald-600 dark:text-emerald-300"
+                                                            : "text-rose-600 dark:text-rose-300"
+                                                    }`}
+                                                >
+                                                    {r.impact >= 0 ? "+" : "−"}
+                                                    {Math.abs(r.impact)}
+                                                </span>
+                                            </li>
+                                        ))}
+                                    </ul>
                                 </div>
-                            </figcaption>
-                        </figure>
-                    </div>
+                            ))}
+                        <div className="mt-6 rounded-xl border border-indigo-500/25 bg-indigo-500/5 p-4">
+                            <div className="font-mono-label text-[10px] uppercase text-indigo-600 dark:text-indigo-300">
+                                Offer engine · why #1
+                            </div>
+                            <p className="mt-1.5 text-sm text-[var(--text)]">
+                                {heroOfferRanking.rationale.whyTop}
+                            </p>
+                        </div>
+                    </figure>
                 </div>
             </section>
 
@@ -552,13 +606,14 @@ export default function Home() {
                             Make your next career move with confidence
                         </h2>
                         <p className="mx-auto mt-4 max-w-xl text-indigo-100">
-                            Join candidates who track, compare, and decide with clarity. It is free
-                            to get started.
+                            Track every application, see why each role and offer scores the way
+                            it does, and decide with evidence. Free to start.
                         </p>
                         <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
                             <Button
+                                variant="inverse"
                                 size="md"
-                                className="bg-white px-6 py-3 text-base text-indigo-700 hover:bg-indigo-50"
+                                className="px-6 py-3 text-base"
                                 onClick={() => navigate("/sign-up")}
                             >
                                 Get started <ArrowRightIcon size={18} />
@@ -567,9 +622,9 @@ export default function Home() {
                                 variant="ghost"
                                 size="md"
                                 className="px-6 py-3 text-base text-white hover:bg-white/10 hover:text-white"
-                                onClick={() => navigate("/pricing")}
+                                onClick={() => navigate("/demo")}
                             >
-                                See pricing
+                                Try the live demo
                             </Button>
                         </div>
                         <p className="mt-6 text-sm text-indigo-200/80">

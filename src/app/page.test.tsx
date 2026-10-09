@@ -91,19 +91,26 @@ describe("Landing page structure (Req 5.1, 5.2)", () => {
     expect(featureTitles.length).toBeGreaterThanOrEqual(3);
   });
 
-  it("renders the social proof section with at least one testimonial", () => {
+  it("renders the explainability section with a real engine breakdown", () => {
     const { container } = renderWithTheme(<Home />);
 
     expect(
-      screen.getByRole("heading", { name: /loved by focused job seekers/i })
+      screen.getByRole("heading", { name: /every score shows its work/i })
     ).toBeInTheDocument();
 
-    // A testimonial is a <blockquote>; require at least one.
-    const quotes = container.querySelectorAll("blockquote");
-    expect(quotes.length).toBeGreaterThanOrEqual(1);
+    // The breakdown is a <figure> of signed contributions from the real engine.
+    const figure = container.querySelector("figure");
+    expect(figure).not.toBeNull();
+    expect(figure!.textContent).toMatch(/[+−]\d+/);
   });
 
-  it("renders sections in top-to-bottom order: hero, features, how-it-works, pricing preview, social proof, closing CTA, footer", () => {
+  it("does not show invented social proof", () => {
+    renderWithTheme(<Home />);
+    expect(screen.queryByText(/trusted by students/i)).toBeNull();
+    expect(screen.queryByText(/maya chen/i)).toBeNull();
+  });
+
+  it("renders sections in top-to-bottom order: hero, features, how-it-works, pricing preview, explainability, closing CTA, footer", () => {
     const { container } = renderWithTheme(<Home />);
 
     const hero = screen.getByRole("heading", { level: 1 });
@@ -114,8 +121,8 @@ describe("Landing page structure (Req 5.1, 5.2)", () => {
     const pricingPreview = screen.getByRole("heading", {
       name: /start free, upgrade when it counts/i,
     });
-    const socialProof = screen.getByRole("heading", {
-      name: /loved by focused job seekers/i,
+    const explainability = screen.getByRole("heading", {
+      name: /every score shows its work/i,
     });
     const closingCta = screen.getByRole("heading", {
       name: /make your next career move with confidence/i,
@@ -127,7 +134,7 @@ describe("Landing page structure (Req 5.1, 5.2)", () => {
       features,
       howItWorks,
       pricingPreview,
-      socialProof,
+      explainability,
       closingCta,
       footer as HTMLElement,
     ]);
