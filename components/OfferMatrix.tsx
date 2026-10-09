@@ -1,10 +1,10 @@
 "use client";
 import React, { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { utils, writeFile } from "xlsx";
 import { useOffers, OfferInput } from "../hooks/useOffers";
 import { useToast } from "./ui/Toast";
 import { usePlanGate } from "./usePlanGate";
+import { downloadCSV } from "../lib/csv";
 import UpgradePrompt from "./UpgradePrompt";
 import {
     Button,
@@ -182,10 +182,7 @@ export default function OfferMatrix() {
             Brand: o.brandScore ?? 0,
             Score: o.score ?? "",
         }));
-        const ws = utils.json_to_sheet(exportRows);
-        const wb = utils.book_new();
-        utils.book_append_sheet(wb, ws, "Offers");
-        writeFile(wb, "trackiq-offers.csv");
+        downloadCSV("trackiq-offers.csv", exportRows);
         toast.success("Exported offers.csv");
     }
 

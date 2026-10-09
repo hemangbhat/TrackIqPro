@@ -7,6 +7,7 @@ import {
     errorResponse,
     successResponse,
     AuthenticatedRequest,
+    isObjectId,
 } from "../../../lib/api-helpers";
 import { enforceRateLimit } from "../../../lib/rate-limit";
 
@@ -14,7 +15,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     const { userId } = req;
     const { id } = req.query;
 
-    if (!id || typeof id !== "string") {
+    if (!isObjectId(id)) {
         return errorResponse(res, 400, "Invalid note ID");
     }
 

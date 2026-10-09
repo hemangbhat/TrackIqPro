@@ -1,14 +1,27 @@
 import { connectDB } from "../../../lib/db";
 import Job from "../../../models/Job";
 import { NextApiResponse } from "next";
-import { withAuth, methodNotAllowed, errorResponse, successResponse, AuthenticatedRequest } from "../../../lib/api-helpers";
+import { withAuth, methodNotAllowed, errorResponse, successResponse, AuthenticatedRequest, isObjectId } from "../../../lib/api-helpers";
 import { enforceRateLimit } from "../../../lib/rate-limit";
+
+const EDITABLE_FIELDS = new Set([
+    "title",
+    "company",
+    "location",
+    "stage",
+    "status",
+    "link",
+    "salary",
+    "dateApplied",
+    "jobDescription",
+    "notes",
+]);
 
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     const { userId } = req;
     const { id } = req.query;
 
-    if (!id || typeof id !== "string") {
+    if (!isObjectId(id)) {
         return errorResponse(res, 400, "Invalid job ID");
     }
 
@@ -36,9 +49,10 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     else if (req.method === "PUT" || req.method === "PATCH") {
         if (await enforceRateLimit(req, res, { tier: "mutation", userId })) return;
         try {
-            const update = req.body;
-            delete update._id;
-            delete update.userId;
+            // Only user-editable fields; ownership and ids can never be rewritten.
+            const update = Object.fromEntries(
+                Object.entries(req.body ?? {}).filter(([key]) => EDITABLE_FIELDS.has(key))
+            );
 
             const job = await Job.findOneAndUpdate(
                 { _id: id, userId },

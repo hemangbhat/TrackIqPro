@@ -41,8 +41,8 @@ vi.mock("next-themes", () => ({
 
 // useUserPlan
 const useUserPlanMock = vi.fn(() => ({
-    plan: "pro" as const,
-    customerId: "cus_123",
+    plan: "pro" as "free" | "pro",
+    customerId: "cus_123" as string | null,
     status: "active",
     trialEnd: null,
     isPro: true,

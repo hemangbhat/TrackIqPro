@@ -71,6 +71,14 @@ export function validateRequiredFields(
 }
 
 /**
+ * True when `id` is a 24-char hex MongoDB ObjectId. Checking up front turns a
+ * malformed id into a clean 400 instead of a Mongoose CastError (500).
+ */
+export function isObjectId(id: unknown): id is string {
+    return typeof id === "string" && /^[a-f\d]{24}$/i.test(id);
+}
+
+/**
  * Generate unique ID with prefix
  */
 export function generateId(prefix: string): string {

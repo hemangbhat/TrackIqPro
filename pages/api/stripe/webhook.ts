@@ -2,7 +2,8 @@
 import Stripe from "stripe";
 import { buffer } from "micro";
 import { NextApiRequest, NextApiResponse } from "next";
-import { updateUserPlanInDB, PlanStatus } from "../../../lib/stripe";
+import { updateUserPlanInDB } from "../../../lib/stripe";
+import { planFromSubscriptionStatus } from "../../../lib/plans";
 
 export const config = { api: { bodyParser: false } };
 
@@ -47,16 +48,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 const sub = event.data.object as Stripe.Subscription;
                 const userId = sub.metadata?.userId;
                 if (userId) {
-                    const statusMap: Record<string, PlanStatus> = {
-                        active: "active",
-                        trialing: "trialing",
-                        past_due: "past_due",
-                        canceled: "canceled",
-                        unpaid: "past_due",
-                    };
-                    const status = statusMap[sub.status] || "active";
-                    const plan =
-                        status === "canceled" || status === "past_due" ? "free" : "pro";
+                    const { plan, status } = planFromSubscriptionStatus(sub.status);
                     await updateUserPlanInDB(
                         userId,
                         plan,

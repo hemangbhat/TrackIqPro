@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const UserPlanSchema = new mongoose.Schema({
-    userId: String,
+    userId: { type: String, required: true, unique: true },
     plan: { type: String, default: "free" }, // "free", "pro", "trial", etc.
     customerId: String,
     status: { type: String, default: "active" }, // "active", "past_due", "canceled", etc.

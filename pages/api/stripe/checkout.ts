@@ -7,7 +7,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
     apiVersion: "2025-07-30.basil",
 });
 
-const PRICE_ID = process.env.STRIPE_PRICE_ID || "price_1RttX9H3uK8I1waI8QkddI8O";
+const PRICE_ID = process.env.STRIPE_PRICE_ID;
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (req.method !== "POST") {
@@ -22,6 +22,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (await enforceRateLimit(req, res, { tier: "billing", userId })) return;
+
+    if (!PRICE_ID) {
+        console.error("STRIPE_PRICE_ID is not configured");
+        return res.status(500).json({ error: "Billing is not configured" });
+    }
 
     try {
         let email: string | undefined;

@@ -26,7 +26,7 @@ import type { GateDecision } from "../lib/plan-gate";
  * The Data_Hook (useOffers) and the Plan_Gate hook (usePlanGate) are mocked so
  * each View_State can be driven deterministically. lib/scoring keeps its real
  * implementation except scoreOffers, which can be made to throw to exercise the
- * scoring-error branch. xlsx.writeFile is stubbed so we can assert whether the
+ * scoring-error branch. lib/csv downloadCSV is stubbed so we can assert whether the
  * CSV export actually runs. UpgradePrompt reads next/navigation's useRouter,
  * which is mocked below.
  */
@@ -37,15 +37,10 @@ vi.mock("next/navigation", () => ({
     useRouter: () => ({ push: pushMock }),
 }));
 
-// --- xlsx (export side-effect) -------------------------------------------
+// --- CSV download (export side-effect) -----------------------------------
 const writeFileMock = vi.fn();
-vi.mock("xlsx", () => ({
-    utils: {
-        json_to_sheet: vi.fn(() => ({})),
-        book_new: vi.fn(() => ({})),
-        book_append_sheet: vi.fn(),
-    },
-    writeFile: (...args: unknown[]) => writeFileMock(...args),
+vi.mock("../lib/csv", () => ({
+    downloadCSV: (...args: unknown[]) => writeFileMock(...args),
 }));
 
 // --- useOffers (Data_Hook) -----------------------------------------------

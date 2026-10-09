@@ -18,3 +18,28 @@ export interface UserPlanData {
 export function isPro(plan?: string | null): boolean {
     return plan === "pro";
 }
+
+/**
+ * Map a Stripe subscription status to the plan/status we persist.
+ *
+ * Only `active` and `trialing` subscriptions grant Pro. Every other status —
+ * including ones Stripe may add later (`incomplete`, `incomplete_expired`,
+ * `paused`, …) — fails closed to Free, so an unexpected status can never
+ * unlock paid features.
+ */
+export function planFromSubscriptionStatus(stripeStatus: string): {
+    plan: Plan;
+    status: PlanStatus;
+} {
+    switch (stripeStatus) {
+        case "active":
+            return { plan: "pro", status: "active" };
+        case "trialing":
+            return { plan: "pro", status: "trialing" };
+        case "past_due":
+        case "unpaid":
+            return { plan: "free", status: "past_due" };
+        default:
+            return { plan: "free", status: "canceled" };
+    }
+}
