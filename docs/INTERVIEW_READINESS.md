@@ -58,13 +58,13 @@ repo. Do them at least a day before.
 ## 3. Rehearsal checklist
 
 - [ ] Say the 30-second pitch (guide §1) out loud without notes, three times.
-- [ ] Run the 5-minute demo script (guide §3) end to end against the live site.
+- [ ] Run the 5-minute demo script (guide §4) end to end against the live site.
 - [ ] Explain on a whiteboard: request → middleware → `withAuth` → scoped query.
 - [ ] Walk through `pages/api/stripe/webhook.ts` and `lib/plans.ts` line by line.
 - [ ] Explain min-max normalization in `lib/offer-intelligence.ts`, including the
       `max === min` edge case and why scores are relative.
-- [ ] Answer each question in guide §6 in under 60 seconds.
-- [ ] Name the three known gaps (E2E, free-tier race, webhook ordering) and the
+- [ ] Answer each question in the guide's question bank (§15) in under 60 seconds, and tell two STAR stories from §12.
+- [ ] Name the known gaps (guide §13: E2E, free-tier race, webhook ordering, pagination) and the
       fix for each — before the interviewer finds them.
 - [ ] Open any file the interviewer points at and explain it. If there's a
       file you can't explain yet, read it until you can.
