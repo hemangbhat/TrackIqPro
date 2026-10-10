@@ -21,7 +21,7 @@ dark mode and Stripe-powered subscriptions.
 
 - 260 tests (Vitest, Testing Library, fast-check property tests, vitest-axe).
 - GitHub Actions CI runs lint, typecheck, tests, and a production build.
-- Presenting this project? See [`docs/INTERVIEW_GUIDE.md`](docs/INTERVIEW_GUIDE.md).
+- Presenting this project? See [`docs/INTERVIEW_GUIDE.md`](docs/INTERVIEW_GUIDE.md) and the readiness checklist in [`docs/INTERVIEW_READINESS.md`](docs/INTERVIEW_READINESS.md).
 
 ## Tech stack
 

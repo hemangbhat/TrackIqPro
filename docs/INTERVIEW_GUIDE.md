@@ -44,8 +44,10 @@ Use **Problem → Solution → Architecture → Hardest part → Result**.
 4. **Hardest part (40s).** Pick one: billing correctness (§5.2) or
    explainable normalized scoring (§5.4). Tell it as a story with a decision
    and a trade-off.
-5. **Result (15s).** Deployed on Vercel; 260 tests; CI green; production
-   hardening (rate limiting, signed webhooks, cron with dedupe).
+5. **Result (15s).** Built to deploy on Vercel (cron in `vercel.json`); 260
+   tests; CI green on `main`; production hardening (rate limiting, signed
+   webhooks, cron with dedupe). Only say "it's live" once your deployment
+   actually is — see `docs/INTERVIEW_READINESS.md`.
 
 ---
 
@@ -183,7 +185,20 @@ Each one: **what → why → trade-off**. Interviewers reward the trade-off.
 - **Gap to admit:** no browser E2E (Playwright) against a seeded DB yet —
   that's the next layer.
 
-### 5.7 Small things that show seniority
+### 5.7 UI decisions you can defend
+- The landing preview imports the real engines (`components/landing/HeroPreview.tsx`)
+  instead of showing mock numbers — the marketing page is itself a demo.
+- Removed invented social proof (fake university logos, a made-up testimonial)
+  and placeholder footer links; replaced them with verifiable facts and a
+  factual `/privacy` page. Honesty is a design decision.
+- Accessibility: skip-to-content links, focus traps in drawers, labeled
+  forms, reduced-motion support, 44px touch targets, axe checks in tests.
+- A real UI bug story: the CTA's "Get started" was invisible because the
+  primary variant's `text-white` beat an override's `text-indigo-700` in
+  Tailwind's generated CSS order. Fixed with a dedicated `inverse` variant
+  rather than `!important`.
+
+### 5.8 Small things that show seniority
 - **CSV injection:** export prefixes cells starting with `= + - @` so a company
   named `=HYPERLINK(...)` can't execute in Excel (`lib/csv.ts`). Also removed
   the `xlsx` dependency (unpatched advisories) — offers page JS dropped
