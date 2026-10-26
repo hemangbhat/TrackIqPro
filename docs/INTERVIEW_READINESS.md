@@ -7,7 +7,7 @@ How to present the project is in [`INTERVIEW_GUIDE.md`](INTERVIEW_GUIDE.md).
 This document answers a narrower question: *if an interviewer opens the repo
 or asks for a live demo today, what holds up and what doesn't?*
 
-Last verified: 2026-10-10, on `main`.
+Last verified: 2026-10-26, on `main`.
 
 ---
 
@@ -35,6 +35,13 @@ Last verified: 2026-10-10, on `main`.
 These need your accounts and credentials, so they couldn't be done from the
 repo. Do them at least a day before.
 
+0. **Rotate the MongoDB Atlas password (urgent).** A real connection string
+   was committed in `MONGODB_GUIDE.md` from 2026-06-18 until 2026-10-26 in
+   this public repo. It has been removed from the file, but it is still in git
+   history. In Atlas → Database Access, change that user's password (or delete
+   the user and create a new one), then update `MONGODB_URI` in `.env.local`
+   and Vercel. An interviewer — or a bot — scanning history would find the old
+   one.
 1. **Deploy and smoke-test.** Set every variable from `.env.example` in Vercel
    (`docs/PRODUCTION_SETUP.md` walks through it). `STRIPE_PRICE_ID` is now
    required — checkout returns "Billing is not configured" without it. Then

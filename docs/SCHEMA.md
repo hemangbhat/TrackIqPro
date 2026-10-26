@@ -80,11 +80,6 @@ Index: `{userId, createdAt}`.
 Contains no identity/entitlement data. Consumed by `lib/career-fit` for Job Fit
 scoring via the `/api/career-profile` route and `useCareerProfile` hook.
 
-## 6. Auxiliary (not in v1 UI flow)
-- **Company** (`models/Company.ts`): normalized company metadata.
-- **Application** (`models/Application.ts`): legacy application concept; superseded
-  by `Job` for v1. Retained for potential normalization; not wired to UI.
-
 ## 6. Relationships
 ```
 UserPlan (1) ─── (1) User[Clerk]

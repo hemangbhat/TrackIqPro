@@ -119,7 +119,7 @@ Legend: ✅ done · � partial · ⬜ not started
 | Welcome email on registration | ✅ | Svix-verified Clerk webhook `/api/clerk/webhook` |
 | Scheduled follow-up reminder emails | ✅ | Daily Vercel cron `/api/cron/follow-up-reminders` (CRON_SECRET-secured, Upstash dedupe) |
 | Lint warnings cleared | ✅ | Unused imports/directives removed |
-| Next.js security patch | ✅ | Pinned 15.5.27; prod audit 0 critical |
+| Next.js security patch | ✅ | Pinned 15.5.28; prod audit 0 critical |
 | Fail-closed Stripe status mapping | ✅ | `planFromSubscriptionStatus` — only active/trialing grant Pro |
 | ObjectId validation + update whitelist | ✅ | Malformed ids → 400; job updates limited to editable fields |
 | CSV export without `xlsx` | ✅ | `lib/csv.ts`, formula-injection safe; offers JS 275→188 kB |

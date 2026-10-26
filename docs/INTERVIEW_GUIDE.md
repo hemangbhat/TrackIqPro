@@ -375,7 +375,7 @@ changing callers.
 | Secret leakage | Client-safe `lib/plans.ts` split from server `lib/stripe.ts`; error details hidden in production | |
 | Unauthenticated cron | `CRON_SECRET` required; refuses to run if unset | cron route |
 | Billing portal hijack | Customer id read from DB, never the client | `stripe/portal.ts` |
-| Vulnerable dependencies | Next 15.5.27; 0 critical in prod audit; removed `xlsx` | `package.json` |
+| Vulnerable dependencies | Next 15.5.28; 0 critical in prod audit; removed `xlsx` | `package.json` |
 
 ---
 
@@ -538,10 +538,9 @@ Volunteer these before the interviewer finds them. Each has a fix ready.
 | 11 | Cron scans up to 20,000 active jobs in one run | Doesn't scale | Queue-based fan-out with a cursor |
 | 12 | Data isolation is in application code | One unscoped query = leak | Repository layer that requires `userId` |
 | 13 | Mixed App Router + Pages Router | Two mental models | Migrate API to Route Handlers |
-| 14 | Unused `Application` and `Company` models | Dead code | Delete them |
-| 15 | 4 transitive vulnerabilities in Next.js | 0 critical, but not zero | Next 16 upgrade |
-| 16 | No observability stack | Hard to debug production | Sentry + structured logs + webhook alerts |
-| 17 | No data import (CSV/LinkedIn) | Onboarding friction | CSV import with column mapping |
+| 14 | 4 transitive vulnerabilities in Next.js | 0 critical, but not zero | Next 16 upgrade |
+| 15 | No observability stack | Hard to debug production | Sentry + structured logs + webhook alerts |
+| 16 | No data import (CSV/LinkedIn) | Onboarding friction | CSV import with column mapping |
 
 ---
 
@@ -553,8 +552,8 @@ Volunteer these before the interviewer finds them. Each has a fix ready.
 - Build webhook event ordering and idempotency in from day one.
 - Put user scoping in a repository layer so an unscoped query can't be
   written.
-- Define the data model before the UI — the two unused models are leftovers
-  of changing direction.
+- Define the data model before the UI — I deleted two early models
+  (`Application`, `Company`) that were superseded by `Job` and never wired up.
 
 **Roadmap:** E2E suite → pagination and server search → CSV import →
 calendar/email integration for interview dates → optional LLM-assisted skill
