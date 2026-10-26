@@ -510,16 +510,16 @@ await Job.deleteMany({ status: "closed" });
 
 ---
 
-## 🔗 Your MongoDB Connection String
+## 🔗 MongoDB Connection String Format
 
 ```
-mongodb+srv://Hemang:blitzkrieg124@cluster1.jud7bgy.mongodb.net/trackiq?retryWrites=true&w=majority&appName=Cluster1
+mongodb+srv://<username>:<password>@<cluster>.mongodb.net/trackiq?retryWrites=true&w=majority&appName=Cluster1
 
 Components:
 - Protocol: mongodb+srv://
-- Username: Hemang
-- Password: blitzkrieg124
-- Host: cluster1.jud7bgy.mongodb.net
+- Username: <your Atlas database user>
+- Password: <stored only in .env.local / Vercel env vars — never commit it>
+- Host: <cluster>.mongodb.net
 - Database: trackiq  ← Your data stored here
 - Options: retryWrites=true&w=majority
 ```
