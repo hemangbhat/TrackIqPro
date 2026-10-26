@@ -33,7 +33,6 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
-    "@modelcontextprotocol/sdk": "^1.29.0",
     "@tailwindcss/postcss": "^4.1.11",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
@@ -51,5 +50,7 @@
     "typescript": "^5",
     "vitest": "^4.1.9",
     "vitest-axe": "^0.1.0"
-  }
+  },
+  "license": "MIT",
+  "description": "Job-search command center with explainable scoring engines \u2014 Next.js, TypeScript, MongoDB, Clerk, Stripe."
 }

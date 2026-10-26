@@ -36,7 +36,7 @@ Legend: ✅ done · � partial · ⬜ not started
 | Glass utilities (panel, gradient-border, cta) | ✅ | globals.css |
 | All 8 surfaces redesigned | ✅ | Landing, Dashboard, Jobs, Job Details, Offers, Notes, Pricing, Settings |
 | Pricing FAQ accordion + footer nav (new) | ✅ | Working interactive features |
-| Stitch reference HTML cached | ✅ | `.stitch-ref/` |
+| Repo cleanup (tool folders, course write-ups removed) | ✅ | `.kiro/`, `.stitch-ref/`, `.vscode/` gitignored; `mcp/` and root course write-ups deleted |
 | Landing preview uses real engines | ✅ | `components/landing/HeroPreview.tsx` |
 | No invented social proof | ✅ | Replaced with verifiable facts + explainability section |
 

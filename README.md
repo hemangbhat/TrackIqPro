@@ -1,21 +1,61 @@
 # TrackIQ
 
-A full-stack SaaS job-search command center. Track applications through every
-stage, keep private interview notes linked to each role, and compare offers with
-a weighted decision engine — wrapped in a polished, responsive dashboard with
-dark mode and Stripe-powered subscriptions.
+**A job-search command center with explainable scoring.** Track applications,
+keep private interview notes, and compare offers with six deterministic engines
+that show their work — every score breaks down into what helped and what held it
+back.
+
+[![CI](https://github.com/hemangbhat/TrackIqPro/actions/workflows/ci.yml/badge.svg)](https://github.com/hemangbhat/TrackIqPro/actions/workflows/ci.yml)
+![Next.js 15](https://img.shields.io/badge/Next.js-15-black)
+![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6)
+![Tests](https://img.shields.io/badge/tests-260%20passing-2ea44f)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+
+**[Live app](https://track-iq-pro.vercel.app)** · **[Demo with sample data — no sign-up](https://track-iq-pro.vercel.app/demo)** · **[Architecture & design notes](docs/README.md)**
+
+![TrackIQ landing page: the hero preview is computed by the real Job Fit and Offer engines](docs/screenshots/landing-dark.webp)
 
 ## Features
 
-- **Application tracker** — full CRUD with stage tracking, search, filter, and sort.
-- **Interview notes** — private, user-scoped notes linked to an application and round.
-- **Offer decision engine** — weighted, set-normalized scoring (0–100) across your
-  real offers with a best-fit recommendation and a transparent explanation.
-- **Analytics dashboard** — KPI cards, an applications timeline, and a stage breakdown.
-- **Billing** — Stripe Checkout + webhooks, server-enforced free/pro gating, and a
-  customer billing portal.
-- **Polished UX** — light/dark mode, toasts, skeleton loaders, empty states,
-  accessible forms, and an SVG icon system.
+**Track**
+- **Application tracker** — full CRUD across 7 stages, with search, filter, and sort.
+- **Interview notes** — private notes linked to an application and interview round.
+- **Analytics** — KPI cards, an applications timeline, and a stage breakdown.
+
+**Decide — six explainable engines** (pure TypeScript in `lib/`, unit- and property-tested)
+- **Offer Intelligence** — six dimensions, min-max normalized across your offers,
+  user-weighted, with a live **what-if simulator** and a "path to #1" for every runner-up.
+- **Job Fit** — scores each role against your skills, target title, and seniority.
+- **Career Health** — one grade from five weighted pipeline metrics, plus next actions.
+- **Follow-up Priority Queue** — stale applications ranked by stage value and urgency;
+  also sent as a daily email digest.
+- **Interview Reflection** — strengths, weak spots, and a confidence trend from your notes.
+
+**Run as a real SaaS**
+- **Billing** — Stripe Checkout; plans change *only* via signature-verified webhooks;
+  free/Pro gating enforced on the server; customer portal.
+- **Production hardening** — per-user rate limiting (Upstash), transactional email
+  (Resend), daily reminder cron (Vercel) with Redis de-duplication.
+- **Polished UX** — light/dark mode, responsive down to 375px, skeleton/empty/error
+  states, accessible dialogs, reduced-motion support.
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/offer-intelligence.webp" alt="Offer Intelligence: what-if weight sliders next to a live ranking with per-dimension scores and the reason for #1" /></td>
+    <td width="50%"><img src="docs/screenshots/career-intelligence.webp" alt="Career Health score with weighted metrics, next to a ranked follow-up priority queue" /></td>
+  </tr>
+  <tr>
+    <td><em>Offer Intelligence — re-weight dimensions and watch the ranking respond.</em></td>
+    <td><em>Career Health and the follow-up Priority Queue.</em></td>
+  </tr>
+</table>
+
+<details>
+<summary>Light mode and mobile</summary>
+
+<img src="docs/screenshots/landing-light.webp" alt="TrackIQ landing page in light mode" width="70%" />
+<img src="docs/screenshots/mobile.webp" alt="TrackIQ landing page on a phone" width="25%" />
+</details>
 
 ## Quality
 
@@ -31,6 +71,8 @@ dark mode and Stripe-powered subscriptions.
 - **Clerk** for authentication
 - **Stripe** for subscriptions
 - **Chart.js** for analytics
+- **Upstash Redis** (rate limiting), **Resend** (email), **Vercel Cron**
+- **Vitest**, **Testing Library**, **fast-check**, **vitest-axe**
 
 ## Architecture
 
@@ -38,8 +80,8 @@ dark mode and Stripe-powered subscriptions.
 - `pages/api/**` — REST API routes. Every data route is authenticated with Clerk
   via `withAuth` and scoped to the signed-in user.
 - `models/**` — Mongoose schemas (`Job`, `Offer`, `Note`, `UserPlan`, …).
-- `lib/**` — DB connection, auth helpers, the scoring engine, and plan utilities.
-- `hooks/**` — reusable data hooks (`useJobs`, `useOffers`).
+- `lib/**` — the six scoring engines, plan gating, rate limiting, email, DB connection.
+- `hooks/**` — data hooks (`useJobs`, `useNotes`, `useOffers`, `useCareerProfile`).
 - `components/ui/**` — design-system primitives (Button, Card, Modal, Toast, …).
 
 Security highlights: all reads/writes are user-isolated, Stripe webhooks are
@@ -105,3 +147,7 @@ Use the printed signing secret as `STRIPE_WEBHOOK_SECRET`.
 | `npm run lint` | Lint the project |
 | `npm run typecheck` | Type-check the whole project, tests included |
 | `npm test` | Run the test suite |
+
+## License
+
+[MIT](LICENSE)

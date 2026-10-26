@@ -36,7 +36,7 @@ These need your accounts and credentials, so they couldn't be done from the
 repo. Do them at least a day before.
 
 0. **Rotate the MongoDB Atlas password (urgent).** A real connection string
-   was committed in `MONGODB_GUIDE.md` from 2026-06-18 until 2026-10-26 in
+   was committed in a root-level `MONGODB_GUIDE.md` (since deleted) from 2026-06-18 until 2026-10-26 in
    this public repo. It has been removed from the file, but it is still in git
    history. In Atlas → Database Access, change that user's password (or delete
    the user and create a new one), then update `MONGODB_URI` in `.env.local`

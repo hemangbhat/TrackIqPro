@@ -5,7 +5,7 @@
 > a production-grade premium aesthetic derived from the Google Stitch reference
 > screens — deep-navy glassmorphism in dark mode, indigo brand accent, Geist/
 > Inter/JetBrains Mono type, bento layouts, and gradient call-to-action bands.
-> Reference HTML for each screen lives in `.stitch-ref/`.
+> The Stitch reference screens were used during design and are not committed.
 
 ## 1. Principles
 - Premium SaaS feel: calm surfaces, clear hierarchy, generous spacing, frosted
@@ -105,7 +105,7 @@ call-to-action band).
 
 ## 12. Stitch Reference Mapping
 Each surface refines a premium Stitch screen (project `3095733913998128134`,
-HTML cached in `.stitch-ref/`):
+reference HTML not committed):
 
 | Surface | Stitch screen |
 |---------|---------------|
