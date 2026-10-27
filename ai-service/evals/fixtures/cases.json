@@ -1,0 +1,192 @@
+[
+  {
+    "id": "northwind-caching",
+    "jobId": "job_northwind",
+    "focus": "caching and cache invalidation",
+    "expectedSourceIds": [
+      "note_nw_sysdesign",
+      "note_free_cache",
+      "note_lumen_cache",
+      "note_orb_sysdesign"
+    ],
+    "expectInsufficient": false
+  },
+  {
+    "id": "northwind-behavioral",
+    "jobId": "job_northwind",
+    "focus": "behavioral questions",
+    "expectedSourceIds": [
+      "note_nw_behavioral",
+      "note_free_star",
+      "note_lumen_behavioral"
+    ],
+    "expectInsufficient": false
+  },
+  {
+    "id": "northwind-postgres",
+    "jobId": "job_northwind",
+    "focus": "Postgres indexing",
+    "expectedSourceIds": [
+      "note_nw_postgres"
+    ],
+    "expectInsufficient": false
+  },
+  {
+    "id": "northwind-general",
+    "jobId": "job_northwind",
+    "focus": "",
+    "expectedSourceIds": [
+      "note_nw_debrief",
+      "note_nw_sysdesign"
+    ],
+    "expectInsufficient": false
+  },
+  {
+    "id": "lumen-api",
+    "jobId": "job_lumen",
+    "focus": "REST API design and scheduling",
+    "expectedSourceIds": [
+      "note_lumen_api",
+      "job_lumen"
+    ],
+    "expectInsufficient": false
+  },
+  {
+    "id": "lumen-mentoring",
+    "jobId": "job_lumen",
+    "focus": "mentoring and behavioral stories",
+    "expectedSourceIds": [
+      "note_lumen_behavioral",
+      "note_free_star"
+    ],
+    "expectInsufficient": false
+  },
+  {
+    "id": "lumen-search-perf",
+    "jobId": "job_lumen",
+    "focus": "speeding up slow endpoints with caching",
+    "expectedSourceIds": [
+      "note_lumen_cache",
+      "note_free_cache"
+    ],
+    "expectInsufficient": false
+  },
+  {
+    "id": "orbital-sysdesign",
+    "jobId": "job_orbital",
+    "focus": "event pipeline system design and caching",
+    "expectedSourceIds": [
+      "note_orb_sysdesign",
+      "note_free_cache"
+    ],
+    "expectInsufficient": false
+  },
+  {
+    "id": "orbital-leadership",
+    "jobId": "job_orbital",
+    "focus": "leadership and behavioral round",
+    "expectedSourceIds": [
+      "note_orb_leadership",
+      "note_free_star"
+    ],
+    "expectInsufficient": false
+  },
+  {
+    "id": "orbital-coding",
+    "jobId": "job_orbital",
+    "focus": "coding round data structures",
+    "expectedSourceIds": [
+      "note_orb_coding"
+    ],
+    "expectInsufficient": false
+  },
+  {
+    "id": "brightwave-perf",
+    "jobId": "job_brightwave",
+    "focus": "React performance profiling",
+    "expectedSourceIds": [
+      "note_bw_takehome"
+    ],
+    "expectInsufficient": false
+  },
+  {
+    "id": "brightwave-caching",
+    "jobId": "job_brightwave",
+    "focus": "GraphQL and HTTP caching",
+    "expectedSourceIds": [
+      "note_bw_pairing",
+      "note_free_cache"
+    ],
+    "expectInsufficient": false
+  },
+  {
+    "id": "brightwave-feedback",
+    "jobId": "job_brightwave",
+    "focus": "collaboration with designers, feedback stories",
+    "expectedSourceIds": [
+      "note_bw_culture",
+      "note_free_star"
+    ],
+    "expectInsufficient": false
+  },
+  {
+    "id": "kestrel-cdn",
+    "jobId": "job_kestrel",
+    "focus": "CDN edge caching and purge strategy",
+    "expectedSourceIds": [
+      "note_ke_infra",
+      "note_free_cache"
+    ],
+    "expectInsufficient": false
+  },
+  {
+    "id": "kestrel-incident",
+    "jobId": "job_kestrel",
+    "focus": "incident leadership story",
+    "expectedSourceIds": [
+      "note_ke_incident",
+      "note_free_star"
+    ],
+    "expectInsufficient": false
+  },
+  {
+    "id": "meridian-stakeholders",
+    "jobId": "job_meridian",
+    "focus": "working with compliance and stakeholders",
+    "expectedSourceIds": [
+      "note_mer_panel",
+      "note_mer_feedback"
+    ],
+    "expectInsufficient": false
+  },
+  {
+    "id": "meridian-sql",
+    "jobId": "job_meridian",
+    "focus": "SQL performance tuning",
+    "expectedSourceIds": [
+      "note_mer_sql"
+    ],
+    "expectInsufficient": false
+  },
+  {
+    "id": "tessellate-finetuning",
+    "jobId": "job_tessellate",
+    "focus": "transformer model fine-tuning and GPU memory",
+    "expectedSourceIds": [],
+    "expectInsufficient": true
+  },
+  {
+    "id": "fernhill-swift",
+    "jobId": "job_fernhill",
+    "focus": "Swift concurrency and iOS app lifecycle",
+    "expectedSourceIds": [],
+    "expectInsufficient": true
+  },
+  {
+    "id": "tessellate-kubernetes",
+    "jobId": "job_tessellate",
+    "focus": "Kubernetes operator internals",
+    "expectedSourceIds": [],
+    "expectInsufficient": true
+  }
+]

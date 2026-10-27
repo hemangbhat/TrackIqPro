@@ -1,0 +1,303 @@
+{
+  "jobs": [
+    {
+      "_id": "job_northwind",
+      "userId": "eval-user",
+      "title": "Senior Backend Engineer",
+      "company": "Northwind Payments",
+      "jobDescription": "Own the ledger and payment-routing services. Requirements: 5+ years of backend experience, strong Postgres skills, experience designing idempotent APIs, event-driven systems on Kafka, and operating services with on-call responsibility. Nice to have: Go, experience with caching layers such as Redis.",
+      "notes": "Recruiter said the loop is phone screen, system design, then a behavioral round with the hiring manager. Team is 8 engineers.",
+      "createdAt": "2026-02-02T09:00:00.000Z"
+    },
+    {
+      "_id": "job_lumen",
+      "userId": "eval-user",
+      "title": "Backend Engineer, Patient Platform",
+      "company": "Lumen Health",
+      "jobDescription": "Build APIs for scheduling and patient records. Requirements: Python or Node, REST design, relational modelling, HIPAA awareness, and clear communication with clinical product partners. You will mentor junior engineers.",
+      "notes": "Referral from a former colleague. Interview is heavy on API design and past project stories.",
+      "createdAt": "2026-02-09T09:00:00.000Z"
+    },
+    {
+      "_id": "job_orbital",
+      "userId": "eval-user",
+      "title": "Staff Software Engineer",
+      "company": "Orbital Logistics",
+      "jobDescription": "Lead design of the shipment-tracking platform handling 40M events/day. Requirements: distributed systems, caching and data-partitioning strategies, capacity planning, and technical leadership across teams.",
+      "notes": "Onsite is 4 rounds: coding, system design, architecture deep dive, leadership.",
+      "createdAt": "2026-02-16T09:00:00.000Z"
+    },
+    {
+      "_id": "job_brightwave",
+      "userId": "eval-user",
+      "title": "Full Stack Engineer",
+      "company": "Brightwave Media",
+      "jobDescription": "Work on the creator dashboard (React, TypeScript, Node). Requirements: component design, performance profiling, GraphQL, and comfort shipping in small, fast iterations with designers.",
+      "notes": "Take-home first, then a pairing session and a culture round.",
+      "createdAt": "2026-02-23T09:00:00.000Z"
+    },
+    {
+      "_id": "job_kestrel",
+      "userId": "eval-user",
+      "title": "Platform Engineer",
+      "company": "Kestrel Cloud",
+      "jobDescription": "Build internal developer tooling on AWS. Requirements: Terraform, CI/CD pipelines, observability, and Postgres operations. Experience with CDN and edge caching is a plus.",
+      "notes": "Phone screen with a recruiter, then a technical round on infrastructure and incident handling.",
+      "createdAt": "2026-03-02T09:00:00.000Z"
+    },
+    {
+      "_id": "job_meridian",
+      "userId": "eval-user",
+      "title": "Software Engineer II",
+      "company": "Meridian Bank",
+      "jobDescription": "Modernise internal lending tools. Requirements: Java or Kotlin, SQL performance tuning, secure coding, and working with compliance reviewers. Strong collaboration and stakeholder skills expected.",
+      "notes": "Panel interview with two engineers and a product owner.",
+      "createdAt": "2026-03-09T09:00:00.000Z"
+    },
+    {
+      "_id": "job_tessellate",
+      "userId": "eval-user",
+      "title": "Machine Learning Engineer",
+      "company": "Tessellate AI",
+      "jobDescription": "",
+      "notes": "",
+      "createdAt": "2026-03-16T09:00:00.000Z"
+    },
+    {
+      "_id": "job_fernhill",
+      "userId": "eval-user",
+      "title": "Mobile Engineer",
+      "company": "Fernhill Retail",
+      "jobDescription": "",
+      "notes": "",
+      "createdAt": "2026-03-23T09:00:00.000Z"
+    }
+  ],
+  "notes": [
+    {
+      "_id": "note_nw_phone",
+      "userId": "eval-user",
+      "jobId": "job_northwind",
+      "title": "Northwind phone screen",
+      "round": "phone screen",
+      "content": "Spoke with the hiring manager for 30 minutes. Walked through my last role owning a payments webhook service. Asked about idempotency keys and how I handle duplicate events from Kafka. I answered well on idempotency but rambled when asked why I left my last team. Follow-up: tighten my career story to two minutes.",
+      "createdAt": "2026-02-05T17:00:00.000Z"
+    },
+    {
+      "_id": "note_nw_sysdesign",
+      "userId": "eval-user",
+      "jobId": "job_northwind",
+      "title": "Northwind system design: payment status API",
+      "round": "system design",
+      "content": "Designed a payment status lookup API with 20k reads per second. I proposed a Redis cache in front of Postgres but could not explain the invalidation strategy when a payment changes state. The interviewer asked about write-through versus cache-aside and stale reads for a ledger. I hesitated and said 'we could just set a short TTL'. Clear weak spot: caching trade-offs and consistency.",
+      "createdAt": "2026-02-10T17:00:00.000Z"
+    },
+    {
+      "_id": "note_nw_behavioral",
+      "userId": "eval-user",
+      "jobId": "job_northwind",
+      "title": "Northwind behavioral round",
+      "round": "behavioral",
+      "content": "Questions about conflict with a teammate and a project that missed its deadline. I described the situation but skipped the result and what I learned, so the answers felt incomplete. The manager hinted that she wanted a clear structure. I should practise STAR answers with measurable outcomes.",
+      "createdAt": "2026-02-12T17:00:00.000Z"
+    },
+    {
+      "_id": "note_nw_postgres",
+      "userId": "eval-user",
+      "jobId": "job_northwind",
+      "title": "Northwind Postgres follow-up questions",
+      "round": "technical",
+      "content": "Short technical chat on indexing: composite index column order, partial indexes for active payments, and why a sequential scan can beat an index. Felt confident. Used EXPLAIN ANALYZE examples from my own projects.",
+      "createdAt": "2026-02-11T17:00:00.000Z"
+    },
+    {
+      "_id": "note_nw_debrief",
+      "userId": "eval-user",
+      "jobId": "job_northwind",
+      "title": "Northwind debrief with recruiter",
+      "round": "debrief",
+      "content": "Recruiter feedback: strong on Postgres and Kafka, wants deeper reasoning about cache invalidation and more structured storytelling in behavioral answers. No offer yet, decision expected next week.",
+      "createdAt": "2026-02-14T17:00:00.000Z"
+    },
+    {
+      "_id": "note_lumen_phone",
+      "userId": "eval-user",
+      "jobId": "job_lumen",
+      "title": "Lumen recruiter screen",
+      "round": "phone screen",
+      "content": "Covered salary range, remote policy, and why healthcare. Recruiter stressed that clinical partners need plain-language explanations. I gave a vague answer about why I want to work in healthcare and had no concrete story ready.",
+      "createdAt": "2026-02-12T17:00:00.000Z"
+    },
+    {
+      "_id": "note_lumen_api",
+      "userId": "eval-user",
+      "jobId": "job_lumen",
+      "title": "Lumen API design exercise",
+      "round": "technical",
+      "content": "Designed REST endpoints for appointment scheduling including double-booking prevention with optimistic locking. Discussed pagination, versioning and audit logs for HIPAA. Good discussion; the interviewer liked the audit log idea. Slight stumble on rate limiting.",
+      "createdAt": "2026-02-18T17:00:00.000Z"
+    },
+    {
+      "_id": "note_lumen_behavioral",
+      "userId": "eval-user",
+      "jobId": "job_lumen",
+      "title": "Lumen behavioral with engineering manager",
+      "round": "behavioral",
+      "content": "Asked how I mentor junior engineers and about a time I disagreed with a product decision. My mentoring example was a rambling story without a clear result. I need a tighter situation-task-action-result structure and one example with numbers, like reduced review time by 30 percent.",
+      "createdAt": "2026-02-20T17:00:00.000Z"
+    },
+    {
+      "_id": "note_lumen_cache",
+      "userId": "eval-user",
+      "jobId": "job_lumen",
+      "title": "Lumen follow-up: performance question",
+      "round": "technical",
+      "content": "They asked how I would speed up a slow patient search endpoint. I jumped to caching the search results and was asked about stale patient data and cache invalidation when a record is updated. Again I could not explain the trade-offs between freshness and speed for sensitive data.",
+      "createdAt": "2026-02-21T17:00:00.000Z"
+    },
+    {
+      "_id": "note_orb_coding",
+      "userId": "eval-user",
+      "jobId": "job_orbital",
+      "title": "Orbital coding round",
+      "round": "coding",
+      "content": "Implemented a sliding window rate limiter and an LRU cache. Passed all tests, discussed time complexity of both. Good round. Used a doubly linked list plus hash map for the LRU cache.",
+      "createdAt": "2026-02-19T17:00:00.000Z"
+    },
+    {
+      "_id": "note_orb_sysdesign",
+      "userId": "eval-user",
+      "jobId": "job_orbital",
+      "title": "Orbital system design: tracking events pipeline",
+      "round": "system design",
+      "content": "Whiteboarded ingestion of 40M events per day with Kafka, partitioning by shipment id, and a read model in Cassandra. Asked where a cache fits: I suggested caching the latest status per shipment but struggled with cache invalidation across regions and the cost of stale data. Caching trade-offs again. Partitioning and capacity maths went well.",
+      "createdAt": "2026-02-24T17:00:00.000Z"
+    },
+    {
+      "_id": "note_orb_leadership",
+      "userId": "eval-user",
+      "jobId": "job_orbital",
+      "title": "Orbital leadership round",
+      "round": "behavioral",
+      "content": "Questions on leading a migration across three teams and handling an underperforming engineer. I gave a strong story on the migration with outcomes but for the underperformer question I could not recall specifics and answered in generalities without STAR structure.",
+      "createdAt": "2026-02-26T17:00:00.000Z"
+    },
+    {
+      "_id": "note_orb_arch",
+      "userId": "eval-user",
+      "jobId": "job_orbital",
+      "title": "Orbital architecture deep dive",
+      "round": "technical",
+      "content": "Deep dive into a past design of mine: event sourcing for order history. Defended the trade-offs of eventual consistency and replay costs. Asked about schema evolution of events; answered with versioned envelopes.",
+      "createdAt": "2026-02-25T17:00:00.000Z"
+    },
+    {
+      "_id": "note_bw_takehome",
+      "userId": "eval-user",
+      "jobId": "job_brightwave",
+      "title": "Brightwave take-home review",
+      "round": "take-home",
+      "content": "Built a small analytics dashboard in React with TypeScript. Feedback: clean components and good tests, but the list rendered slowly with 10k rows and I had not used virtualization or memoization. Performance profiling is a gap.",
+      "createdAt": "2026-02-27T17:00:00.000Z"
+    },
+    {
+      "_id": "note_bw_pairing",
+      "userId": "eval-user",
+      "jobId": "job_brightwave",
+      "title": "Brightwave pairing session",
+      "round": "pairing",
+      "content": "Paired on adding GraphQL pagination to the dashboard. Comfortable with Apollo hooks. Interviewer asked about HTTP caching and Apollo cache normalisation; I knew the basics but could not discuss when cached data becomes stale or how to evict it.",
+      "createdAt": "2026-03-03T17:00:00.000Z"
+    },
+    {
+      "_id": "note_bw_culture",
+      "userId": "eval-user",
+      "jobId": "job_brightwave",
+      "title": "Brightwave culture round",
+      "round": "behavioral",
+      "content": "Talked about working with designers and receiving critical feedback. My answer about handling feedback had no concrete example. The interviewer asked 'tell me about a time' twice and I stayed generic. Need prepared STAR stories for feedback and collaboration.",
+      "createdAt": "2026-03-05T17:00:00.000Z"
+    },
+    {
+      "_id": "note_ke_phone",
+      "userId": "eval-user",
+      "jobId": "job_kestrel",
+      "title": "Kestrel recruiter phone screen",
+      "round": "phone screen",
+      "content": "Discussed AWS experience, Terraform modules I maintain, and on-call load. Recruiter said the team values calm incident communication. No concerns raised.",
+      "createdAt": "2026-03-04T17:00:00.000Z"
+    },
+    {
+      "_id": "note_ke_infra",
+      "userId": "eval-user",
+      "jobId": "job_kestrel",
+      "title": "Kestrel infrastructure technical round",
+      "round": "technical",
+      "content": "Questions on Terraform state management, blue-green deploys, and CloudFront. When asked how to cache API responses at the CDN edge and purge them safely after a deploy, I only gave the TTL answer. Did not cover cache keys, stale-while-revalidate or purge strategy. Weak on caching trade-offs.",
+      "createdAt": "2026-03-10T17:00:00.000Z"
+    },
+    {
+      "_id": "note_ke_incident",
+      "userId": "eval-user",
+      "jobId": "job_kestrel",
+      "title": "Kestrel incident scenario",
+      "round": "technical",
+      "content": "Walked through a simulated database outage: triage, communication, rollback. Did well on technical steps. Asked for a real incident I led; I described it but without the timeline or measurable impact, so it was not a crisp STAR story.",
+      "createdAt": "2026-03-11T17:00:00.000Z"
+    },
+    {
+      "_id": "note_mer_panel",
+      "userId": "eval-user",
+      "jobId": "job_meridian",
+      "title": "Meridian panel interview",
+      "round": "panel",
+      "content": "Two engineers and a product owner. Java collections, SQL window functions, and a question about working with compliance reviewers who block a release. My stakeholder example was vague on the actual outcome. Product owner wanted a specific story with a result.",
+      "createdAt": "2026-03-12T17:00:00.000Z"
+    },
+    {
+      "_id": "note_mer_sql",
+      "userId": "eval-user",
+      "jobId": "job_meridian",
+      "title": "Meridian SQL tuning exercise",
+      "round": "technical",
+      "content": "Given a slow query joining loans and payments. Found a missing index and rewrote a correlated subquery as a join. Explained the query plan. Strong round.",
+      "createdAt": "2026-03-13T17:00:00.000Z"
+    },
+    {
+      "_id": "note_mer_feedback",
+      "userId": "eval-user",
+      "jobId": "job_meridian",
+      "title": "Meridian recruiter feedback",
+      "round": "debrief",
+      "content": "Feedback: technically solid, but behavioral answers lacked structure and measurable results. Suggested using the STAR method.",
+      "createdAt": "2026-03-15T17:00:00.000Z"
+    },
+    {
+      "_id": "note_free_star",
+      "userId": "eval-user",
+      "jobId": null,
+      "title": "General: STAR method cheat sheet",
+      "round": "general",
+      "content": "Reminder after several rounds: structure behavioral answers as Situation, Task, Action, Result. Always finish with a number or an outcome and one lesson. Keep each story under two minutes. Prepare five stories: conflict, failure, leadership, tight deadline, feedback.",
+      "createdAt": "2026-03-14T17:00:00.000Z"
+    },
+    {
+      "_id": "note_free_cache",
+      "userId": "eval-user",
+      "jobId": null,
+      "title": "General: caching reading notes",
+      "round": "general",
+      "content": "Notes to self on caching: cache-aside versus write-through versus write-behind, TTL versus explicit invalidation, cache stampede and request coalescing, stale-while-revalidate, and when stale data is acceptable (product catalog) versus not (balances, patient data). Practise explaining these with one example each.",
+      "createdAt": "2026-03-06T17:00:00.000Z"
+    },
+    {
+      "_id": "note_free_salary",
+      "userId": "eval-user",
+      "jobId": null,
+      "title": "General: salary negotiation thoughts",
+      "round": "general",
+      "content": "Ask for the range early, anchor with market data, and never give a number first if I can avoid it. Compare total compensation including equity and bonus rather than base salary alone.",
+      "createdAt": "2026-03-08T17:00:00.000Z"
+    }
+  ]
+}

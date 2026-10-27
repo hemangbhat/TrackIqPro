@@ -96,9 +96,10 @@ class UserStore:
             self._index.delete(ids=batch, namespace=self._namespace)
 
 
-def get_store(user_id: str) -> UserStore:
+def get_store(user_id: str, namespace: str | None = None) -> UserStore:
     """Build the real store. Imports and clients are created lazily so tests
-    (which override this dependency) never need real keys."""
+    (which override this dependency) never need real keys.
+    namespace overrides the configured one (the eval suite uses "eval")."""
     from langchain_openai import OpenAIEmbeddings
     from pinecone import Pinecone
 
@@ -107,7 +108,9 @@ def get_store(user_id: str) -> UserStore:
     embeddings = OpenAIEmbeddings(
         model="text-embedding-3-small", api_key=settings.openai_api_key
     )
-    return UserStore(index, embeddings, user_id, settings.pinecone_namespace)
+    if namespace is None:
+        namespace = settings.pinecone_namespace
+    return UserStore(index, embeddings, user_id, namespace)
 
 
 def get_store_factory():

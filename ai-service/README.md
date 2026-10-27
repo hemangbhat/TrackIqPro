@@ -129,4 +129,24 @@ every step can be explained line by line.
 
 ## Eval results
 
-To be filled by the eval run.
+A small custom harness (no eval framework) answers "how do you know the RAG works?".
+It indexes a fixed fixture user (8 jobs, 25 notes, `evals/fixtures/user.json`) into the
+Pinecone namespace `eval`, runs ~20 labelled cases (`evals/fixtures/cases.json`) through
+the real retrieve + prep pipeline, and writes `evals/results/<UTC timestamp>.json`
+with the settings used (k, chunk size/overlap, chat model).
+
+Run it from `ai-service/` with `OPENAI_API_KEY`, `PINECONE_API_KEY`, `PINECONE_INDEX`,
+`AI_SERVICE_SECRET` and `OPENAI_CHAT_MODEL` set:
+
+    python -m evals.run              # re-index fixtures, then run all cases
+    python -m evals.run --no-index   # reuse vectors already in the eval namespace
+
+Metrics:
+
+- **recall@k**: share of the sources a human marked as relevant that retrieval returned.
+- **hit rate**: share of cases where retrieval returned at least one relevant source.
+- **citation validity**: share of output citations that point at a source retrieval returned (the guard should make this 100%).
+- **groundedness**: share of output items an LLM judge says are supported by the text they cite.
+- **insufficient correct**: share of cases where the service said "not enough data" exactly when expected.
+
+No results recorded yet — run `python -m evals.run` with API keys set.

@@ -4,7 +4,9 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 from app.schemas import IndexSource
 
-splitter = RecursiveCharacterTextSplitter(chunk_size=800, chunk_overlap=100)
+CHUNK_SIZE = 800
+CHUNK_OVERLAP = 100
+splitter = RecursiveCharacterTextSplitter(chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP)
 
 
 @dataclass
