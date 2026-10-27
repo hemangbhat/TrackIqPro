@@ -21,6 +21,40 @@ class FakeEmbeddings:
         return [float(len(text)), 1.0, 0.0]
 
 
+def _matches(metadata: dict, flt: dict) -> bool:
+    """Evaluate the Pinecone filter subset we use: $and, $eq, $ne."""
+    for key, cond in flt.items():
+        if key == "$and":
+            if not all(_matches(metadata, sub) for sub in cond):
+                return False
+        elif "$eq" in cond:
+            if metadata.get(key) != cond["$eq"]:
+                return False
+        elif "$ne" in cond:
+            if metadata.get(key) == cond["$ne"]:
+                return False
+        else:
+            raise NotImplementedError(cond)
+    return True
+
+
+class FakeChat:
+    """Stands in for ChatOpenAI: with_structured_output(...).invoke(...) returns a canned result."""
+
+    def __init__(self, result):
+        self.result = result
+        self.calls = 0
+        self.messages = None
+
+    def with_structured_output(self, schema):
+        return self
+
+    def invoke(self, messages):
+        self.calls += 1
+        self.messages = messages
+        return self.result
+
+
 class FakeIndex:
     def __init__(self, list_page_size: int = 100):
         self.vectors: dict[str, dict] = {}  # id -> {"values", "metadata"}
@@ -54,14 +88,8 @@ class FakeIndex:
         namespace: str = "",
     ) -> dict:
         self.query_filters.append(filter)
-        # Supports only the {"$and": [{field: {"$eq": v}}, ...]} shape UserStore sends.
-        conditions = filter["$and"]
         matches = []
         for vid, v in self.vectors.items():
-            if all(
-                v["metadata"].get(field) == cond["$eq"]
-                for c in conditions
-                for field, cond in c.items()
-            ):
+            if _matches(v["metadata"], filter):
                 matches.append({"id": vid, "score": 1.0, "metadata": v["metadata"]})
         return {"matches": matches[:top_k]}

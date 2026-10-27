@@ -6,7 +6,8 @@ from fastapi import Depends, FastAPI, Header, HTTPException
 from pydantic import BaseModel
 
 from app.config import Settings, get_settings
-from app.schemas import IndexSource, SourceRef
+from app.prep import get_chat, run_prep
+from app.schemas import IndexSource, PrepRequest, PrepResult, SourceRef
 from app.store import UserStore, get_store_factory
 
 app = FastAPI(title="TrackIQ AI service")
@@ -30,12 +31,6 @@ def health() -> dict:
     return {"status": "ok"}
 
 
-@app.post("/prep", dependencies=[Depends(require_service_key)])
-def prep() -> None:
-    """Placeholder until the real prep flow is built."""
-    raise HTTPException(status_code=501, detail="Not implemented")
-
-
 class IndexRequest(BaseModel):
     userId: str
     sources: list[IndexSource]
@@ -54,6 +49,15 @@ def _store_for(factory: StoreFactory, user_id: str) -> UserStore:
         return factory(user_id)
     except ValueError as exc:  # empty or malformed userId
         raise HTTPException(status_code=422, detail=str(exc))
+
+
+@app.post("/prep", dependencies=[Depends(require_service_key)])
+def prep(
+    body: PrepRequest,
+    factory: StoreFactory = Depends(get_store_factory),
+    chat=Depends(get_chat),
+) -> PrepResult:
+    return run_prep(_store_for(factory, body.userId), chat, body)
 
 
 @app.post("/index", dependencies=[Depends(require_service_key)])
