@@ -23,7 +23,7 @@ def _has_text(value) -> bool:
 
 
 def build_sources(job_docs: list[dict], note_docs: list[dict]) -> list[IndexSource]:
-    """Turn Mongo job/note documents into IndexSources (same mapping as lib/ai-sources.ts).
+    """Turn Mongo job/note documents into IndexSources (same mapping as lib/ai-sources.ts, added in the Next.js app).
 
     Accepts pymongo documents (ObjectId _id, datetime createdAt) and plain
     JSON-shaped dicts (string _id, ISO createdAt).
@@ -73,6 +73,24 @@ def build_sources(job_docs: list[dict], note_docs: list[dict]) -> list[IndexSour
     return sources
 
 
+def reindex_users(user_ids, load_docs, store_factory) -> int:
+    """Re-index each user; one user's failure never stops the others.
+
+    load_docs(user_id) -> (job_docs, note_docs). Returns the number of failed users.
+    """
+    failures = 0
+    for user_id in user_ids:
+        try:
+            jobs, notes = load_docs(user_id)
+            sources = build_sources(jobs, notes)
+            chunks = store_factory(user_id).upsert_sources(sources) if sources else 0
+            print(f"user={user_id} sources={len(sources)} chunks={chunks}")
+        except Exception as exc:  # report the type only, never content
+            failures += 1
+            print(f"user={user_id} FAILED {type(exc).__name__}")
+    return failures
+
+
 def main() -> None:
     from pymongo import MongoClient
 
@@ -88,17 +106,21 @@ def main() -> None:
     query = {"aiEnabled": True}
     if args.user:
         query["userId"] = args.user
-    user_ids = sorted({p["userId"] for p in db["careerprofiles"].find(query)})
+    user_ids = sorted(
+        {p["userId"] for p in db["careerprofiles"].find(query) if isinstance(p.get("userId"), str)}
+    )
     if not user_ids:
         print("No opted-in users found.")
         return
 
-    for user_id in user_ids:
-        jobs = list(db["jobs"].find({"userId": user_id}))
-        notes = list(db["notes"].find({"userId": user_id}))
-        sources = build_sources(jobs, notes)
-        chunks = get_store(user_id).upsert_sources(sources) if sources else 0
-        print(f"user={user_id} sources={len(sources)} chunks={chunks}")
+    def load_docs(user_id):
+        return (
+            list(db["jobs"].find({"userId": user_id})),
+            list(db["notes"].find({"userId": user_id})),
+        )
+
+    if reindex_users(user_ids, load_docs, get_store):
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":

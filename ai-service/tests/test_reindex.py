@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 
 from bson import ObjectId
 
-from scripts.reindex import build_sources
+from scripts.reindex import build_sources, reindex_users
 
 JOB = {"_id": "job1", "userId": "u1", "title": "Backend Engineer", "company": "Acme",
        "createdAt": "2026-01-01T00:00:00+00:00"}
@@ -53,6 +53,42 @@ def test_pymongo_shaped_docs_are_converted():
     assert n.createdAt == when.isoformat()
 
 
-def test_empty_note_is_skipped_but_title_only_kept():
+def test_empty_note_is_skipped():
     assert build_sources([], [{"_id": "n", "jobId": None, "title": " ", "content": " ",
                                "createdAt": "x"}]) == []
+
+
+def test_title_only_note_is_kept():
+    [s] = build_sources([], [{"_id": "n", "jobId": None, "title": "Idea", "content": "",
+                              "createdAt": "x"}])
+    assert s.text == "Idea" + chr(10) * 2
+
+
+class _FakeStore:
+    def __init__(self, user_id):
+        if "#" in user_id:
+            raise ValueError("user_id must not contain '#'")
+        self.user_id = user_id
+        self.upserted = []
+
+    def upsert_sources(self, sources):
+        self.upserted = sources
+        return len(sources)
+
+
+def test_one_failing_user_does_not_stop_the_run(capsys):
+    stores = {}
+
+    def factory(user_id):
+        stores[user_id] = _FakeStore(user_id)
+        return stores[user_id]
+
+    def load_docs(user_id):
+        return [{**JOB, "jobDescription": "JD"}], []
+
+    failures = reindex_users(["bad#id", "u2"], load_docs, factory)
+    assert failures == 1
+    assert len(stores["u2"].upserted) == 1
+    out = capsys.readouterr().out
+    assert "user=bad#id FAILED ValueError" in out
+    assert "user=u2 sources=1 chunks=1" in out
