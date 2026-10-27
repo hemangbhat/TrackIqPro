@@ -131,7 +131,7 @@ every step can be explained line by line.
 
 A small custom harness (no eval framework) answers "how do you know the RAG works?".
 It indexes a fixed fixture user (8 jobs, 25 notes, `evals/fixtures/user.json`) into the
-Pinecone namespace `eval`, runs ~20 labelled cases (`evals/fixtures/cases.json`) through
+Pinecone namespace `eval`, runs 20 labelled cases (`evals/fixtures/cases.json`) through
 the real retrieve + prep pipeline, and writes `evals/results/<UTC timestamp>.json`
 with the settings used (k, chunk size/overlap, chat model).
 
@@ -147,6 +147,6 @@ Metrics:
 - **hit rate**: share of cases where retrieval returned at least one relevant source.
 - **citation validity**: share of output citations that point at a source retrieval returned (the guard should make this 100%).
 - **groundedness**: share of output items an LLM judge says are supported by the text they cite.
-- **insufficient correct**: share of cases where the service said "not enough data" exactly when expected.
+- **insufficient correct**: share of cases where the service said "not enough data" exactly when expected. Notes from other jobs are always retrieved, so this measures whether the model declines when the retrieved notes do not support prep.
 
-No results recorded yet — run `python -m evals.run` with API keys set.
+No results recorded yet â€” run `python -m evals.run` with API keys set.

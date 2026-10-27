@@ -9,7 +9,6 @@ through the real retrieve + run_prep pipeline, and reports four numbers:
 """
 import argparse
 import json
-import os
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -21,16 +20,22 @@ HERE = Path(__file__).parent
 EVAL_USER = "eval-user"
 EVAL_NAMESPACE = "eval"  # keeps eval vectors away from real users' data
 K = 6  # same value retrieve() uses in production
-REQUIRED_ENV = ("OPENAI_API_KEY", "PINECONE_API_KEY", "PINECONE_INDEX")
 EVAL_PROFILE = Profile(skills=["Python", "SQL", "distributed systems"], targetRole="Backend Engineer", seniority="senior")
 
 
-def check_env() -> None:
-    missing = [name for name in REQUIRED_ENV if not os.environ.get(name)]
-    if missing:
+def load_settings():
+    """Settings reads the environment and .env; report what is missing without echoing values."""
+    from pydantic import ValidationError
+
+    from app.config import get_settings
+
+    try:
+        return get_settings()
+    except ValidationError as exc:
+        fields = sorted({str(err["loc"][0]).upper() for err in exc.errors()})
         raise SystemExit(
-            f"Missing environment variables: {', '.join(missing)}. "
-            "Export them in your shell (plus AI_SERVICE_SECRET and OPENAI_CHAT_MODEL) and re-run."
+            f"Missing or invalid settings: {', '.join(fields)}. "
+            "Set them in the environment or in ai-service/.env and re-run."
         )
 
 
@@ -74,6 +79,8 @@ def run_case(store, chat, case: dict, jobs: dict) -> dict:
         userId=EVAL_USER, jobId=case["jobId"], jobTitle=job["title"],
         company=job["company"], focus=case["focus"], profile=EVAL_PROFILE,
     )
+    # run_prep retrieves again internally; the metrics use this first retrieval and
+    # assume Pinecone returns the same chunks both times (temperature-0 chat, same query).
     chunks = retrieve(store, req, K)
     retrieved_ids = list(dict.fromkeys(c.metadata["sourceId"] for c in chunks))  # dedupe, keep order
     result = run_prep(store, chat, req)
@@ -109,10 +116,8 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Run the retrieval + groundedness eval")
     parser.add_argument("--no-index", action="store_true", help="reuse vectors already in the eval namespace")
     args = parser.parse_args()
-    check_env()
+    settings = load_settings()  # first, so missing keys fail fast with a clear message
 
-    # Imported after the env check so a missing key gives the clear message above.
-    from app.config import get_settings
     from app.prep import get_chat
     from app.store import get_store
     from scripts.reindex import build_sources
@@ -146,7 +151,7 @@ def main() -> None:
                 "k": K,
                 "chunk_size": CHUNK_SIZE,
                 "chunk_overlap": CHUNK_OVERLAP,
-                "chat_model": get_settings().openai_chat_model,
+                "chat_model": settings.openai_chat_model,
                 "averages": averages,
                 "cases": rows,
             },
