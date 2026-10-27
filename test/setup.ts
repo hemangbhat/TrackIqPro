@@ -48,7 +48,8 @@ function resetMatchMedia() {
   mediaOverrides = {};
 }
 
-Object.defineProperty(window, "matchMedia", {
+// Node-environment tests (e.g. database tests) have no window; skip DOM stubs there.
+if (typeof window !== "undefined") Object.defineProperty(window, "matchMedia", {
   writable: true,
   configurable: true,
   value: vi.fn((query: string) => {
@@ -94,6 +95,6 @@ if (!("IntersectionObserver" in globalThis)) {
     };
 }
 
-if (!("matchMedia" in window)) {
+if (typeof window !== "undefined" && !("matchMedia" in window)) {
   /* covered above */
 }

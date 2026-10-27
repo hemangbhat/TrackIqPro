@@ -15,6 +15,9 @@ const CareerProfileSchema = new mongoose.Schema(
             enum: ["intern", "junior", "mid", "senior", "staff", "lead"],
             default: "mid",
         },
+        // Opt-in consent for sending jobs/notes to the AI service (off by default).
+        aiEnabled: { type: Boolean, default: false },
+        aiEnabledAt: { type: Date, default: null },
     },
     { timestamps: true }
 );
