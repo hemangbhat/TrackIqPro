@@ -63,6 +63,11 @@ describe("noteToSource", () => {
         expect(s.round).toBe("");
     });
 
+    it("ignores a job that is not the note's parent", () => {
+        expect(noteToSource({ ...note, jobId: "other" }, JOB)!.company).toBe("");
+        expect(noteToSource(note, JOB)!.company).toBe("");
+    });
+
     it("returns null for an empty note", () => {
         expect(noteToSource({ ...note, title: " ", content: " " })).toBeNull();
     });

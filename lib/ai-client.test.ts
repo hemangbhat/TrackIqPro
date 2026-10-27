@@ -73,6 +73,14 @@ describe("ai-client", () => {
         await expect(deleteUserVectors("u1")).rejects.toBeInstanceOf(AiServiceError);
     });
 
+    it("wraps network failures in AiServiceError with status 0", async () => {
+        fetchMock.mockRejectedValue(new TypeError("fetch failed"));
+        await expect(requestPrep(PREP_INPUT)).rejects.toMatchObject({
+            name: "AiServiceError",
+            status: 0,
+        });
+    });
+
     it("returns the PrepResult from /prep", async () => {
         const result = {
             insufficientData: true,

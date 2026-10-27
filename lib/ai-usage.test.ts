@@ -24,9 +24,15 @@ describe("daily prep cap", () => {
     it("allows 5 then blocks the 6th", async () => {
         for (let i = 1; i <= DAILY_PREP_LIMIT; i++) {
             const r = await consumePrep("u1");
-            expect(r).toEqual({ allowed: true, remaining: DAILY_PREP_LIMIT - i });
+            expect(r).toMatchObject({ allowed: true, remaining: DAILY_PREP_LIMIT - i });
         }
-        expect(await consumePrep("u1")).toEqual({ allowed: false, remaining: 0 });
+        expect(await consumePrep("u1")).toMatchObject({ allowed: false, remaining: 0 });
+    });
+
+    it("allows every call in a concurrent burst on a fresh day", async () => {
+        const results = await Promise.all(Array.from({ length: 3 }, () => consumePrep("burst")));
+        expect(results.every((r) => r.allowed)).toBe(true);
+        expect(new Set(results.map((r) => r.remaining))).toEqual(new Set([4, 3, 2]));
     });
 
     it("consumes at most 5 even when called concurrently", async () => {
@@ -51,6 +57,17 @@ describe("daily prep cap", () => {
         expect(await remainingPreps("u1")).toBe(5);
     });
 
+    it("refund uses the consumed date even after midnight", async () => {
+        vi.useFakeTimers({ toFake: ["Date"] });
+        vi.setSystemTime(new Date("2026-03-01T23:59:00Z"));
+        const { date } = await consumePrep("u1");
+        expect(date).toBe("2026-03-01");
+        vi.setSystemTime(new Date("2026-03-02T00:01:00Z"));
+        await refundPrep("u1", date);
+        const doc = await AiUsage.findOne({ userId: "u1", date: "2026-03-01" });
+        expect(doc?.count).toBe(0);
+    });
+
     it("remainingPreps is 5 with no usage and is per user", async () => {
         expect(await remainingPreps("fresh")).toBe(5);
         await consumePrep("u1");
@@ -63,7 +80,7 @@ describe("daily prep cap", () => {
         for (let i = 0; i < 5; i++) await consumePrep("u1");
         expect((await consumePrep("u1")).allowed).toBe(false);
         vi.setSystemTime(new Date("2026-03-02T00:01:00Z"));
-        expect(await consumePrep("u1")).toEqual({ allowed: true, remaining: 4 });
+        expect(await consumePrep("u1")).toMatchObject({ allowed: true, remaining: 4 });
     });
 
     it("utcDay formats as YYYY-MM-DD in UTC", () => {

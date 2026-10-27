@@ -26,6 +26,8 @@ export interface NoteLike {
     createdAt?: DateLike;
 }
 
+// createdAt is informational metadata, never compared or sorted, so toISOString here vs
+// Python isoformat in reindex.py is a harmless format difference.
 function iso(value: DateLike): string {
     if (value instanceof Date) return value.toISOString();
     return value ? String(value) : "";
@@ -70,7 +72,8 @@ export function noteToSource(note: NoteLike, job?: JobLike | null): IndexSource 
         sourceType: "note",
         sourceId: String(note._id),
         jobId: note.jobId ? String(note.jobId) : "none",
-        company: job?.company ?? "",
+        // Only trust the parent job if it really is this note's job (Python looks it up by note.jobId).
+        company: job && note.jobId && String(job._id) === String(note.jobId) ? job.company : "",
         title,
         round: note.round || "",
         createdAt: iso(note.createdAt),

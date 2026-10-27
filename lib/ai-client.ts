@@ -80,15 +80,22 @@ export function aiConfigured(): boolean {
 
 async function call(path: string, init: { method: string; body?: unknown; timeoutMs: number }) {
     const base = process.env.AI_SERVICE_URL!.replace(/\/+$/, "");
-    const res = await fetch(base + path, {
-        method: init.method,
-        headers: {
-            "Content-Type": "application/json",
-            "X-AI-Service-Key": process.env.AI_SERVICE_SECRET!,
-        },
-        body: init.body === undefined ? undefined : JSON.stringify(init.body),
-        signal: AbortSignal.timeout(init.timeoutMs),
-    });
+    let res: Response;
+    try {
+        res = await fetch(base + path, {
+            method: init.method,
+            headers: {
+                "Content-Type": "application/json",
+                "X-AI-Service-Key": process.env.AI_SERVICE_SECRET!,
+            },
+            body: init.body === undefined ? undefined : JSON.stringify(init.body),
+            signal: AbortSignal.timeout(init.timeoutMs),
+        });
+    } catch (e) {
+        // Timeouts and network failures: callers only ever see AiServiceError (status 0 = no HTTP response).
+        const reason = e instanceof Error ? e.name : "unknown";
+        throw new AiServiceError(0, `AI service request failed (${reason})`);
+    }
     if (!res.ok) throw new AiServiceError(res.status);
     return res;
 }
