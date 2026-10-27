@@ -93,6 +93,6 @@ class LLMStudyItem(BaseModel):
 
 class LLMPrep(BaseModel):
     insufficientData: bool
-    likelyQuestions: list[LLMQuestion] = []
-    weakSpots: list[LLMWeakSpot] = []
-    studyPlan: list[LLMStudyItem] = []
+    likelyQuestions: list[LLMQuestion]
+    weakSpots: list[LLMWeakSpot]
+    studyPlan: list[LLMStudyItem]

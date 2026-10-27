@@ -3,9 +3,9 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 from app.prep import get_chat, retrieve, run_prep
-from app.schemas import IndexSource, LLMPrep, LLMQuestion, PrepRequest, Profile
+from app.schemas import IndexSource, LLMQuestion, PrepRequest, Profile
 from app.store import UserStore, get_store_factory
-from tests.fakes import FakeChat, FakeEmbeddings, FakeIndex
+from tests.fakes import FakeChat, FakeEmbeddings, FakeIndex, make_llm_prep
 
 HEADERS = {"X-AI-Service-Key": "test-secret"}
 
@@ -54,6 +54,7 @@ def test_retrieve_runs_two_passes_with_expected_filters(store, index):
     chunks = retrieve(store, make_req())
 
     pass1, pass2 = (f["$and"][1] for f in index.query_filters)
+    assert all(f["$and"][0] == {"userId": {"$eq": "u1"}} for f in index.query_filters)
     assert pass1 == {"jobId": {"$eq": "j1"}}
     assert pass2 == {"$and": [{"jobId": {"$ne": "j1"}}, {"sourceType": {"$eq": "note"}}]}
     assert {c.metadata["sourceId"] for c in chunks} == {"d1", "n1", "n2"}
@@ -61,7 +62,7 @@ def test_retrieve_runs_two_passes_with_expected_filters(store, index):
 
 
 def test_prep_with_no_matches_skips_llm(store):
-    chat = FakeChat(LLMPrep(insufficientData=False))
+    chat = FakeChat(make_llm_prep(insufficientData=False))
     result = run_prep(store, chat, make_req())
     assert result.insufficientData is True
     assert chat.calls == 0
@@ -70,7 +71,7 @@ def test_prep_with_no_matches_skips_llm(store):
 def test_run_prep_labels_chunks_and_puts_profile_in_prompt(store):
     store.upsert_sources([source("note", "n1", "j1")])
     chat = FakeChat(
-        LLMPrep(
+        make_llm_prep(
             insufficientData=False,
             likelyQuestions=[LLMQuestion(question="q", why="w", citations=["S1"])],
         )
@@ -83,7 +84,7 @@ def test_run_prep_labels_chunks_and_puts_profile_in_prompt(store):
 
 def test_prep_route_returns_guarded_result(index):
     UserStore(index, FakeEmbeddings(), "u1").upsert_sources([source("note", "n1", "j1")])
-    canned = LLMPrep(
+    canned = make_llm_prep(
         insufficientData=False,
         likelyQuestions=[
             LLMQuestion(question="good", why="w", citations=["S1"]),
@@ -111,7 +112,7 @@ def test_prep_route_rejects_bad_user_id():
     app.dependency_overrides[get_store_factory] = lambda: (
         lambda user_id: UserStore(FakeIndex(), FakeEmbeddings(), user_id)
     )
-    app.dependency_overrides[get_chat] = lambda: FakeChat(LLMPrep(insufficientData=True))
+    app.dependency_overrides[get_chat] = lambda: FakeChat(make_llm_prep(insufficientData=True))
     try:
         body = make_req().model_dump() | {"userId": "a#b"}
         res = TestClient(app).post("/prep", json=body, headers=HEADERS)

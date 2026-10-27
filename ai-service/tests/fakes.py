@@ -38,6 +38,14 @@ def _matches(metadata: dict, flt: dict) -> bool:
     return True
 
 
+def make_llm_prep(**kwargs):
+    """LLMPrep has no field defaults (strict schema), so tests fill the empty lists here."""
+    from app.schemas import LLMPrep
+
+    fields = {"insufficientData": False, "likelyQuestions": [], "weakSpots": [], "studyPlan": []}
+    return LLMPrep(**(fields | kwargs))
+
+
 class FakeChat:
     """Stands in for ChatOpenAI: with_structured_output(...).invoke(...) returns a canned result."""
 

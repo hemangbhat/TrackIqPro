@@ -17,8 +17,9 @@ EMPTY_DATA_MESSAGE = "Add notes from your rounds to get prep tailored to you"
 PREP_SYSTEM_PROMPT = """You are an interview preparation coach.
 Use ONLY the numbered sources provided in the user message. Never use outside knowledge
 about the company or role, and never invent details.
-Cite every item (each question, weak spot and study plan entry) with the [S#] labels of the
-sources that support it, listing labels exactly as given, e.g. ["S1", "S3"].
+Cite every item (each question, weak spot and study plan entry) with the labels of the
+sources that support it. Sources appear as [S1], [S2], ...; in citations write the bare
+label without brackets, e.g. ["S1", "S3"].
 An item you cannot support with a source must be left out.
 If the sources do not contain enough to prepare the candidate, set insufficientData to true
 and return empty lists."""
@@ -53,7 +54,8 @@ def apply_citation_guard(llm: LLMPrep, labelled: dict[str, RetrievedChunk]) -> P
         citations: list[Citation] = []
         seen: set[tuple[str, str]] = set()
         for label in labels:
-            chunk = labelled.get(label)
+            # Tolerate "[S1]", " s1 " etc.; lookup is still limited to retrieved labels.
+            chunk = labelled.get(label.strip().strip("[]").strip().upper())
             if chunk is None:  # label the LLM made up
                 continue
             m = chunk.metadata
@@ -86,6 +88,7 @@ def apply_citation_guard(llm: LLMPrep, labelled: dict[str, RetrievedChunk]) -> P
         for s in llm.studyPlan
         if (c := to_citations(s.citations))
     ]
+    # The LLM's own insufficientData flag is advisory; code-checked citations are the authority.
     if not (questions or weak_spots or study_plan):
         return _insufficient()
     return PrepResult(
