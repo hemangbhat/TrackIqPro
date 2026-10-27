@@ -117,8 +117,9 @@ Browser ──► Next.js (Vercel)                       Python ai-service (Rend
   Pinecone's free Starter plan caps namespaces per index, around 100, which a
   public portfolio app could hit.) Evals use a separate index-level namespace
   `eval`.
-- **Vector ID:** `{sourceType}:{sourceId}:{chunkIndex}` so all chunks of a
-  source can be deleted/replaced together.
+- **Vector ID:** `{userId}#{sourceType}#{sourceId}#{chunkIndex}` so all
+  chunks of a source (or of a whole user) can be listed by prefix and
+  deleted/replaced together.
 - **Metadata per chunk:** `sourceType` (`job_description` | `note`),
   `sourceId`, `jobId`, `company`, `title`, `round`, `createdAt`, `text`.
 - **Keeping in sync:** after a successful Mongo write in
