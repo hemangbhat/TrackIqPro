@@ -20,6 +20,7 @@ vi.mock("./ai-client", async () => {
         indexSources: vi.fn(),
         deleteSources: vi.fn(),
         deleteUserVectors: vi.fn(),
+        pingHealth: vi.fn(),
     };
 });
 
@@ -27,6 +28,8 @@ import * as ai from "./ai-client";
 import { syncJobDeleted, syncJobSaved, syncNoteDeleted, syncNoteSaved, syncUserDeleted } from "./ai-sync";
 
 const mocked = vi.mocked(ai);
+// Background sync waits out a sleeping free-tier service (see ai-sync.ts).
+const SLOW = { timeoutMs: 50_000 };
 
 /** Wait for everything handed to waitUntil so far. */
 async function flush() {
@@ -44,6 +47,7 @@ beforeEach(async () => {
     mocked.indexSources.mockResolvedValue(undefined);
     mocked.deleteSources.mockResolvedValue(undefined);
     mocked.deleteUserVectors.mockResolvedValue(undefined);
+    mocked.pingHealth.mockResolvedValue(true);
     vi.spyOn(console, "error").mockImplementation(() => {});
 });
 
@@ -104,31 +108,59 @@ describe("ai-sync", () => {
         const job = await Job.create({ userId: "u1", title: "Eng", company: "Acme", jobDescription: "jd" });
         syncJobSaved("u1", job);
         await flush();
-        expect(mocked.deleteSources).toHaveBeenCalledWith("u1", [
-            { sourceType: "job_notes", sourceId: String(job._id) },
-        ]);
+        expect(mocked.deleteSources).toHaveBeenCalledWith(
+            "u1",
+            [{ sourceType: "job_notes", sourceId: String(job._id) }],
+            SLOW
+        );
     });
 
-    it("job save re-indexes notes in batches of 50", async () => {
+    it("job save re-indexes notes in batches of 10", async () => {
         await CareerProfile.create({ userId: "u1", aiEnabled: true });
         const job = await Job.create({ userId: "u1", title: "Eng", company: "Acme" });
         await Note.insertMany(
-            Array.from({ length: 51 }, (_, i) => ({ userId: "u1", title: `n${i}`, content: "c", jobId: String(job._id) }))
+            Array.from({ length: 21 }, (_, i) => ({ userId: "u1", title: `n${i}`, content: "c", jobId: String(job._id) }))
         );
         syncJobSaved("u1", job);
         await flush();
         const noteBatches = mocked.indexSources.mock.calls.map((c) => c[1].length).filter((n) => n > 0);
-        expect(noteBatches).toEqual([50, 1]);
+        expect(noteBatches).toEqual([10, 10, 1]);
+    });
+
+    it("pings the service awake before the first call and uses the long background timeout", async () => {
+        await CareerProfile.create({ userId: "u1", aiEnabled: true });
+        const order: string[] = [];
+        mocked.pingHealth.mockImplementation(async () => {
+            order.push("ping");
+            return false; // still asleep: the sync goes ahead anyway
+        });
+        mocked.indexSources.mockImplementation(async () => {
+            order.push("index");
+        });
+        syncNoteSaved("u1", { _id: "n1", title: "t", content: "c" });
+        await flush();
+        expect(order).toEqual(["ping", "index"]);
+        expect(mocked.indexSources.mock.calls[0][2]).toEqual(SLOW);
+    });
+
+    it("does not ping for a user who has not opted in", async () => {
+        syncNoteSaved("nobody", { _id: "n1", title: "t", content: "c" });
+        await flush();
+        expect(mocked.pingHealth).not.toHaveBeenCalled();
     });
 
     it("job delete removes only job sources", async () => {
         await CareerProfile.create({ userId: "u1", aiEnabled: true });
         syncJobDeleted("u1", "j1");
         await flush();
-        expect(mocked.deleteSources).toHaveBeenCalledWith("u1", [
-            { sourceType: "job_description", sourceId: "j1" },
-            { sourceType: "job_notes", sourceId: "j1" },
-        ]);
+        expect(mocked.deleteSources).toHaveBeenCalledWith(
+            "u1",
+            [
+                { sourceType: "job_description", sourceId: "j1" },
+                { sourceType: "job_notes", sourceId: "j1" },
+            ],
+            SLOW
+        );
     });
 
     it("note save indexes the note with its job's company", async () => {
@@ -146,14 +178,14 @@ describe("ai-sync", () => {
         syncNoteSaved("u1", { _id: "n1", title: "  ", content: "" });
         await flush();
         expect(mocked.indexSources).not.toHaveBeenCalled();
-        expect(mocked.deleteSources).toHaveBeenCalledWith("u1", [{ sourceType: "note", sourceId: "n1" }]);
+        expect(mocked.deleteSources).toHaveBeenCalledWith("u1", [{ sourceType: "note", sourceId: "n1" }], SLOW);
     });
 
     it("note delete removes the note ref", async () => {
         await CareerProfile.create({ userId: "u1", aiEnabled: true });
         syncNoteDeleted("u1", "n1");
         await flush();
-        expect(mocked.deleteSources).toHaveBeenCalledWith("u1", [{ sourceType: "note", sourceId: "n1" }]);
+        expect(mocked.deleteSources).toHaveBeenCalledWith("u1", [{ sourceType: "note", sourceId: "n1" }], SLOW);
     });
 
     it("swallows AI service errors", async () => {
@@ -169,7 +201,7 @@ describe("ai-sync", () => {
     it("user deleted removes vectors even without a profile", async () => {
         syncUserDeleted("ghost");
         await flush();
-        expect(mocked.deleteUserVectors).toHaveBeenCalledWith("ghost");
+        expect(mocked.deleteUserVectors).toHaveBeenCalledWith("ghost", SLOW);
     });
 
     it("stops indexing when the user opts out mid-run", async () => {

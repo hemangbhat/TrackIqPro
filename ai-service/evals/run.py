@@ -129,7 +129,12 @@ def main() -> None:
     store = get_store(EVAL_USER, namespace=EVAL_NAMESPACE)
     if not args.no_index:
         sources = build_sources(fixture["jobs"], fixture["notes"])
-        print(f"Indexed {store.upsert_sources(sources)} chunks from {len(sources)} sources")
+        indexed = store.upsert_sources(sources)
+        print(f"Indexed {indexed} chunks from {len(sources)} sources")
+        # Pinecone serverless is eventually consistent: querying straight away can
+        # miss fresh vectors and under-report recall, so wait until they are visible.
+        if not store.wait_for_namespace_count(indexed):
+            print("Warning: not all vectors were visible after 60s; results may be low")
     chat = get_chat()
 
     rows = [run_case(store, chat, case, jobs) for case in cases]

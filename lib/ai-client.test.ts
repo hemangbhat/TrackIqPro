@@ -48,6 +48,16 @@ describe("ai-client", () => {
         expect(JSON.parse(init.body)).toEqual({ userId: "u1", sources: [] });
     });
 
+    it("index calls time out after 30s by default, or after the caller's timeoutMs", async () => {
+        const timeout = vi.spyOn(AbortSignal, "timeout");
+        fetchMock.mockImplementation(async () => jsonResponse({}));
+        await indexSources("u1", []);
+        await deleteSources("u1", [], { timeoutMs: 50_000 });
+        await deleteUserVectors("u1", { timeoutMs: 50_000 });
+        expect(timeout.mock.calls.map((c) => c[0])).toEqual([30_000, 50_000, 50_000]);
+        timeout.mockRestore();
+    });
+
     it("makes no network call when AI_SERVICE_URL is unset", async () => {
         vi.stubEnv("AI_SERVICE_URL", "");
         expect(aiConfigured()).toBe(false);

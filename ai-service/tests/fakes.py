@@ -7,6 +7,7 @@ FakeIndex mirrors the real serverless client's signatures and return shapes:
   delete(ids=[...], namespace=...)
   query(vector=..., top_k=..., filter=..., include_metadata=True, namespace=...)
       -> {"matches": [{"id","score","metadata"}]}
+  describe_index_stats() -> .namespaces[name].vector_count ("" is "__default__")
 """
 from __future__ import annotations  # the `list` method below shadows the builtin in annotations
 
@@ -14,7 +15,11 @@ from types import SimpleNamespace
 
 
 class FakeEmbeddings:
+    def __init__(self):
+        self.document_calls: list[int] = []  # number of texts per embed_documents call
+
     def embed_documents(self, texts: list[str]) -> list[list[float]]:
+        self.document_calls.append(len(texts))
         return [self.embed_query(t) for t in texts]
 
     def embed_query(self, text: str) -> list[float]:
@@ -86,6 +91,11 @@ class FakeIndex:
         self.delete_batches.append(len(ids))
         for i in ids:
             self.vectors.pop(i, None)
+
+    def describe_index_stats(self):
+        return SimpleNamespace(
+            namespaces={"__default__": SimpleNamespace(vector_count=len(self.vectors))}
+        )
 
     def query(
         self,

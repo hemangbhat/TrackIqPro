@@ -6,6 +6,10 @@ import { getUserPlan } from "../../../lib/stripe";
 import { enforceRateLimit } from "../../../lib/rate-limit";
 import { syncJobSaved } from "../../../lib/ai-sync";
 
+// The response is sent first; this only lets background AI sync (waitUntil)
+// keep running while a sleeping AI service wakes up.
+export const config = { maxDuration: 60 };
+
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     const { userId } = req;
 

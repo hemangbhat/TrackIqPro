@@ -69,7 +69,13 @@ export class AiServiceError extends Error {
     }
 }
 
-const INDEX_TIMEOUT_MS = 10_000;
+/**
+ * Sources per /index call. Each call embeds its chunks in one OpenAI request,
+ * so 10 sources comfortably finish inside INDEX_TIMEOUT_MS.
+ */
+export const INDEX_BATCH_SIZE = 10;
+
+const INDEX_TIMEOUT_MS = 30_000;
 const PREP_TIMEOUT_MS = 55_000;
 const HEALTH_TIMEOUT_MS = 3_000;
 
@@ -100,24 +106,36 @@ async function call(path: string, init: { method: string; body?: unknown; timeou
     return res;
 }
 
-export async function indexSources(userId: string, sources: IndexSource[]): Promise<void> {
-    if (!aiConfigured()) return;
-    await call("/index", { method: "POST", body: { userId, sources }, timeoutMs: INDEX_TIMEOUT_MS });
+/** Index/delete calls default to INDEX_TIMEOUT_MS; background sync passes a longer one. */
+export interface CallOptions {
+    timeoutMs?: number;
 }
 
-export async function deleteSources(userId: string, refs: SourceRef[]): Promise<void> {
+export async function indexSources(userId: string, sources: IndexSource[], opts: CallOptions = {}): Promise<void> {
+    if (!aiConfigured()) return;
+    await call("/index", {
+        method: "POST",
+        body: { userId, sources },
+        timeoutMs: opts.timeoutMs ?? INDEX_TIMEOUT_MS,
+    });
+}
+
+export async function deleteSources(userId: string, refs: SourceRef[], opts: CallOptions = {}): Promise<void> {
     if (!aiConfigured()) return;
     await call("/index/delete", {
         method: "POST",
         body: { userId, sources: refs },
-        timeoutMs: INDEX_TIMEOUT_MS,
+        timeoutMs: opts.timeoutMs ?? INDEX_TIMEOUT_MS,
     });
 }
 
 /** Remove every vector the service holds for this user. */
-export async function deleteUserVectors(userId: string): Promise<void> {
+export async function deleteUserVectors(userId: string, opts: CallOptions = {}): Promise<void> {
     if (!aiConfigured()) return;
-    await call(`/users/${encodeURIComponent(userId)}`, { method: "DELETE", timeoutMs: INDEX_TIMEOUT_MS });
+    await call(`/users/${encodeURIComponent(userId)}`, {
+        method: "DELETE",
+        timeoutMs: opts.timeoutMs ?? INDEX_TIMEOUT_MS,
+    });
 }
 
 export async function requestPrep(input: PrepInput): Promise<PrepResult> {

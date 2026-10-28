@@ -14,11 +14,18 @@ import {
     deleteSources,
     deleteUserVectors,
     indexSources,
+    INDEX_BATCH_SIZE,
+    pingHealth,
     type SourceRef,
 } from "./ai-client";
 import { jobSourceRefs, jobToSources, noteToSource, type JobLike, type NoteLike } from "./ai-sources";
 
-const BATCH_SIZE = 50;
+/**
+ * The free-tier service can take 30-60s to wake from sleep. Sync runs in the
+ * background (waitUntil), so it can afford to wait that out instead of failing;
+ * the routes that schedule it set maxDuration = 60 to allow it.
+ */
+const SLOW = { timeoutMs: 50_000 };
 
 /**
  * Run `work` in the background without blocking the response. The promise starts
@@ -45,6 +52,16 @@ async function shouldSync(userId: string): Promise<boolean> {
     return aiConfigured() && (await userOptedIn(userId));
 }
 
+/**
+ * shouldSync, plus a health ping to start waking a sleeping service before the
+ * first real call. pingHealth never throws; its result doesn't matter here.
+ */
+async function startSync(userId: string): Promise<boolean> {
+    if (!(await shouldSync(userId))) return false;
+    await pingHealth();
+    return true;
+}
+
 // Job fields that appear in the job's own sources (title/company are in the text prefix).
 const JOB_SOURCE_FIELDS = ["jobDescription", "notes", "title", "company"];
 // Job fields copied onto each of the job's notes' metadata.
@@ -62,26 +79,26 @@ export function syncJobSaved(userId: string, job: JobLike, changedFields?: strin
     const touches = (fields: string[]) => !changedFields || fields.some((f) => changedFields.includes(f));
 
     schedule(async () => {
-        if (!(await shouldSync(userId))) return;
+        if (!(await startSync(userId))) return;
         const jobId = String(job._id);
 
         if (touches(JOB_SOURCE_FIELDS)) {
             const sources = jobToSources(job);
-            if (sources.length > 0) await indexSources(userId, sources);
+            if (sources.length > 0) await indexSources(userId, sources, SLOW);
 
             // A field that was cleared must disappear from the index.
             const present = new Set(sources.map((s) => s.sourceType));
             const stale = jobSourceRefs(jobId).filter((ref) => !present.has(ref.sourceType));
-            if (stale.length > 0) await deleteSources(userId, stale);
+            if (stale.length > 0) await deleteSources(userId, stale, SLOW);
         }
 
         // Notes carry the job's company/title, so refresh them when those change.
         if (touches(NOTE_METADATA_FIELDS)) {
             const notes = (await Note.find({ userId, jobId }).lean()) as unknown as NoteLike[];
             const noteSources = notes.flatMap((n) => noteToSource(n, job) ?? []);
-            for (let i = 0; i < noteSources.length; i += BATCH_SIZE) {
+            for (let i = 0; i < noteSources.length; i += INDEX_BATCH_SIZE) {
                 if (!(await shouldSync(userId))) return;
-                await indexSources(userId, noteSources.slice(i, i + BATCH_SIZE));
+                await indexSources(userId, noteSources.slice(i, i + INDEX_BATCH_SIZE), SLOW);
             }
         }
     }, "job saved");
@@ -90,32 +107,32 @@ export function syncJobSaved(userId: string, job: JobLike, changedFields?: strin
 /** Removes the job's own sources only; its notes stay indexed as history. */
 export function syncJobDeleted(userId: string, jobId: string): void {
     schedule(async () => {
-        if (!(await shouldSync(userId))) return;
-        await deleteSources(userId, jobSourceRefs(jobId));
+        if (!(await startSync(userId))) return;
+        await deleteSources(userId, jobSourceRefs(jobId), SLOW);
     }, "job deleted");
 }
 
 export function syncNoteSaved(userId: string, note: NoteLike): void {
     schedule(async () => {
-        if (!(await shouldSync(userId))) return;
+        if (!(await startSync(userId))) return;
 
         // The parent job is only needed for its company name.
         const job = note.jobId ? await findJob(userId, String(note.jobId)) : null;
         const source = noteToSource(note, job);
         if (source) {
             if (!(await shouldSync(userId))) return;
-            await indexSources(userId, [source]);
+            await indexSources(userId, [source], SLOW);
         } else {
             // Blank note: nothing worth indexing, and any older version must go.
-            await deleteSources(userId, [noteRef(note._id)]);
+            await deleteSources(userId, [noteRef(note._id)], SLOW);
         }
     }, "note saved");
 }
 
 export function syncNoteDeleted(userId: string, noteId: string): void {
     schedule(async () => {
-        if (!(await shouldSync(userId))) return;
-        await deleteSources(userId, [noteRef(noteId)]);
+        if (!(await startSync(userId))) return;
+        await deleteSources(userId, [noteRef(noteId)], SLOW);
     }, "note deleted");
 }
 
@@ -123,7 +140,8 @@ export function syncNoteDeleted(userId: string, noteId: string): void {
 export function syncUserDeleted(userId: string): void {
     schedule(async () => {
         if (!aiConfigured()) return;
-        await deleteUserVectors(userId);
+        await pingHealth();
+        await deleteUserVectors(userId, SLOW);
     }, "user deleted", userId);
 }
 
