@@ -60,6 +60,14 @@ describe("ai-sync", () => {
         expect(mocked.deleteSources).not.toHaveBeenCalled();
     });
 
+    it("does nothing for a user with no profile at all", async () => {
+        syncNoteSaved("nobody", { _id: "n1", title: "t", content: "c" });
+        syncNoteDeleted("nobody", "n1");
+        await flush();
+        expect(mocked.indexSources).not.toHaveBeenCalled();
+        expect(mocked.deleteSources).not.toHaveBeenCalled();
+    });
+
     it("does nothing when the AI service is not configured", async () => {
         await CareerProfile.create({ userId: "u1", aiEnabled: true });
         mocked.aiConfigured.mockReturnValue(false);
@@ -162,5 +170,58 @@ describe("ai-sync", () => {
         syncUserDeleted("ghost");
         await flush();
         expect(mocked.deleteUserVectors).toHaveBeenCalledWith("ghost");
+    });
+
+    it("stops indexing when the user opts out mid-run", async () => {
+        await CareerProfile.create({ userId: "u1", aiEnabled: true });
+        const job = await Job.create({ userId: "u1", title: "Eng", company: "Acme", jobDescription: "jd" });
+        await Note.insertMany(
+            Array.from({ length: 60 }, (_, i) => ({ userId: "u1", title: `n${i}`, content: "c", jobId: String(job._id) }))
+        );
+        // The first index call succeeds, then the user disables the copilot.
+        mocked.indexSources.mockImplementationOnce(async () => {
+            await CareerProfile.updateOne({ userId: "u1" }, { aiEnabled: false });
+        });
+        syncJobSaved("u1", job);
+        await flush();
+        expect(mocked.indexSources).toHaveBeenCalledTimes(1);
+    });
+
+    it("a stage-only change makes no index or delete calls", async () => {
+        await CareerProfile.create({ userId: "u1", aiEnabled: true });
+        const job = await Job.create({ userId: "u1", title: "Eng", company: "Acme", jobDescription: "jd" });
+        await Note.create({ userId: "u1", title: "R1", content: "c", jobId: String(job._id) });
+        syncJobSaved("u1", job, ["stage"]);
+        await flush();
+        expect(mocked.indexSources).not.toHaveBeenCalled();
+        expect(mocked.deleteSources).not.toHaveBeenCalled();
+    });
+
+    it("a description-only change re-indexes the job but not its notes", async () => {
+        await CareerProfile.create({ userId: "u1", aiEnabled: true });
+        const job = await Job.create({ userId: "u1", title: "Eng", company: "Acme", jobDescription: "jd" });
+        await Note.create({ userId: "u1", title: "R1", content: "c", jobId: String(job._id) });
+        syncJobSaved("u1", job, ["jobDescription"]);
+        await flush();
+        const sent = mocked.indexSources.mock.calls.flatMap((c) => c[1]);
+        expect(sent.map((s) => s.sourceType)).toEqual(["job_description"]);
+    });
+
+    it("a company change re-indexes the notes", async () => {
+        await CareerProfile.create({ userId: "u1", aiEnabled: true });
+        const job = await Job.create({ userId: "u1", title: "Eng", company: "NewCo" });
+        await Note.create({ userId: "u1", title: "R1", content: "c", jobId: String(job._id) });
+        syncJobSaved("u1", job, ["company"]);
+        await flush();
+        const sent = mocked.indexSources.mock.calls.flatMap((c) => c[1]);
+        expect(sent).toHaveLength(1);
+        expect(sent[0]).toMatchObject({ sourceType: "note", company: "NewCo" });
+    });
+
+    it("logs the userId when an account purge fails", async () => {
+        mocked.deleteUserVectors.mockRejectedValue(new ai.AiServiceError(500));
+        syncUserDeleted("user_123");
+        await flush();
+        expect(vi.mocked(console.error).mock.calls[0][0]).toContain("user_123");
     });
 });

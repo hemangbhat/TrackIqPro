@@ -25,10 +25,12 @@ const BATCH_SIZE = 50;
  * running as soon as it is created, so it also completes locally and in tests;
  * waitUntil only asks Vercel to keep the function alive until it settles.
  */
-function schedule(work: () => Promise<void>, label: string): void {
+function schedule(work: () => Promise<void>, label: string, userId?: string): void {
     const task = work().catch((error) => {
-        // Log the error type only: never note content.
-        console.error(`AI sync failed (${label}):`, error instanceof Error ? error.name : "unknown");
+        // Log the error type only: never note content. userId is an id, not content;
+        // it lets a failed account purge be cleaned up by hand.
+        const who = userId ? ` userId=${userId}` : "";
+        console.error(`AI sync failed (${label})${who}:`, error instanceof Error ? error.name : "unknown");
     });
     waitUntil(task);
 }
@@ -43,24 +45,44 @@ async function shouldSync(userId: string): Promise<boolean> {
     return aiConfigured() && (await userOptedIn(userId));
 }
 
-export function syncJobSaved(userId: string, job: JobLike): void {
+// Job fields that appear in the job's own sources (title/company are in the text prefix).
+const JOB_SOURCE_FIELDS = ["jobDescription", "notes", "title", "company"];
+// Job fields copied onto each of the job's notes' metadata.
+const NOTE_METADATA_FIELDS = ["title", "company"];
+
+/**
+ * `changedFields` (from a PUT/PATCH body) limits the re-embedding to what could
+ * have changed; leave it undefined on create to index everything.
+ *
+ * The opt-in flag is re-checked before every later index call: disabling clears
+ * the flag and then deletes vectors, so a batch sent after that would re-create
+ * data for a user who has opted out.
+ */
+export function syncJobSaved(userId: string, job: JobLike, changedFields?: string[]): void {
+    const touches = (fields: string[]) => !changedFields || fields.some((f) => changedFields.includes(f));
+
     schedule(async () => {
         if (!(await shouldSync(userId))) return;
         const jobId = String(job._id);
 
-        const sources = jobToSources(job);
-        if (sources.length > 0) await indexSources(userId, sources);
+        if (touches(JOB_SOURCE_FIELDS)) {
+            const sources = jobToSources(job);
+            if (sources.length > 0) await indexSources(userId, sources);
 
-        // A field that was cleared must disappear from the index.
-        const present = new Set(sources.map((s) => s.sourceType));
-        const stale = jobSourceRefs(jobId).filter((ref) => !present.has(ref.sourceType));
-        if (stale.length > 0) await deleteSources(userId, stale);
+            // A field that was cleared must disappear from the index.
+            const present = new Set(sources.map((s) => s.sourceType));
+            const stale = jobSourceRefs(jobId).filter((ref) => !present.has(ref.sourceType));
+            if (stale.length > 0) await deleteSources(userId, stale);
+        }
 
-        // Notes carry the job's company/title, so refresh them too.
-        const notes = (await Note.find({ userId, jobId }).lean()) as unknown as NoteLike[];
-        const noteSources = notes.flatMap((n) => noteToSource(n, job) ?? []);
-        for (let i = 0; i < noteSources.length; i += BATCH_SIZE) {
-            await indexSources(userId, noteSources.slice(i, i + BATCH_SIZE));
+        // Notes carry the job's company/title, so refresh them when those change.
+        if (touches(NOTE_METADATA_FIELDS)) {
+            const notes = (await Note.find({ userId, jobId }).lean()) as unknown as NoteLike[];
+            const noteSources = notes.flatMap((n) => noteToSource(n, job) ?? []);
+            for (let i = 0; i < noteSources.length; i += BATCH_SIZE) {
+                if (!(await shouldSync(userId))) return;
+                await indexSources(userId, noteSources.slice(i, i + BATCH_SIZE));
+            }
         }
     }, "job saved");
 }
@@ -81,6 +103,7 @@ export function syncNoteSaved(userId: string, note: NoteLike): void {
         const job = note.jobId ? await findJob(userId, String(note.jobId)) : null;
         const source = noteToSource(note, job);
         if (source) {
+            if (!(await shouldSync(userId))) return;
             await indexSources(userId, [source]);
         } else {
             // Blank note: nothing worth indexing, and any older version must go.
@@ -101,7 +124,7 @@ export function syncUserDeleted(userId: string): void {
     schedule(async () => {
         if (!aiConfigured()) return;
         await deleteUserVectors(userId);
-    }, "user deleted");
+    }, "user deleted", userId);
 }
 
 function noteRef(noteId: { toString(): string }): SourceRef {

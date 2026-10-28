@@ -51,7 +51,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
                 return errorResponse(res, 404, "Job not found");
             }
             
-            syncJobSaved(userId, job);
+            syncJobSaved(userId, job, Object.keys(update));
             return successResponse(res, job);
         } catch (error) {
             console.error("Error updating job:", error);

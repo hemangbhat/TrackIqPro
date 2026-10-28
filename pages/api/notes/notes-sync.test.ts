@@ -59,7 +59,8 @@ describe("notes routes sync with the AI index", () => {
         mocked.indexSources.mockRejectedValue(new ai.AiServiceError(500));
         const r = await call(notesHandler, "POST", { title: "R1", content: "went well" });
         expect(r.status).toBe(201);
-        await expect(Promise.all(scheduled)).resolves.toBeDefined();
+        await Promise.all(scheduled);
+        expect(console.error).toHaveBeenCalled();
         expect(mocked.indexSources).toHaveBeenCalled();
     });
 
