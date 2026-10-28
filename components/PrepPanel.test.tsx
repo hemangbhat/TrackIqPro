@@ -30,7 +30,10 @@ const RESULT: PrepResult = {
     studyPlan: [
         {
             item: "Practice edge cases",
-            citations: [{ sourceType: "job_notes", sourceId: "j2", jobId: "j2", title: "Other job" }],
+            citations: [
+                { sourceType: "job_notes", sourceId: "j2", jobId: "j2", title: "Other job" },
+                { sourceType: "job_notes", sourceId: "j1", jobId: "j1", title: "This job's notes" },
+            ],
         },
     ],
 };
@@ -66,6 +69,33 @@ describe("PrepPanel", () => {
         await act(async () => {});
         expect(screen.queryByRole("heading")).toBeNull();
         expect(screen.queryByRole("button")).toBeNull();
+    });
+
+    it("stays hidden when the status request fails", async () => {
+        const fetchFn = stubFetch({ "/api/ai/status": () => json({}, 500) });
+        renderWithTheme(<PrepPanel jobId="j1" />);
+        await waitFor(() => expect(fetchFn).toHaveBeenCalled());
+        await act(async () => {});
+        expect(screen.queryByRole("heading")).toBeNull();
+        expect(screen.queryByRole("button")).toBeNull();
+    });
+
+    it("shows the cap copy and a disabled button when today's preps are used up on load", async () => {
+        stubFetch({ "/api/ai/status": () => json({ configured: true, enabled: true, remaining: 0 }) });
+        renderWithTheme(<PrepPanel jobId="j1" />);
+        expect(await screen.findByText(CAP)).toBeInTheDocument();
+        expect(screen.getByRole("button", { name: "Prep for this interview" })).toBeDisabled();
+    });
+
+    it("refetches status after a failed enable", async () => {
+        const fetchFn = stubFetch({
+            "/api/ai/status": () => json({ configured: true, enabled: false, remaining: 5 }),
+            "/api/ai/enable": () => json({ error: "Could not send your data to the AI service. Please try again." }, 502),
+        });
+        renderWithTheme(<PrepPanel jobId="j1" />);
+        await userEvent.click(await screen.findByRole("button", { name: "Turn on AI prep" }));
+        await screen.findByRole("alert");
+        expect(fetchFn.mock.calls.filter((c) => c[0] === "/api/ai/status")).toHaveLength(2);
     });
 
     it("shows the consent copy when not enabled", async () => {
@@ -114,6 +144,8 @@ describe("PrepPanel", () => {
         // Another job's source links to that job; this job's source scrolls to the description.
         expect(screen.getByRole("link", { name: "Other job" })).toHaveAttribute("href", "/dashboard/jobs/j2");
         expect(screen.getByRole("link", { name: "This job" })).toHaveAttribute("href", "#job-description");
+        // This job's own notes field scrolls to where those notes are shown.
+        expect(screen.getByRole("link", { name: "This job's notes" })).toHaveAttribute("href", "#job-notes");
         expect(screen.getByRole("heading", { name: "Likely questions" })).toBeInTheDocument();
         expect(screen.getByRole("heading", { name: "Weak spots" })).toBeInTheDocument();
         expect(screen.getByRole("heading", { name: "Study plan" })).toBeInTheDocument();

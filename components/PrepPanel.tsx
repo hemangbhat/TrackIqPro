@@ -6,7 +6,13 @@ import { useReducedMotion } from "./useReducedMotion";
 import { Badge, Button, Card, Input, Spinner } from "./ui/primitives";
 import type { Citation, PrepResult } from "../lib/ai-client";
 
+// Ids of the blocks in MetadataPanel that show the current job's description and notes.
 export const DESCRIPTION_ANCHOR_ID = "job-description";
+export const JOB_NOTES_ANCHOR_ID = "job-notes";
+const ANCHOR_FOR_SOURCE: Partial<Record<Citation["sourceType"], string>> = {
+    job_description: DESCRIPTION_ANCHOR_ID,
+    job_notes: JOB_NOTES_ANCHOR_ID,
+};
 
 const CONSENT_COPY =
     "Your job descriptions and interview notes will be sent to OpenAI to build your prep. You can turn this off any time.";
@@ -47,13 +53,15 @@ function CitationChip({
         );
     }
 
-    if (citation.jobId === currentJobId) {
+    // A source from the job being viewed scrolls to where that text is shown on this page.
+    const anchorId = citation.jobId === currentJobId ? ANCHOR_FOR_SOURCE[citation.sourceType] : undefined;
+    if (anchorId) {
         return (
             <a
-                href={`#${DESCRIPTION_ANCHOR_ID}`}
+                href={`#${anchorId}`}
                 className={chipClass}
                 onClick={(e) => {
-                    const target = document.getElementById(DESCRIPTION_ANCHOR_ID);
+                    const target = document.getElementById(anchorId);
                     if (!target) return; // fall back to the plain hash jump
                     e.preventDefault();
                     target.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
@@ -199,9 +207,9 @@ function LivePrepPanel({ jobId }: { jobId: string }) {
                 setRemaining(body.remaining);
             } else if (res.status === 429) {
                 // Daily cap and per-minute rate limit share a status; the body tells them apart.
-                const isCap = body?.error === CAP_COPY;
-                setError({ message: isCap ? CAP_COPY : RATE_LIMIT_COPY, retryable: false });
-                if (isCap) setRemaining(0);
+                // At the cap, the counter line below shows the cap copy.
+                if (body?.error === CAP_COPY) setRemaining(0);
+                else setError({ message: RATE_LIMIT_COPY, retryable: false });
             } else if (res.status === 503) {
                 setError({ message: body?.error || GENERIC_ERROR_COPY, retryable: true });
             } else {
@@ -259,8 +267,8 @@ function LivePrepPanel({ jobId }: { jobId: string }) {
                     Prep for this interview
                 </Button>
             </div>
-            <p className="mt-2 text-xs text-[var(--text-muted)]">
-                {left} of {DAILY_LIMIT} preps left today
+            <p aria-live="polite" className="mt-2 text-xs text-[var(--text-muted)]">
+                {capped ? CAP_COPY : `${left} of ${DAILY_LIMIT} preps left today`}
             </p>
 
             <div aria-live="polite">

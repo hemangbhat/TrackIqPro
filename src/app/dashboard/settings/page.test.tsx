@@ -321,4 +321,64 @@ describe("Settings page — AI interview prep toggle", () => {
         const call = fetchFn.mock.calls.find((c) => c[0] === "/api/ai/enable")!;
         expect(JSON.parse((call as unknown as [string, RequestInit])[1].body as string)).toEqual({ enabled: false });
     });
+
+    it("offers to retry deleting data when turning off could not delete it", async () => {
+        const DELETE_FAILED = "We turned AI prep off but couldn't delete your existing data. Please try again.";
+        let enabled = true;
+        let deleteWorks = false;
+        const fetchFn = vi.fn((url: string) => {
+            if (url === "/api/ai/enable") {
+                enabled = false; // the server clears the flag even when the delete fails
+                return Promise.resolve(
+                    deleteWorks
+                        ? new Response(JSON.stringify({ enabled: false }), { status: 200 })
+                        : new Response(JSON.stringify({ error: DELETE_FAILED }), { status: 502 })
+                );
+            }
+            return Promise.resolve(
+                new Response(JSON.stringify({ configured: true, enabled, remaining: 5 }), { status: 200 })
+            );
+        });
+        vi.stubGlobal("fetch", fetchFn);
+        const user = userEvent.setup();
+        renderSettings();
+        await user.click(await screen.findByRole("switch", { name: "AI interview prep" }));
+        await user.click(screen.getByRole("button", { name: "Confirm" }));
+
+        expect(await screen.findByRole("alert")).toHaveTextContent(DELETE_FAILED);
+        // Status was refetched after the failure: the switch shows the server's flag (off).
+        expect(screen.getByRole("switch", { name: "AI interview prep" })).toHaveAttribute("aria-checked", "false");
+
+        deleteWorks = true;
+        await user.click(screen.getByRole("button", { name: "Retry deleting data" }));
+        const enableCalls = fetchFn.mock.calls.filter((c) => c[0] === "/api/ai/enable");
+        expect(enableCalls).toHaveLength(2);
+        expect(JSON.parse((enableCalls[1] as unknown as [string, RequestInit])[1].body as string)).toEqual({
+            enabled: false,
+        });
+        await act(async () => {});
+        expect(screen.queryByRole("button", { name: "Retry deleting data" })).toBeNull();
+        expect(screen.queryByRole("alert")).toBeNull();
+    });
+
+    it("shows a retry when the status request fails, so the off-switch stays reachable", async () => {
+        let fail = true;
+        vi.stubGlobal(
+            "fetch",
+            vi.fn(() =>
+                Promise.resolve(
+                    fail
+                        ? new Response("{}", { status: 500 })
+                        : new Response(JSON.stringify({ configured: true, enabled: true, remaining: 5 }), { status: 200 })
+                )
+            )
+        );
+        const user = userEvent.setup();
+        renderSettings();
+        expect(await screen.findByText("Couldn't load AI prep settings.")).toBeInTheDocument();
+        fail = false;
+        await user.click(screen.getByRole("button", { name: "Retry" }));
+        expect(await screen.findByRole("switch", { name: "AI interview prep" })).toHaveAttribute("aria-checked", "true");
+        expect(screen.queryByText("Couldn't load AI prep settings.")).toBeNull();
+    });
 });

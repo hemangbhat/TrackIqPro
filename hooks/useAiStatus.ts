@@ -5,11 +5,17 @@ export type AiStatus = { configured: boolean; enabled: boolean; remaining: numbe
 
 /**
  * Loads GET /api/ai/status and exposes setEnabled (POST /api/ai/enable).
- * After a successful enable/disable the status is refetched so callers
- * always render server truth. `skip` disables all fetching (demo sample).
+ * After every enable/disable attempt, successful or not, the status is
+ * refetched so callers always render the server's flag. `skip` disables all
+ * fetching (demo sample).
+ *
+ * `statusError` means the status request itself failed. That is different from
+ * "not configured": the prep panel stays hidden either way, but Settings shows a
+ * retry so the off-switch is always reachable.
  */
 export function useAiStatus(skip = false) {
     const [status, setStatus] = useState<AiStatus | null>(null);
+    const [statusError, setStatusError] = useState(false);
     const [loading, setLoading] = useState(!skip);
     const [enableError, setEnableError] = useState<string | null>(null);
     const [busy, setBusy] = useState(false);
@@ -19,9 +25,10 @@ export function useAiStatus(skip = false) {
             const res = await fetch("/api/ai/status");
             if (!res.ok) throw new Error("status failed");
             setStatus((await res.json()) as AiStatus);
+            setStatusError(false);
         } catch {
-            // Treat a failed status call like "not configured": the feature stays hidden.
-            setStatus({ configured: false, enabled: false, remaining: 0 });
+            setStatus(null);
+            setStatusError(true);
         } finally {
             setLoading(false);
         }
@@ -36,28 +43,29 @@ export function useAiStatus(skip = false) {
         async (enabled: boolean): Promise<boolean> => {
             setBusy(true);
             setEnableError(null);
+            let ok = false;
             try {
                 const res = await fetch("/api/ai/enable", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ enabled }),
                 });
-                if (!res.ok) {
+                ok = res.ok;
+                if (!ok) {
                     const body = await res.json().catch(() => ({}));
                     setEnableError(body?.error || "Something went wrong. Please try again.");
-                    return false;
                 }
-                await refresh();
-                return true;
             } catch {
                 setEnableError("Something went wrong. Please try again.");
-                return false;
-            } finally {
-                setBusy(false);
             }
+            // Even a failed call may have changed the flag (disable clears it before
+            // deleting data), so always re-read it.
+            await refresh();
+            setBusy(false);
+            return ok;
         },
         [refresh]
     );
 
-    return { status, loading, enableError, busy, refresh, setEnabled };
+    return { status, statusError, loading, enableError, busy, refresh, setEnabled };
 }

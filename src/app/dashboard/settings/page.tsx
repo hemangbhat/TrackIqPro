@@ -123,28 +123,55 @@ function ThemeSelector() {
     );
 }
 
+const AI_PREP_SECTION = {
+    id: "ai-prep",
+    icon: <SparklesIcon size={20} />,
+    title: "AI interview prep",
+    description: "Get likely questions, weak spots, and a study plan drawn from your own notes.",
+};
+
 /**
  * Opt-in switch for the AI interview-prep copilot. Hidden entirely when the AI
  * service is not configured. Turning it off deletes the user's indexed notes
- * from the AI service, so it asks for an inline confirmation first.
+ * from the AI service, so it asks for an inline confirmation first. If that
+ * delete fails the server still turns AI prep off, and we offer a retry.
  */
 function AiPrepToggle() {
-    const { status, loading, enableError, busy, setEnabled } = useAiStatus();
+    const { status, statusError, loading, enableError, busy, refresh, setEnabled } = useAiStatus();
     const [confirmingOff, setConfirmingOff] = useState(false);
+    const [deleteFailed, setDeleteFailed] = useState(false);
 
-    if (loading || !status?.configured) return null;
+    if (loading) return null;
+
+    // A failed status call is not "not configured": keep the off-switch reachable.
+    if (statusError) {
+        return (
+            <Section {...AI_PREP_SECTION}>
+                <div className="flex flex-wrap items-center gap-3">
+                    <p className="text-sm text-[var(--text-muted)]">Couldn&apos;t load AI prep settings.</p>
+                    <Button variant="secondary" size="sm" onClick={() => void refresh()}>
+                        Retry
+                    </Button>
+                </div>
+            </Section>
+        );
+    }
+
+    if (!status?.configured) return null;
 
     async function turnOff() {
-        if (await setEnabled(false)) setConfirmingOff(false);
+        const ok = await setEnabled(false);
+        setConfirmingOff(false);
+        setDeleteFailed(!ok);
+    }
+
+    function turnOn() {
+        setDeleteFailed(false);
+        void setEnabled(true);
     }
 
     return (
-        <Section
-            id="ai-prep"
-            icon={<SparklesIcon size={20} />}
-            title="AI interview prep"
-            description="Get likely questions, weak spots, and a study plan drawn from your own notes."
-        >
+        <Section {...AI_PREP_SECTION}>
             <div className="flex items-center justify-between gap-4 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3">
                 <span id="ai-prep-label" className="text-sm font-medium text-[var(--text)]">
                     AI interview prep
@@ -157,7 +184,7 @@ function AiPrepToggle() {
                     disabled={busy}
                     onClick={() => {
                         if (status.enabled) setConfirmingOff(true);
-                        else void setEnabled(true);
+                        else turnOn();
                     }}
                     className={
                         "relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 disabled:opacity-60 " +
@@ -206,6 +233,14 @@ function AiPrepToggle() {
                 <p role="alert" className="mt-3 text-sm text-rose-600 dark:text-rose-400">
                     {enableError}
                 </p>
+            )}
+
+            {deleteFailed && (
+                <div className="mt-3">
+                    <Button variant="secondary" size="sm" onClick={() => void turnOff()} loading={busy}>
+                        Retry deleting data
+                    </Button>
+                </div>
             )}
         </Section>
     );
