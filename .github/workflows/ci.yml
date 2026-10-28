@@ -30,7 +30,8 @@ jobs:
       - run: npm run build
 
   ai-service:
-    runs-on: ubuntu-latest
+    # Pinned: Ubuntu 26.04 (ubuntu-latest) ships no Python 3.10 builds.
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: ai-service
@@ -38,7 +39,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version-file: ai-service/.python-version
+          python-version: "3.10"
           cache: pip
           cache-dependency-path: ai-service/requirements.txt
       - run: pip install -r requirements.txt
