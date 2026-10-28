@@ -1,5 +1,6 @@
 // @vitest-environment node
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import mongoose from "mongoose";
 import type { NextApiRequest, NextApiResponse } from "next";
 import { startMemoryMongo, stopMemoryMongo } from "../../../test/mongo-memory";
 import CareerProfile from "../../../models/CareerProfile";
@@ -190,6 +191,45 @@ describe("POST /api/ai/prep", () => {
     });
 });
 
+describe("POST /api/ai/prep failure handling", () => {
+    it("treats an empty AI body as insufficient data and keeps the count honest", async () => {
+        mocked.requestPrep.mockResolvedValue({} as PrepResult);
+        const r = await prep({ jobId });
+        expect(r.status).toBe(200);
+        expect(r.body.result.insufficientData).toBe(true);
+        expect(r.body.remaining).toBe(4);
+        expect(await remainingPreps("u1")).toBe(4);
+    });
+
+    it("refunds and returns 503 when a citation lookup throws", async () => {
+        const citation = { sourceType: "note" as const, sourceId: String(new mongoose.Types.ObjectId()), jobId, title: "t" };
+        mocked.requestPrep.mockResolvedValue(
+            prepResult({ weakSpots: [{ topic: "t", detail: "d", citations: [citation] }] })
+        );
+        const spy = vi.spyOn(Note, "find").mockImplementation(() => {
+            throw new Error("db down");
+        });
+        try {
+            const r = await prep({ jobId });
+            expect(r.status).toBe(503);
+            expect(await remainingPreps("u1")).toBe(5);
+        } finally {
+            spy.mockRestore();
+        }
+    });
+
+    it("still returns the 503 copy when the refund itself fails", async () => {
+        mocked.requestPrep.mockRejectedValue(new ai.AiServiceError(0));
+        const spy = vi.spyOn(AiUsage, "updateOne").mockRejectedValue(new Error("db down"));
+        try {
+            const r = await prep({ jobId });
+            expect(r.status).toBe(503);
+        } finally {
+            spy.mockRestore();
+        }
+    });
+});
+
 describe("GET /api/ai/status", () => {
     it("reports configured, enabled and remaining, and warms the service", async () => {
         const r = await call(statusHandler, "GET");
@@ -246,7 +286,16 @@ describe("POST /api/ai/enable", () => {
         expect(((await CareerProfile.findOne({ userId: "u1" }).lean()) as any).aiEnabled).toBe(false);
     });
 
-    it("enable false returns 502 and leaves the flag on when vector deletion fails", async () => {
+    it("enable false clears the flag before deleting vectors", async () => {
+        let flagDuringDelete: unknown;
+        mocked.deleteUserVectors.mockImplementation(async () => {
+            flagDuringDelete = ((await CareerProfile.findOne({ userId: "u1" }).lean()) as any).aiEnabled;
+        });
+        await call(enableHandler, "POST", { enabled: false });
+        expect(flagDuringDelete).toBe(false);
+    });
+
+    it("enable false returns 502 and restores the flag when vector deletion fails", async () => {
         mocked.deleteUserVectors.mockRejectedValue(new ai.AiServiceError(0));
         const r = await call(enableHandler, "POST", { enabled: false });
         expect(r.status).toBe(502);

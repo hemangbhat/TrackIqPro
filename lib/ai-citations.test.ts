@@ -1,7 +1,22 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
 import type { Citation, PrepResult } from "./ai-client";
-import { EMPTY_DATA_MESSAGE, filterStaleCitations } from "./ai-citations";
+import { EMPTY_DATA_MESSAGE, filterStaleCitations, normalizePrepResult } from "./ai-citations";
+
+describe("normalizePrepResult", () => {
+    it("fills in missing lists and citations", () => {
+        const out = normalizePrepResult({ studyPlan: [{ item: "i" }] } as unknown as PrepResult);
+        expect(out.likelyQuestions).toEqual([]);
+        expect(out.weakSpots).toEqual([]);
+        expect(out.studyPlan[0].citations).toEqual([]);
+        expect(out.insufficientData).toBe(false);
+    });
+
+    it("copes with an empty or null body", () => {
+        expect(normalizePrepResult({}).studyPlan).toEqual([]);
+        expect(normalizePrepResult(null).message).toBe("");
+    });
+});
 
 const cite = (sourceType: Citation["sourceType"], sourceId: string, jobId = "j1"): Citation => ({
     sourceType,

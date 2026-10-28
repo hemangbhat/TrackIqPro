@@ -1,8 +1,8 @@
 // pages/api/ai/enable.ts
 // POST /api/ai/enable { enabled } -> { enabled }
 // The consent switch. Turning it on records consent and sends the user's
-// existing jobs and notes to the AI service. Turning it off deletes their
-// vectors first, so we never claim data is gone when it is not.
+// existing jobs and notes to the AI service. Turning it off clears the flag,
+// then deletes their vectors (restoring the flag if that fails).
 
 import { NextApiResponse } from "next";
 import { connectDB } from "../../../lib/db";
@@ -19,6 +19,9 @@ import {
 import { enforceRateLimit } from "../../../lib/rate-limit";
 import { aiConfigured, deleteUserVectors, indexSources, type IndexSource } from "../../../lib/ai-client";
 import { jobToSources, noteToSource, type JobLike, type NoteLike } from "../../../lib/ai-sources";
+
+// Initial indexing awaits batched calls to a possibly cold service.
+export const config = { maxDuration: 60 };
 
 const BATCH_SIZE = 50;
 
@@ -78,18 +81,21 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
             return successResponse(res, { enabled: true });
         }
 
-        // Disabling: delete remote data first. If that fails, stay enabled and say so.
-        try {
-            await deleteUserVectors(userId);
-        } catch (error) {
-            console.error("AI vector deletion failed:", error);
-            return errorResponse(res, 502, "Could not delete your data from the AI service. Please try again.");
-        }
+        // Disabling: clear the flag FIRST so no job/note save can re-index this user
+        // while we delete. If the delete fails, restore the flag and say so: we never
+        // claim data is gone when it is not.
         await CareerProfile.findOneAndUpdate(
             { userId },
             { $set: { aiEnabled: false } },
             { upsert: true, setDefaultsOnInsert: true }
         );
+        try {
+            await deleteUserVectors(userId);
+        } catch (error) {
+            console.error("AI vector deletion failed:", error);
+            await CareerProfile.updateOne({ userId }, { $set: { aiEnabled: true } });
+            return errorResponse(res, 502, "Could not delete your data from the AI service. Please try again.");
+        }
         return successResponse(res, { enabled: false });
     } catch (error) {
         console.error("AI enable error:", error);

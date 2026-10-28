@@ -20,7 +20,7 @@ import {
 import { enforceRateLimit } from "../../../lib/rate-limit";
 import { aiConfigured, requestPrep } from "../../../lib/ai-client";
 import { consumePrep, refundPrep } from "../../../lib/ai-usage";
-import { filterStaleCitations } from "../../../lib/ai-citations";
+import { filterStaleCitations, normalizePrepResult } from "../../../lib/ai-citations";
 
 // The AI call can take up to ~55s (see PREP_TIMEOUT_MS in lib/ai-client.ts).
 export const config = { maxDuration: 60 };
@@ -64,15 +64,19 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
         if (!profile?.aiEnabled) return errorResponse(res, 403, "AI copilot is not enabled");
 
         // A malformed id can never match, so it is a plain 404 rather than a cast error.
-        const job = mongoose.Types.ObjectId.isValid(jobId) ? await Job.findOne({ _id: jobId, userId }).lean() : null;
+        const job = (
+            mongoose.Types.ObjectId.isValid(jobId) ? await Job.findOne({ _id: jobId, userId }).lean() : null
+        ) as { title: string; company: string } | null;
         if (!job) return errorResponse(res, 404, "Job not found");
 
         const usage = await consumePrep(userId);
         if (!usage.allowed) return errorResponse(res, 429, CAP_MESSAGE);
 
-        let result;
+        // Everything until we respond can fail after the prep was consumed, so any
+        // throw (AI call, malformed payload, citation lookups) refunds it.
+        let filtered;
         try {
-            result = await requestPrep({
+            const raw = await requestPrep({
                 userId,
                 jobId,
                 jobTitle: job.title,
@@ -84,31 +88,36 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
                     seniority: profile.seniority ?? "mid",
                 },
             });
+            const result = normalizePrepResult(raw);
+
+            // Drop citations to notes/jobs deleted after indexing. Query by userId too,
+            // so an id belonging to someone else never counts as existing.
+            const cited = [
+                ...result.likelyQuestions.flatMap((q) => q.citations),
+                ...result.weakSpots.flatMap((w) => w.citations),
+                ...result.studyPlan.flatMap((s) => s.citations),
+            ];
+            const noteIds = validObjectIds([...new Set(cited.filter((c) => c.sourceType === "note").map((c) => c.sourceId))]);
+            const jobIds = validObjectIds([...new Set(cited.filter((c) => c.sourceType !== "note").map((c) => c.sourceId))]);
+            const [notes, jobs] = await Promise.all([
+                Note.find({ _id: { $in: noteIds }, userId }).select("_id").lean(),
+                Job.find({ _id: { $in: jobIds }, userId }).select("_id").lean(),
+            ]);
+            filtered = filterStaleCitations(
+                result,
+                new Set(notes.map((n) => String(n._id))),
+                new Set(jobs.map((j) => String(j._id)))
+            );
         } catch (error) {
             // The user got nothing, so give the prep back (on the day it was taken).
             console.error("AI prep failed:", error);
-            await refundPrep(userId, usage.date);
+            try {
+                await refundPrep(userId, usage.date);
+            } catch (refundError) {
+                console.error("Prep refund failed:", refundError);
+            }
             return errorResponse(res, 503, UNAVAILABLE_MESSAGE);
         }
-
-        // Drop citations to notes/jobs deleted after indexing. Query by userId too,
-        // so an id belonging to someone else never counts as existing.
-        const cited = [
-            ...result.likelyQuestions.flatMap((q) => q.citations),
-            ...result.weakSpots.flatMap((w) => w.citations),
-            ...result.studyPlan.flatMap((s) => s.citations),
-        ];
-        const noteIds = validObjectIds([...new Set(cited.filter((c) => c.sourceType === "note").map((c) => c.sourceId))]);
-        const jobIds = validObjectIds([...new Set(cited.filter((c) => c.sourceType !== "note").map((c) => c.sourceId))]);
-        const [notes, jobs] = await Promise.all([
-            Note.find({ _id: { $in: noteIds }, userId }).select("_id").lean(),
-            Job.find({ _id: { $in: jobIds }, userId }).select("_id").lean(),
-        ]);
-        const filtered = filterStaleCitations(
-            result,
-            new Set(notes.map((n) => String(n._id))),
-            new Set(jobs.map((j) => String(j._id)))
-        );
 
         return successResponse(res, { result: filtered, remaining: usage.remaining });
     } catch (error) {

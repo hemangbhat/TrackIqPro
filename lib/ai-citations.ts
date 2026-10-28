@@ -7,6 +7,26 @@ import type { Citation, PrepResult } from "./ai-client";
 
 export const EMPTY_DATA_MESSAGE = "Add notes from your rounds to get prep tailored to you";
 
+/**
+ * The AI client casts the service's JSON without checking it, so make the shape
+ * safe before anything iterates it: missing lists become [], missing citations become [].
+ */
+export function normalizePrepResult(raw: Partial<PrepResult> | null | undefined): PrepResult {
+    const r = raw ?? {};
+    const list = <T extends { citations?: Citation[] }>(items: T[] | undefined) =>
+        (Array.isArray(items) ? items : []).map((i) => ({
+            ...i,
+            citations: Array.isArray(i?.citations) ? i.citations : [],
+        }));
+    return {
+        insufficientData: r.insufficientData === true,
+        message: typeof r.message === "string" ? r.message : "",
+        likelyQuestions: list(r.likelyQuestions) as PrepResult["likelyQuestions"],
+        weakSpots: list(r.weakSpots) as PrepResult["weakSpots"],
+        studyPlan: list(r.studyPlan) as PrepResult["studyPlan"],
+    };
+}
+
 /** A note citation needs its note to exist; job_description / job_notes need their job. */
 function isLive(c: Citation, noteIds: Set<string>, jobIds: Set<string>): boolean {
     return c.sourceType === "note" ? noteIds.has(c.sourceId) : jobIds.has(c.sourceId);
