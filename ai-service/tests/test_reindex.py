@@ -70,6 +70,10 @@ class _FakeStore:
             raise ValueError("user_id must not contain '#'")
         self.user_id = user_id
         self.upserted = []
+        self.deleted_all = False
+
+    def delete_all(self):
+        self.deleted_all = True
 
     def upsert_sources(self, sources):
         self.upserted = sources
@@ -89,6 +93,37 @@ def test_one_failing_user_does_not_stop_the_run(capsys):
     failures = reindex_users(["bad#id", "u2"], load_docs, factory)
     assert failures == 1
     assert len(stores["u2"].upserted) == 1
+    assert stores["u2"].deleted_all
     out = capsys.readouterr().out
     assert "user=bad#id FAILED ValueError" in out
     assert "user=u2 sources=1 chunks=1" in out
+
+
+def test_reindex_removes_vectors_of_deleted_sources():
+    from app.store import UserStore
+    from tests.fakes import FakeEmbeddings, FakeIndex
+
+    index = FakeIndex()
+    factory = lambda user_id: UserStore(index, FakeEmbeddings(), user_id)  # noqa: E731
+    kept = {"_id": "n1", "jobId": None, "title": "Kept", "content": "c", "createdAt": "x"}
+    deleted = {"_id": "n2", "jobId": None, "title": "Deleted", "content": "c", "createdAt": "x"}
+    other_user = {"_id": "n9", "jobId": None, "title": "Theirs", "content": "c", "createdAt": "x"}
+
+    reindex_users(["u1"], lambda _u: ([], [kept, deleted]), factory)
+    reindex_users(["u2"], lambda _u: ([], [other_user]), factory)
+    # n2 was deleted in Mongo but its delete sync never reached the service.
+    assert reindex_users(["u1"], lambda _u: ([], [kept]), factory) == 0
+
+    assert sorted(index.vectors) == ["u1#note#n1#0", "u2#note#n9#0"]
+
+
+def test_reindex_clears_a_user_whose_sources_are_all_gone():
+    from app.store import UserStore
+    from tests.fakes import FakeEmbeddings, FakeIndex
+
+    index = FakeIndex()
+    factory = lambda user_id: UserStore(index, FakeEmbeddings(), user_id)  # noqa: E731
+    note = {"_id": "n1", "jobId": None, "title": "Old", "content": "c", "createdAt": "x"}
+    reindex_users(["u1"], lambda _u: ([], [note]), factory)
+    reindex_users(["u1"], lambda _u: ([], []), factory)
+    assert index.vectors == {}

@@ -2,7 +2,11 @@
 
 Usage (from ai-service/):  python -m scripts.reindex [--user USER_ID]
 
-Safe to run any time: upserting a source replaces all of its chunks.
+Rebuilds each user from scratch: delete ALL of the user's vectors, then upsert
+sources rebuilt from MongoDB. That also removes vectors of jobs/notes that were
+deleted (or fields that were cleared) while a sync call was failing, so the
+index ends up matching Mongo exactly. Safe to run any time; during the run a
+user's prep may briefly see fewer sources.
 Only users with careerprofiles.aiEnabled == true are touched.
 Prints counts only, never note content.
 """
@@ -74,7 +78,8 @@ def build_sources(job_docs: list[dict], note_docs: list[dict]) -> list[IndexSour
 
 
 def reindex_users(user_ids, load_docs, store_factory) -> int:
-    """Re-index each user; one user's failure never stops the others.
+    """Rebuild each user's vectors (delete all, then upsert); one user's failure
+    never stops the others.
 
     load_docs(user_id) -> (job_docs, note_docs). Returns the number of failed users.
     """
@@ -83,7 +88,9 @@ def reindex_users(user_ids, load_docs, store_factory) -> int:
         try:
             jobs, notes = load_docs(user_id)
             sources = build_sources(jobs, notes)
-            chunks = store_factory(user_id).upsert_sources(sources) if sources else 0
+            store = store_factory(user_id)
+            store.delete_all()
+            chunks = store.upsert_sources(sources) if sources else 0
             print(f"user={user_id} sources={len(sources)} chunks={chunks}")
         except Exception as exc:  # report the type only, never content
             failures += 1

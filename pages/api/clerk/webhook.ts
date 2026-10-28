@@ -2,6 +2,8 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { Webhook } from "svix";
 import { sendWelcomeEmail } from "../../../lib/email";
 import { syncUserDeleted } from "../../../lib/ai-sync";
+import { connectDB } from "../../../lib/db";
+import CareerProfile from "../../../models/CareerProfile";
 
 // Clerk delivers a raw JSON body that must be verified with Svix using the
 // exact bytes — so disable Next's body parser and read the raw buffer.
@@ -38,9 +40,26 @@ interface ClerkOtherEvent {
 type ClerkEvent = ClerkUserCreated | ClerkUserDeleted | ClerkOtherEvent;
 
 /**
+ * Withdraw a deleted user's AI consent. The profile itself is kept, but with
+ * aiEnabled still true the reindex script would re-upload their data. Never
+ * throws: a DB failure is logged (id and error type only) and the vector purge
+ * still runs.
+ */
+async function clearAiConsent(userId: string): Promise<void> {
+    try {
+        await connectDB();
+        // No upsert: a user without a profile has nothing to withdraw.
+        await CareerProfile.updateOne({ userId }, { $set: { aiEnabled: false } });
+    } catch (err) {
+        const reason = err instanceof Error ? err.name : "unknown";
+        console.error(`[clerk/webhook] could not clear aiEnabled userId=${userId}:`, reason);
+    }
+}
+
+/**
  * Clerk webhook receiver.
  *
- * On `user.deleted` it removes the user's AI vectors. On `user.created` it sends a branded welcome email (best-effort — email
+ * On `user.deleted` it turns AI prep off and removes the user's AI vectors. On `user.created` it sends a branded welcome email (best-effort — email
  * failures never fail the webhook, so Clerk won't retry forever). Requires
  * CLERK_WEBHOOK_SECRET; if unset, the endpoint returns 200 and no-ops so an
  * unconfigured environment doesn't error.
@@ -84,6 +103,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 });
             }
         } else if (evt.type === "user.deleted") {
+            // Flag off first, so a reindex running meanwhile can't restore the vectors.
+            await clearAiConsent(evt.data.id);
             // Vectors are removed in the background, so we still reply promptly.
             syncUserDeleted(evt.data.id);
         }

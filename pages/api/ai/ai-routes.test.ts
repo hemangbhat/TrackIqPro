@@ -11,6 +11,7 @@ import { remainingPreps } from "../../../lib/ai-usage";
 import type { PrepResult } from "../../../lib/ai-client";
 
 vi.mock("@clerk/nextjs/server", () => ({ getAuth: vi.fn() }));
+vi.mock("@vercel/functions", () => ({ waitUntil: vi.fn() }));
 vi.mock("../../../lib/db", () => ({ connectDB: vi.fn().mockResolvedValue(undefined) }));
 vi.mock("../../../lib/ai-client", async () => {
     const actual = await vi.importActual<typeof import("../../../lib/ai-client")>("../../../lib/ai-client");
@@ -25,6 +26,7 @@ vi.mock("../../../lib/ai-client", async () => {
 });
 
 import { getAuth } from "@clerk/nextjs/server";
+import { waitUntil } from "@vercel/functions";
 import * as ai from "../../../lib/ai-client";
 import prepHandler from "./prep";
 import statusHandler from "./status";
@@ -235,6 +237,8 @@ describe("GET /api/ai/status", () => {
         const r = await call(statusHandler, "GET");
         expect(r.body).toEqual({ configured: true, enabled: true, remaining: 5 });
         expect(mocked.pingHealth).toHaveBeenCalled();
+        // The ping is handed to waitUntil so Vercel doesn't freeze it once we respond.
+        expect(vi.mocked(waitUntil)).toHaveBeenCalledWith(mocked.pingHealth.mock.results[0].value);
     });
 
     it("still reports the profile flag when not configured, without pinging", async () => {
@@ -257,9 +261,9 @@ describe("POST /api/ai/enable", () => {
         const profile: any = await CareerProfile.findOne({ userId: "u1" }).lean();
         expect(profile.aiEnabled).toBe(true);
         expect(profile.aiEnabledAt).toBeInstanceOf(Date);
-        // 1 job_description + 60 notes = 61 sources, sent as batches of 50 and 11.
+        // 1 job_description + 60 notes = 61 sources, sent as six batches of 10 and one of 1.
         const sizes = mocked.indexSources.mock.calls.map((c) => c[1].length);
-        expect(sizes).toEqual([50, 11]);
+        expect(sizes).toEqual([10, 10, 10, 10, 10, 10, 1]);
         expect(mocked.indexSources.mock.calls[0][0]).toBe("u1");
     });
 
@@ -295,11 +299,26 @@ describe("POST /api/ai/enable", () => {
         expect(flagDuringDelete).toBe(false);
     });
 
-    it("enable false returns 502 and restores the flag when vector deletion fails", async () => {
+    it("enable false returns 502 but leaves the flag off when vector deletion fails", async () => {
         mocked.deleteUserVectors.mockRejectedValue(new ai.AiServiceError(0));
         const r = await call(enableHandler, "POST", { enabled: false });
         expect(r.status).toBe(502);
-        expect(((await CareerProfile.findOne({ userId: "u1" }).lean()) as any).aiEnabled).toBe(true);
+        expect(r.body.error).toBe("We turned AI prep off but couldn't delete your existing data. Please try again.");
+        expect(((await CareerProfile.findOne({ userId: "u1" }).lean()) as any).aiEnabled).toBe(false);
+    });
+
+    it("enable false never opts in a user who had not consented, even when deletion fails", async () => {
+        await CareerProfile.deleteMany({});
+        mocked.deleteUserVectors.mockRejectedValue(new ai.AiServiceError(0));
+        expect((await call(enableHandler, "POST", { enabled: false })).status).toBe(502);
+        expect(((await CareerProfile.findOne({ userId: "u1" }).lean()) as any).aiEnabled).toBe(false);
+    });
+
+    it("enable false retries the delete when the flag is already off", async () => {
+        await CareerProfile.updateOne({ userId: "u1" }, { aiEnabled: false });
+        const r = await call(enableHandler, "POST", { enabled: false });
+        expect(r.status).toBe(200);
+        expect(mocked.deleteUserVectors).toHaveBeenCalledWith("u1");
     });
 
     it("rejects a non-boolean body with 400", async () => {

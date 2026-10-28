@@ -3,6 +3,7 @@
 // Also nudges the AI service awake (it may be cold) so the prep click is fast.
 
 import { NextApiResponse } from "next";
+import { waitUntil } from "@vercel/functions";
 import { connectDB } from "../../../lib/db";
 import CareerProfile from "../../../models/CareerProfile";
 import {
@@ -25,8 +26,9 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     try {
         await connectDB();
         const configured = aiConfigured();
-        // Warm-up only: fire and forget. pingHealth never throws and has its own 3s timeout.
-        if (configured) void pingHealth().catch(() => {});
+        // Warm-up only: don't wait for it. waitUntil keeps the ping alive after we
+        // respond; pingHealth never throws and has its own 3s timeout.
+        if (configured) waitUntil(pingHealth());
 
         const profile = (await CareerProfile.findOne({ userId }).lean()) as { aiEnabled?: boolean } | null;
         return successResponse(res, {
