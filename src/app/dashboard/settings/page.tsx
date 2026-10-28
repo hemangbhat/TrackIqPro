@@ -16,9 +16,11 @@ import {
     PaletteIcon,
     ShieldIcon,
     AlertTriangleIcon,
+    SparklesIcon,
 } from "../../../../components/ui/icons";
 import { FREE_JOB_LIMIT } from "../../../../lib/plans";
 import { gateExport } from "../../../../lib/plan-gate";
+import { useAiStatus } from "../../../../hooks/useAiStatus";
 
 /**
  * Section wrapper giving every settings block a consistent icon-led heading +
@@ -118,6 +120,129 @@ function ThemeSelector() {
                 );
             })}
         </div>
+    );
+}
+
+const AI_PREP_SECTION = {
+    id: "ai-prep",
+    icon: <SparklesIcon size={20} />,
+    title: "AI interview prep",
+    description: "Get likely questions, weak spots, and a study plan drawn from your own notes.",
+};
+
+/**
+ * Opt-in switch for the AI interview-prep copilot. Hidden entirely when the AI
+ * service is not configured. Turning it off deletes the user's indexed notes
+ * from the AI service, so it asks for an inline confirmation first. If that
+ * delete fails the server still turns AI prep off, and we offer a retry.
+ */
+function AiPrepToggle() {
+    const { status, statusError, loading, enableError, busy, refresh, setEnabled } = useAiStatus();
+    const [confirmingOff, setConfirmingOff] = useState(false);
+    const [deleteFailed, setDeleteFailed] = useState(false);
+
+    if (loading) return null;
+
+    // A failed status call is not "not configured": keep the off-switch reachable.
+    if (statusError) {
+        return (
+            <Section {...AI_PREP_SECTION}>
+                <div className="flex flex-wrap items-center gap-3">
+                    <p className="text-sm text-[var(--text-muted)]">Couldn&apos;t load AI prep settings.</p>
+                    <Button variant="secondary" size="sm" onClick={() => void refresh()}>
+                        Retry
+                    </Button>
+                </div>
+            </Section>
+        );
+    }
+
+    if (!status?.configured) return null;
+
+    async function turnOff() {
+        const ok = await setEnabled(false);
+        setConfirmingOff(false);
+        setDeleteFailed(!ok);
+    }
+
+    function turnOn() {
+        setDeleteFailed(false);
+        void setEnabled(true);
+    }
+
+    return (
+        <Section {...AI_PREP_SECTION}>
+            <div className="flex items-center justify-between gap-4 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3">
+                <span id="ai-prep-label" className="text-sm font-medium text-[var(--text)]">
+                    AI interview prep
+                </span>
+                <button
+                    type="button"
+                    role="switch"
+                    aria-checked={status.enabled}
+                    aria-labelledby="ai-prep-label"
+                    disabled={busy}
+                    onClick={() => {
+                        if (status.enabled) setConfirmingOff(true);
+                        else turnOn();
+                    }}
+                    className={
+                        "relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 disabled:opacity-60 " +
+                        (status.enabled ? "bg-indigo-600" : "bg-slate-400/60")
+                    }
+                >
+                    <span
+                        aria-hidden
+                        className={
+                            "inline-block h-5 w-5 rounded-full bg-white shadow transition-transform " +
+                            (status.enabled ? "translate-x-6" : "translate-x-1")
+                        }
+                    />
+                </button>
+            </div>
+
+            {!status.enabled && (
+                <p className="mt-3 text-sm text-[var(--text-muted)]">
+                    Your job descriptions and interview notes will be sent to OpenAI to build your
+                    prep. You can turn this off any time.
+                </p>
+            )}
+
+            {confirmingOff && (
+                <div className="mt-3 flex flex-wrap items-center gap-3 rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3">
+                    <p className="text-sm text-amber-700 dark:text-amber-300">
+                        This deletes your indexed notes from the AI service.
+                    </p>
+                    <div className="flex gap-2">
+                        <Button variant="danger" size="sm" onClick={() => void turnOff()} loading={busy}>
+                            Confirm
+                        </Button>
+                        <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => setConfirmingOff(false)}
+                            disabled={busy}
+                        >
+                            Cancel
+                        </Button>
+                    </div>
+                </div>
+            )}
+
+            {enableError && (
+                <p role="alert" className="mt-3 text-sm text-rose-600 dark:text-rose-400">
+                    {enableError}
+                </p>
+            )}
+
+            {deleteFailed && (
+                <div className="mt-3">
+                    <Button variant="secondary" size="sm" onClick={() => void turnOff()} loading={busy}>
+                        Retry deleting data
+                    </Button>
+                </div>
+            )}
+        </Section>
     );
 }
 
@@ -333,6 +458,9 @@ export default function SettingsPage() {
                     />
                 )}
             </Section>
+
+            {/* AI copilot opt-in (hidden unless the AI service is configured) */}
+            <AiPrepToggle />
 
             {/* 5. Privacy */}
             <Section

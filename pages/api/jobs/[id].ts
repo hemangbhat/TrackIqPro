@@ -3,6 +3,11 @@ import Job from "../../../models/Job";
 import { NextApiResponse } from "next";
 import { withAuth, methodNotAllowed, errorResponse, successResponse, AuthenticatedRequest, isObjectId } from "../../../lib/api-helpers";
 import { enforceRateLimit } from "../../../lib/rate-limit";
+import { syncJobDeleted, syncJobSaved } from "../../../lib/ai-sync";
+
+// The response is sent first; this only lets background AI sync (waitUntil)
+// keep running while a sleeping AI service wakes up.
+export const config = { maxDuration: 60 };
 
 const EDITABLE_FIELDS = new Set([
     "title",
@@ -64,6 +69,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
                 return errorResponse(res, 404, "Job not found");
             }
             
+            syncJobSaved(userId, job, Object.keys(update));
             return successResponse(res, job);
         } catch (error) {
             console.error("Error updating job:", error);
@@ -80,6 +86,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
                 return errorResponse(res, 404, "Job not found");
             }
             
+            syncJobDeleted(userId, id);
             return successResponse(res, { message: "Job deleted successfully" });
         } catch (error) {
             console.error("Error deleting job:", error);

@@ -88,12 +88,24 @@ export default function MetadataPanel({ job }: MetadataPanelProps) {
             </dl>
 
             {job.jobDescription && (
-                <div className="mt-4 border-t border-[var(--border)] pt-4">
+                <div id="job-description" className="mt-4 scroll-mt-24 border-t border-[var(--border)] pt-4">
                     <h3 className="mb-1.5 font-mono-label text-[11px] uppercase text-[var(--text-muted)]">
                         Job description
                     </h3>
                     <p className="whitespace-pre-wrap text-sm leading-relaxed text-[var(--text)]">
                         {job.jobDescription}
+                    </p>
+                </div>
+            )}
+
+            {/* The ids above and below are scroll targets for AI prep citations (PrepPanel). */}
+            {job.notes && (
+                <div id="job-notes" className="mt-4 scroll-mt-24 border-t border-[var(--border)] pt-4">
+                    <h3 className="mb-1.5 font-mono-label text-[11px] uppercase text-[var(--text-muted)]">
+                        Notes
+                    </h3>
+                    <p className="whitespace-pre-wrap text-sm leading-relaxed text-[var(--text)]">
+                        {job.notes}
                     </p>
                 </div>
             )}

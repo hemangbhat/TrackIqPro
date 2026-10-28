@@ -14,5 +14,8 @@ export default defineConfig({
     include: ["**/*.{test,spec}.{ts,tsx}"],
     exclude: ["node_modules", ".next", "dist"],
     css: true,
+    // The default 5s is too tight for the heavier UI and property tests when the
+    // whole suite runs in parallel (they pass alone but time out under load).
+    testTimeout: 15000,
   },
 });

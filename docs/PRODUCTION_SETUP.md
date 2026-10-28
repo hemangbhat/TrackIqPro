@@ -27,7 +27,8 @@ Already working for auth. To enable the **welcome email**:
 
 1. Clerk Dashboard → **Webhooks** → **Add Endpoint**.
 2. Endpoint URL: `https://YOUR_DOMAIN/api/clerk/webhook`
-3. Subscribe to the **`user.created`** event.
+3. Subscribe to the **`user.created`** event and the **`user.deleted`** event
+   (the latter removes a deleted user's data from the AI service).
 4. Copy the **Signing Secret** (starts `whsec_`) → set `CLERK_WEBHOOK_SECRET`.
 5. Ensure these are set (already in use): `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`,
    `CLERK_SECRET_KEY`.
@@ -83,6 +84,60 @@ Priority Queue engine + Resend). Per-user dedupe via Upstash prevents repeats.
 
 ---
 
+## 7. AI interview prep (optional)
+
+The prep panel needs the separate Python service in `ai-service/` (see
+`ai-service/README.md`). If `AI_SERVICE_URL` is unset the feature is hidden
+and nothing is sent anywhere.
+
+**Pinecone index.** In the Pinecone console create one index: dimension
+**1536**, metric **cosine**, type **serverless**. Note its name.
+
+**ai-service on Render.** New Web Service from this repo, root directory
+`ai-service`; build `pip install -r requirements.txt`; start
+`uvicorn app.main:app --host 0.0.0.0 --port $PORT`. Set these env vars:
+
+| Variable | Required | Notes |
+|----------|----------|-------|
+| `AI_SERVICE_SECRET` | ✅ | Long random string; must equal the Next.js value |
+| `OPENAI_API_KEY` | ✅ | Embeddings and chat |
+| `OPENAI_CHAT_MODEL` | ✅ | Chat model name; must support structured outputs (`json_schema`) |
+| `PINECONE_API_KEY` | ✅ | |
+| `PINECONE_INDEX` | ✅ | Index created above |
+| `PINECONE_NAMESPACE` | optional | Defaults to the default namespace |
+| `MONGODB_URI` | reindex only | Include the database name |
+| `PYTHON_VERSION` | ✅ | `3.10.11` (the service needs Python 3.10+) |
+
+The free tier sleeps when idle; the first prep after a quiet period shows
+"Waking up the AI service…" while it starts.
+
+**Next.js (Vercel).** Set `AI_SERVICE_URL` (the Render URL) and
+`AI_SERVICE_SECRET` (same value as above). The Clerk webhook must also
+subscribe to `user.deleted` (section 2). The daily prep cap relies on the
+unique `{ userId, date }` index on the `aiusages` collection, which Mongoose
+creates on startup (autoIndex is on by default); if you disable autoIndex,
+create that index by hand. Unsetting `AI_SERVICE_URL` hides the feature but does
+not delete vectors already stored in Pinecone.
+
+**Backfill / repair.** From `ai-service/`, with the env vars above set:
+
+```bash
+python -m scripts.reindex                  # every user with AI prep enabled
+python -m scripts.reindex --user user_123  # one user
+```
+
+For each opted-in user the script deletes **all** of their vectors and then
+re-indexes every job and note from MongoDB, so the index ends up matching Mongo
+exactly (deleted notes/jobs and cleared fields disappear too). Safe to run any
+time; it prints counts only, never note content.
+
+Saves sync to the AI service in the background and wait up to 50s for a
+sleeping free-tier service to wake, but a sync can still fail (for example a
+long outage). Running `python -m scripts.reindex` periodically (e.g. a daily
+cron job) repairs any sync that still failed.
+
+---
+
 ## Env var checklist (Vercel)
 
 | Variable | Required | Purpose |
@@ -101,6 +156,8 @@ Priority Queue engine + Resend). Per-user dedupe via Upstash prevents repeats.
 | `UPSTASH_REDIS_REST_URL` | optional | Rate limiting |
 | `UPSTASH_REDIS_REST_TOKEN` | optional | Rate limiting |
 | `CRON_SECRET` | optional | Authorizes the follow-up reminder cron |
+| `AI_SERVICE_URL` | optional | Base URL of the ai-service (enables AI interview prep) |
+| `AI_SERVICE_SECRET` | optional | Shared secret sent as `X-AI-Service-Key` |
 
 ## Post-deploy smoke test
 

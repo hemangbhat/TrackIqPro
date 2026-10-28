@@ -11,6 +11,7 @@ import { PriorityQueue } from "../../../components/intelligence/PriorityQueue";
 import { ReflectionPanel } from "../../../components/intelligence/ReflectionPanel";
 import { JobFitList } from "../../../components/intelligence/JobFitList";
 import { OfferIntelligence } from "../../../components/intelligence/OfferIntelligence";
+import PrepPanel from "../../../components/PrepPanel";
 import { Button } from "../../../components/ui/primitives";
 import {
     SparklesIcon,
@@ -29,6 +30,7 @@ import {
     demoNotes,
     DEMO_PROFILE,
 } from "../../../lib/demo-data";
+import { DEMO_PREP_SAMPLE } from "../../../lib/demo-prep-sample";
 import { computeCareerHealth } from "../../../lib/career-health";
 import { getPriorityQueue } from "../../../lib/follow-up-intelligence";
 import { analyzeReflections } from "../../../lib/interview-reflection";
@@ -244,6 +246,19 @@ export default function DemoPage() {
                 {/* ---------------------- Interview Reflection ------------------- */}
                 <section aria-label="Interview reflection" className="mt-12">
                     <ReflectionPanel reflection={reflection} />
+                </section>
+
+                {/* ------------------------ Interview prep ------------------------ */}
+                <section aria-label="Interview prep" className="mt-12">
+                    <SectionHeading
+                        eyebrow="AI copilot"
+                        title="Interview prep from your own notes"
+                        description="Likely questions, weak spots, and a study plan, each traced back to the notes and job descriptions it came from."
+                        icon={<SparklesIcon size={20} />}
+                    />
+                    <div className="mt-6">
+                        <PrepPanel sample={DEMO_PREP_SAMPLE} />
+                    </div>
                 </section>
 
                 {/* ----------------------- Closing CTA --------------------------- */}

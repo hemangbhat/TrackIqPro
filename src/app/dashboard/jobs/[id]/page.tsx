@@ -17,6 +17,7 @@ import JobFormDrawer from "../../../../../components/JobFormDrawer";
 import StageStepper from "../../../../../components/StageStepper";
 import MetadataPanel from "../../../../../components/MetadataPanel";
 import NotesPanel from "../../../../../components/NotesPanel";
+import PrepPanel from "../../../../../components/PrepPanel";
 import FollowUpPanel from "../../../../../components/FollowUpPanel";
 import RelatedOffers from "../../../../../components/RelatedOffers";
 import { Job } from "../../../../../types";
@@ -182,6 +183,7 @@ export default function JobDetailsPage() {
             <div className="grid gap-6 lg:grid-cols-2">
                 <MetadataPanel job={job} />
                 <NotesPanel jobId={job._id} />
+                <PrepPanel jobId={job._id} />
                 <FollowUpPanel job={job} />
                 <RelatedOffers job={job} />
             </div>
