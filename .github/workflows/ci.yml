@@ -28,3 +28,19 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
+
+  ai-service:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ai-service
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: ai-service/.python-version
+          cache: pip
+          cache-dependency-path: ai-service/requirements.txt
+      - run: pip install -r requirements.txt
+      # Fakes stand in for OpenAI and Pinecone, so no API keys are needed.
+      - run: python -m pytest -q

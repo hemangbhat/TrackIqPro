@@ -8,7 +8,7 @@ back.
 [![CI](https://github.com/hemangbhat/TrackIqPro/actions/workflows/ci.yml/badge.svg)](https://github.com/hemangbhat/TrackIqPro/actions/workflows/ci.yml)
 ![Next.js 15](https://img.shields.io/badge/Next.js-15-black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6)
-![Tests](https://img.shields.io/badge/tests-260%20passing-2ea44f)
+![Tests](https://img.shields.io/badge/tests-425%20passing-2ea44f)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
 **[Live app](https://track-iq-pro.vercel.app)** · **[Demo with sample data — no sign-up](https://track-iq-pro.vercel.app/demo)** · **[Architecture & design notes](docs/README.md)**
@@ -30,6 +30,18 @@ back.
 - **Follow-up Priority Queue** — stale applications ranked by stage value and urgency;
   also sent as a daily email digest.
 - **Interview Reflection** — strengths, weak spots, and a confidence trend from your notes.
+
+**Prepare — AI Interview Prep Copilot** (opt-in; a separate Python service in [`ai-service/`](ai-service/README.md))
+- **Retrieval-augmented prep** — for any application, it retrieves the most relevant
+  chunks of that job's description and your past interview notes (OpenAI embeddings +
+  Pinecone), then asks the model for likely questions, weak spots, and a study plan.
+- **Every item is cited** — each claim links back to the job description or a note, and
+  code drops any item whose citation doesn't point at a retrieved source.
+- **Private by design** — nothing is sent to OpenAI until you turn it on in Settings; every
+  vector query is filtered to your user ID; turning it off or deleting your account
+  deletes your vectors. 5 preps per day.
+- **Measured, not guessed** — an eval suite (20 hand-written cases) reports retrieval
+  recall@k, citation validity, and LLM-judged groundedness.
 
 **Run as a real SaaS**
 - **Billing** — Stripe Checkout; plans change *only* via signature-verified webhooks;
@@ -59,7 +71,9 @@ back.
 
 ## Quality
 
-- 260 tests (Vitest, Testing Library, fast-check property tests, vitest-axe).
+- 368 app tests (Vitest, Testing Library, fast-check property tests, vitest-axe,
+  mongodb-memory-server) and 57 Python tests for the AI service (pytest, with fake
+  OpenAI and Pinecone clients so they run offline).
 - GitHub Actions CI runs lint, typecheck, tests, and a production build.
 - Presenting this project? See [`docs/INTERVIEW_GUIDE.md`](docs/INTERVIEW_GUIDE.md) and the readiness checklist in [`docs/INTERVIEW_READINESS.md`](docs/INTERVIEW_READINESS.md).
 
@@ -72,6 +86,8 @@ back.
 - **Stripe** for subscriptions
 - **Chart.js** for analytics
 - **Upstash Redis** (rate limiting), **Resend** (email), **Vercel Cron**
+- **AI service:** Python, **FastAPI**, **LangChain**, **OpenAI** (embeddings + chat),
+  **Pinecone** (vector store), pytest
 - **Vitest**, **Testing Library**, **fast-check**, **vitest-axe**
 
 ## Architecture
@@ -83,6 +99,9 @@ back.
 - `lib/**` — the six scoring engines, plan gating, rate limiting, email, DB connection.
 - `hooks/**` — data hooks (`useJobs`, `useNotes`, `useOffers`, `useCareerProfile`).
 - `components/ui/**` — design-system primitives (Button, Card, Modal, Toast, …).
+- `ai-service/**` — the Python RAG service (chunking, user-scoped vector store,
+  prep pipeline, citation guard, reindex script, evals). Next.js calls it with a
+  shared secret; `lib/ai-sync.ts` keeps its index in step with job and note edits.
 
 Security highlights: all reads/writes are user-isolated, Stripe webhooks are
 signature-verified, plan upgrades happen **only** after a successful payment
@@ -110,6 +129,7 @@ customer ID from the server-side record rather than client input.
    | `STRIPE_SECRET_KEY` | Stripe secret key |
    | `STRIPE_WEBHOOK_SECRET` | Signing secret for the webhook endpoint |
    | `STRIPE_PRICE_ID` | Price ID of the Pro subscription |
+   | `AI_SERVICE_URL` / `AI_SERVICE_SECRET` | Optional. The AI service's URL and shared secret; leave unset to hide AI prep. Setup: [`ai-service/README.md`](ai-service/README.md) |
 
 3. Run the dev server:
 
