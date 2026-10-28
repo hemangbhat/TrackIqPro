@@ -88,7 +88,7 @@ export default function MetadataPanel({ job }: MetadataPanelProps) {
             </dl>
 
             {job.jobDescription && (
-                <div className="mt-4 border-t border-[var(--border)] pt-4">
+                <div id="job-description" className="mt-4 scroll-mt-24 border-t border-[var(--border)] pt-4">
                     <h3 className="mb-1.5 font-mono-label text-[11px] uppercase text-[var(--text-muted)]">
                         Job description
                     </h3>

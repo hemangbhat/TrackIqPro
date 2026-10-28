@@ -27,7 +27,8 @@ Already working for auth. To enable the **welcome email**:
 
 1. Clerk Dashboard → **Webhooks** → **Add Endpoint**.
 2. Endpoint URL: `https://YOUR_DOMAIN/api/clerk/webhook`
-3. Subscribe to the **`user.created`** event.
+3. Subscribe to the **`user.created`** event and the **`user.deleted`** event
+   (the latter removes a deleted user's data from the AI service).
 4. Copy the **Signing Secret** (starts `whsec_`) → set `CLERK_WEBHOOK_SECRET`.
 5. Ensure these are set (already in use): `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`,
    `CLERK_SECRET_KEY`.
@@ -83,6 +84,47 @@ Priority Queue engine + Resend). Per-user dedupe via Upstash prevents repeats.
 
 ---
 
+## 7. AI interview prep (optional)
+
+The prep panel needs the separate Python service in `ai-service/` (see
+`ai-service/README.md`). If `AI_SERVICE_URL` is unset the feature is hidden
+and nothing is sent anywhere.
+
+**Pinecone index.** In the Pinecone console create one index: dimension
+**1536**, metric **cosine**, type **serverless**. Note its name.
+
+**ai-service on Render.** New Web Service from this repo, root directory
+`ai-service`; build `pip install -r requirements.txt`; start
+`uvicorn app.main:app --host 0.0.0.0 --port $PORT`. Set these env vars:
+
+| Variable | Required | Notes |
+|----------|----------|-------|
+| `AI_SERVICE_SECRET` | ✅ | Long random string; must equal the Next.js value |
+| `OPENAI_API_KEY` | ✅ | Embeddings and chat |
+| `OPENAI_CHAT_MODEL` | ✅ | Chat model name |
+| `PINECONE_API_KEY` | ✅ | |
+| `PINECONE_INDEX` | ✅ | Index created above |
+| `PINECONE_NAMESPACE` | optional | Defaults to the default namespace |
+| `MONGODB_URI` | reindex only | Include the database name |
+
+The free tier sleeps when idle; the first prep after a quiet period shows
+"Waking up the AI service…" while it starts.
+
+**Next.js (Vercel).** Set `AI_SERVICE_URL` (the Render URL) and
+`AI_SERVICE_SECRET` (same value as above). The Clerk webhook must also
+subscribe to `user.deleted` (section 2).
+
+**Backfill / repair.** From `ai-service/`, with the env vars above set:
+
+```bash
+python -m scripts.reindex                  # every user with AI prep enabled
+python -m scripts.reindex --user user_123  # one user
+```
+
+Safe to run any time; it prints counts only, never note content.
+
+---
+
 ## Env var checklist (Vercel)
 
 | Variable | Required | Purpose |
@@ -101,6 +143,8 @@ Priority Queue engine + Resend). Per-user dedupe via Upstash prevents repeats.
 | `UPSTASH_REDIS_REST_URL` | optional | Rate limiting |
 | `UPSTASH_REDIS_REST_TOKEN` | optional | Rate limiting |
 | `CRON_SECRET` | optional | Authorizes the follow-up reminder cron |
+| `AI_SERVICE_URL` | optional | Base URL of the ai-service (enables AI interview prep) |
+| `AI_SERVICE_SECRET` | optional | Shared secret sent as `X-AI-Service-Key` |
 
 ## Post-deploy smoke test
 

@@ -271,3 +271,54 @@ describe("Settings page — data-export gating for free users (Req 13.7)", () =>
         ).toBeNull();
     });
 });
+
+describe("Settings page — AI interview prep toggle", () => {
+    afterEach(() => {
+        vi.unstubAllGlobals();
+    });
+
+    function stubAi(status: { configured: boolean; enabled: boolean; remaining: number }) {
+        const fn = vi.fn((url: string) =>
+            Promise.resolve(
+                new Response(JSON.stringify(url === "/api/ai/enable" ? { enabled: false } : status), { status: 200 })
+            )
+        );
+        vi.stubGlobal("fetch", fn);
+        return fn;
+    }
+
+    it("is hidden when the AI service is not configured", async () => {
+        stubAi({ configured: false, enabled: false, remaining: 5 });
+        renderSettings();
+        await act(async () => {});
+        expect(screen.queryByRole("switch", { name: "AI interview prep" })).toBeNull();
+    });
+
+    it("reflects the enabled state", async () => {
+        stubAi({ configured: true, enabled: true, remaining: 5 });
+        renderSettings();
+        const toggle = await screen.findByRole("switch", { name: "AI interview prep" });
+        expect(toggle).toHaveAttribute("aria-checked", "true");
+    });
+
+    it("asks for confirmation before turning off, and Cancel makes no request", async () => {
+        const fetchFn = stubAi({ configured: true, enabled: true, remaining: 5 });
+        const user = userEvent.setup();
+        renderSettings();
+        await user.click(await screen.findByRole("switch", { name: "AI interview prep" }));
+        expect(screen.getByText("This deletes your indexed notes from the AI service.")).toBeInTheDocument();
+        await user.click(screen.getByRole("button", { name: "Cancel" }));
+        expect(fetchFn).not.toHaveBeenCalledWith("/api/ai/enable", expect.anything());
+        expect(screen.queryByText("This deletes your indexed notes from the AI service.")).toBeNull();
+    });
+
+    it("posts enabled:false after Confirm", async () => {
+        const fetchFn = stubAi({ configured: true, enabled: true, remaining: 5 });
+        const user = userEvent.setup();
+        renderSettings();
+        await user.click(await screen.findByRole("switch", { name: "AI interview prep" }));
+        await user.click(screen.getByRole("button", { name: "Confirm" }));
+        const call = fetchFn.mock.calls.find((c) => c[0] === "/api/ai/enable")!;
+        expect(JSON.parse((call as unknown as [string, RequestInit])[1].body as string)).toEqual({ enabled: false });
+    });
+});
