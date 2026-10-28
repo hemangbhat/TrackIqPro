@@ -38,7 +38,7 @@ const limiters: Record<LimitTier, Ratelimit | null> = {
     default: makeLimiter(120, "1 m"), // 120 req/min per identity
     mutation: makeLimiter(40, "1 m"), // 40 writes/min
     billing: makeLimiter(8, "1 m"), // 8 checkout/portal starts/min
-    ai: makeLimiter(10, "1 m"), // 10 AI prep/index calls/min
+    ai: makeLimiter(10, "1 m"), // 10 AI prep requests/min (used by /api/ai/prep only)
 };
 
 /** Best-effort client identifier: authenticated userId if present, else IP. */

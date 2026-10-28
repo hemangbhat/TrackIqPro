@@ -40,10 +40,13 @@ Browser ──► Next.js (Vercel)                         Python ai-service (Re
 
 ## Run locally
 
+Needs Python 3.10 or newer (`.python-version` pins 3.10.11).
+
 ```bash
 cd ai-service
 python -m venv .venv
-.venv/Scripts/activate          # Windows; use source .venv/bin/activate on macOS/Linux
+source .venv/Scripts/activate   # Windows Git Bash (PowerShell: .venv\Scripts\Activate.ps1)
+# source .venv/bin/activate     # macOS/Linux
 pip install -r requirements.txt
 # create a .env file with the variables below
 uvicorn app.main:app --reload
@@ -56,7 +59,7 @@ python -m pytest                # tests mock OpenAI and Pinecone, no keys needed
 |---|---|---|
 | `AI_SERVICE_SECRET` | yes | Must match the Next.js `AI_SERVICE_SECRET` |
 | `OPENAI_API_KEY` | yes | Embeddings and chat |
-| `OPENAI_CHAT_MODEL` | yes | Chat model name |
+| `OPENAI_CHAT_MODEL` | yes | Chat model name. Must support structured outputs (`json_schema`), e.g. `gpt-4o-mini` |
 | `PINECONE_API_KEY` | yes | |
 | `PINECONE_INDEX` | yes | Name of the index below |
 | `PINECONE_NAMESPACE` | no | Defaults to the empty (default) namespace. Evals use `eval` |
@@ -75,16 +78,27 @@ Create one index in the Pinecone console:
 1. New Web Service from this repo, root directory `ai-service`.
 2. Build command: `pip install -r requirements.txt`
 3. Start command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
-4. Add the environment variables above.
+4. Add the environment variables above, plus `PYTHON_VERSION=3.10.11` so Render
+   uses a supported Python.
 5. In Next.js set `AI_SERVICE_URL` (the Render URL) and `AI_SERVICE_SECRET`.
+
+Unsetting `AI_SERVICE_URL` in Next.js only hides the feature and stops sync. It
+does not delete anything already stored in Pinecone; users who want their data
+gone should turn AI prep off in Settings first (that deletes their vectors), or
+you can delete the index.
 
 The free tier sleeps when idle. The web app sends a `GET /health` when a job page
 opens to wake it up.
 
 ## Reindexing
 
-Repairs drift from failed sync calls, or backfills existing data. Safe to run any
-time because upserting a source replaces all of its chunks.
+Backfills existing data and repairs drift from sync calls that failed (for
+example while the free-tier service was asleep). For each opted-in user it
+deletes **all** of their vectors, then re-indexes every job and note from
+MongoDB. So afterwards the index matches Mongo exactly: edits are refreshed, and
+vectors of deleted notes/jobs or cleared fields are gone. Safe to run any time;
+while a user is being rebuilt their prep may briefly see fewer sources. Running it
+periodically (for example a daily cron) repairs any sync that still failed.
 
 ```bash
 python -m scripts.reindex                 # every user with aiEnabled: true
@@ -108,13 +122,17 @@ so the store rejects ids that do. Tests assert the filter and prefix on every ca
 guarantee. Retrieved chunks are labelled `[S1]..[Sn]`; the model must cite those
 labels. Before returning, code normalises label variants (for example `s1`, `[S1]`),
 drops any item with no citation or a citation that was not retrieved, and maps
-labels back to real source ids. If nothing relevant was retrieved the service says
-so (`insufficientData`) instead of giving generic advice.
+labels back to real source ids. The "no LLM call" path only applies when retrieval
+finds nothing, which in practice means the user has no indexed data. Otherwise the
+model decides what the retrieved text supports (the prompt asks it to flag
+`insufficientData` rather than give generic advice), and the guard enforces that
+every returned item is cited; if the guard drops every item, the answer becomes
+`insufficientData`.
 
 **Push-based sync.** Next.js sends text to the service after a successful save, as
 fire-and-forget calls. Saving a job or note never waits on, or fails because of, the
 AI service. The service needs no database access at runtime, and the reindex script
-heals any missed call.
+(delete all, then rebuild from Mongo) heals any missed call, including missed deletes.
 
 **Opt-in consent.** Nothing leaves the app for OpenAI until the user turns the
 copilot on (`CareerProfile.aiEnabled`). Sync and reindex skip everyone else, and

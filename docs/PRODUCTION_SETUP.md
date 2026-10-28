@@ -101,18 +101,23 @@ and nothing is sent anywhere.
 |----------|----------|-------|
 | `AI_SERVICE_SECRET` | ✅ | Long random string; must equal the Next.js value |
 | `OPENAI_API_KEY` | ✅ | Embeddings and chat |
-| `OPENAI_CHAT_MODEL` | ✅ | Chat model name |
+| `OPENAI_CHAT_MODEL` | ✅ | Chat model name; must support structured outputs (`json_schema`) |
 | `PINECONE_API_KEY` | ✅ | |
 | `PINECONE_INDEX` | ✅ | Index created above |
 | `PINECONE_NAMESPACE` | optional | Defaults to the default namespace |
 | `MONGODB_URI` | reindex only | Include the database name |
+| `PYTHON_VERSION` | ✅ | `3.10.11` (the service needs Python 3.10+) |
 
 The free tier sleeps when idle; the first prep after a quiet period shows
 "Waking up the AI service…" while it starts.
 
 **Next.js (Vercel).** Set `AI_SERVICE_URL` (the Render URL) and
 `AI_SERVICE_SECRET` (same value as above). The Clerk webhook must also
-subscribe to `user.deleted` (section 2).
+subscribe to `user.deleted` (section 2). The daily prep cap relies on the
+unique `{ userId, date }` index on the `aiusages` collection, which Mongoose
+creates on startup (autoIndex is on by default); if you disable autoIndex,
+create that index by hand. Unsetting `AI_SERVICE_URL` hides the feature but does
+not delete vectors already stored in Pinecone.
 
 **Backfill / repair.** From `ai-service/`, with the env vars above set:
 
@@ -121,7 +126,15 @@ python -m scripts.reindex                  # every user with AI prep enabled
 python -m scripts.reindex --user user_123  # one user
 ```
 
-Safe to run any time; it prints counts only, never note content.
+For each opted-in user the script deletes **all** of their vectors and then
+re-indexes every job and note from MongoDB, so the index ends up matching Mongo
+exactly (deleted notes/jobs and cleared fields disappear too). Safe to run any
+time; it prints counts only, never note content.
+
+Saves sync to the AI service in the background and wait up to 50s for a
+sleeping free-tier service to wake, but a sync can still fail (for example a
+long outage). Running `python -m scripts.reindex` periodically (e.g. a daily
+cron job) repairs any sync that still failed.
 
 ---
 
