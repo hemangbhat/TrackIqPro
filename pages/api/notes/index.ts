@@ -9,6 +9,7 @@ import {
     AuthenticatedRequest,
 } from "../../../lib/api-helpers";
 import { enforceRateLimit } from "../../../lib/rate-limit";
+import { syncNoteSaved } from "../../../lib/ai-sync";
 
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     const { userId } = req;
@@ -50,6 +51,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
                 jobId: jobId || null,
                 round: round || "",
             });
+            syncNoteSaved(userId, note);
             return successResponse(res, note, 201);
         } catch (error) {
             console.error("Notes POST error:", error);

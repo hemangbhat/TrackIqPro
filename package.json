@@ -15,6 +15,7 @@
     "@types/micro": "^7.3.7",
     "@upstash/ratelimit": "2.0.8",
     "@upstash/redis": "1.38.0",
+    "@vercel/functions": "3.10.4",
     "chart.js": "^4.5.0",
     "date-fns": "^4.1.0",
     "framer-motion": "^12.23.12",

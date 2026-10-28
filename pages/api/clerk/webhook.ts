@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { Webhook } from "svix";
 import { sendWelcomeEmail } from "../../../lib/email";
+import { syncUserDeleted } from "../../../lib/ai-sync";
 
 // Clerk delivers a raw JSON body that must be verified with Svix using the
 // exact bytes — so disable Next's body parser and read the raw buffer.
@@ -17,7 +18,7 @@ function readRawBody(req: NextApiRequest): Promise<Buffer> {
 
 type ClerkEmail = { id: string; email_address: string };
 interface ClerkUserCreated {
-    type: string;
+    type: "user.created";
     data: {
         id: string;
         first_name?: string | null;
@@ -25,11 +26,21 @@ interface ClerkUserCreated {
         email_addresses?: ClerkEmail[];
     };
 }
+interface ClerkUserDeleted {
+    type: "user.deleted";
+    data: { id: string };
+}
+// Any other event type carries data we never read.
+interface ClerkOtherEvent {
+    type: "other";
+    data: unknown;
+}
+type ClerkEvent = ClerkUserCreated | ClerkUserDeleted | ClerkOtherEvent;
 
 /**
  * Clerk webhook receiver.
  *
- * On `user.created` it sends a branded welcome email (best-effort — email
+ * On `user.deleted` it removes the user's AI vectors. On `user.created` it sends a branded welcome email (best-effort — email
  * failures never fail the webhook, so Clerk won't retry forever). Requires
  * CLERK_WEBHOOK_SECRET; if unset, the endpoint returns 200 and no-ops so an
  * unconfigured environment doesn't error.
@@ -47,7 +58,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(200).json({ ok: true, skipped: true });
     }
 
-    let evt: ClerkUserCreated;
+    let evt: ClerkEvent;
     try {
         const payload = (await readRawBody(req)).toString("utf8");
         const wh = new Webhook(secret);
@@ -55,7 +66,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             "svix-id": req.headers["svix-id"] as string,
             "svix-timestamp": req.headers["svix-timestamp"] as string,
             "svix-signature": req.headers["svix-signature"] as string,
-        }) as ClerkUserCreated;
+        }) as ClerkEvent;
     } catch {
         return res.status(400).json({ error: "Invalid signature" });
     }
@@ -72,6 +83,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     firstName: first_name ?? undefined,
                 });
             }
+        } else if (evt.type === "user.deleted") {
+            // Vectors are removed in the background, so we still reply promptly.
+            syncUserDeleted(evt.data.id);
         }
     } catch (err) {
         // Log but still 200 — a transient email error shouldn't trigger endless

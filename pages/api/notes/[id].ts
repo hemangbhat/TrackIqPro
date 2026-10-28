@@ -9,6 +9,7 @@ import {
     AuthenticatedRequest,
 } from "../../../lib/api-helpers";
 import { enforceRateLimit } from "../../../lib/rate-limit";
+import { syncNoteDeleted, syncNoteSaved } from "../../../lib/ai-sync";
 
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     const { userId } = req;
@@ -51,6 +52,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
                 { new: true, runValidators: true }
             );
             if (!note) return errorResponse(res, 404, "Note not found");
+            syncNoteSaved(userId, note);
             return successResponse(res, note);
         } catch (error) {
             console.error("Note PUT error:", error);
@@ -65,6 +67,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
             if (result.deletedCount === 0) {
                 return errorResponse(res, 404, "Note not found");
             }
+            syncNoteDeleted(userId, id);
             return successResponse(res, { message: "Note deleted successfully" });
         } catch (error) {
             console.error("Note DELETE error:", error);

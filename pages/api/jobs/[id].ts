@@ -3,6 +3,7 @@ import Job from "../../../models/Job";
 import { NextApiResponse } from "next";
 import { withAuth, methodNotAllowed, errorResponse, successResponse, AuthenticatedRequest } from "../../../lib/api-helpers";
 import { enforceRateLimit } from "../../../lib/rate-limit";
+import { syncJobDeleted, syncJobSaved } from "../../../lib/ai-sync";
 
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     const { userId } = req;
@@ -50,6 +51,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
                 return errorResponse(res, 404, "Job not found");
             }
             
+            syncJobSaved(userId, job);
             return successResponse(res, job);
         } catch (error) {
             console.error("Error updating job:", error);
@@ -66,6 +68,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
                 return errorResponse(res, 404, "Job not found");
             }
             
+            syncJobDeleted(userId, id);
             return successResponse(res, { message: "Job deleted successfully" });
         } catch (error) {
             console.error("Error deleting job:", error);

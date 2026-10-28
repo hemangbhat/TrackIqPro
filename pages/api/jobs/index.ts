@@ -4,6 +4,7 @@ import { NextApiResponse } from "next";
 import { withAuth, methodNotAllowed, errorResponse, successResponse, AuthenticatedRequest } from "../../../lib/api-helpers";
 import { getUserPlan } from "../../../lib/stripe";
 import { enforceRateLimit } from "../../../lib/rate-limit";
+import { syncJobSaved } from "../../../lib/ai-sync";
 
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     const { userId } = req;
@@ -61,6 +62,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
             });
             
             await newJob.save();
+            syncJobSaved(userId, newJob);
             return successResponse(res, newJob, 201);
         } catch (error) {
             console.error("Error creating job:", error);
