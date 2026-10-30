@@ -54,5 +54,13 @@
     "vitest-axe": "^0.1.0"
   },
   "license": "MIT",
-  "description": "Job-search command center with explainable scoring engines \u2014 Next.js, TypeScript, MongoDB, Clerk, Stripe."
+  "description": "Job-search command center with explainable scoring engines — Next.js, TypeScript, MongoDB, Clerk, Stripe.",
+  "overrides": {
+    "@vercel/cli-config": {
+      "zod": "4.6.7"
+    },
+    "next": {
+      "postcss": "8.5.32"
+    }
+  }
 }
