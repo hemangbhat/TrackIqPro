@@ -27,7 +27,8 @@ export default defineConfig({
     ],
     webServer: {
         command: `npx next start -p ${PORT}`,
-        url: `http://localhost:${PORT}/api/health`,
+        // A static page: CI has no database, so /api/health would never be ready.
+        url: `http://localhost:${PORT}/privacy`,
         reuseExistingServer: !process.env.CI,
         timeout: 120_000,
     },

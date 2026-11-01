@@ -52,3 +52,42 @@ jobs:
       - run: pip install pip-audit==2.10.1 && pip-audit -r requirements.txt
       # Fakes stand in for OpenAI and Pinecone, so no API keys are needed.
       - run: python -m pytest -q
+
+  e2e:
+    # Browser tests need a real Clerk development instance: add the repository
+    # secrets E2E_CLERK_PUBLISHABLE_KEY and E2E_CLERK_SECRET_KEY (pk_test_/sk_test_).
+    # Without them (forks, or before setup) the job passes with a notice.
+    runs-on: ubuntu-24.04
+    env:
+      NEXT_TELEMETRY_DISABLED: 1
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.E2E_CLERK_PUBLISHABLE_KEY }}
+      CLERK_SECRET_KEY: ${{ secrets.E2E_CLERK_SECRET_KEY }}
+    steps:
+      - id: keys
+        run: |
+          if [ -n "$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY" ] && [ -n "$CLERK_SECRET_KEY" ]; then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::E2E skipped: add the E2E_CLERK_PUBLISHABLE_KEY and E2E_CLERK_SECRET_KEY repository secrets to run it."
+          fi
+      - if: steps.keys.outputs.ok == 'true'
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - if: steps.keys.outputs.ok == 'true'
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+          cache: npm
+      - if: steps.keys.outputs.ok == 'true'
+        run: npm ci
+      - if: steps.keys.outputs.ok == 'true'
+        run: npx playwright install --with-deps chromium
+      - if: steps.keys.outputs.ok == 'true'
+        run: npm run build
+      - if: steps.keys.outputs.ok == 'true'
+        run: npm run test:e2e
+      - if: failure() && steps.keys.outputs.ok == 'true'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: playwright-traces
+          path: test-results/
+          retention-days: 7
