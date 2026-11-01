@@ -10,11 +10,13 @@ vi.mock("../../../lib/email", () => ({ sendWelcomeEmail: vi.fn().mockResolvedVal
 vi.mock("../../../lib/ai-sync", () => ({ syncUserDeleted: vi.fn() }));
 vi.mock("../../../lib/db", () => ({ connectDB: vi.fn() }));
 vi.mock("../../../models/CareerProfile", () => ({ default: { updateOne: vi.fn() } }));
+vi.mock("../../../lib/account-deletion", () => ({ deleteAccountData: vi.fn() }));
 
 import { sendWelcomeEmail } from "../../../lib/email";
 import { syncUserDeleted } from "../../../lib/ai-sync";
 import { connectDB } from "../../../lib/db";
 import CareerProfile from "../../../models/CareerProfile";
+import { deleteAccountData } from "../../../lib/account-deletion";
 import handler from "./webhook";
 
 /** A POST request that streams a body, and a res that records status/json. */
@@ -46,6 +48,7 @@ beforeEach(() => {
     process.env.CLERK_WEBHOOK_SECRET = "whsec_test";
     vi.mocked(connectDB).mockResolvedValue(undefined as never);
     updateOne.mockResolvedValue({} as never);
+    vi.mocked(deleteAccountData).mockResolvedValue(undefined);
 });
 
 describe("POST /api/clerk/webhook", () => {
@@ -83,6 +86,22 @@ describe("POST /api/clerk/webhook", () => {
         expect(logged).toContain("user_1");
         expect(logged).toContain("TypeError");
         expect(logged).not.toContain("db down");
+        errorLog.mockRestore();
+    });
+
+    it("user.deleted erases the account's data and billing", async () => {
+        verify.mockReturnValue({ type: "user.deleted", data: { id: "user_1" } });
+        expect((await post()).status).toBe(200);
+        expect(deleteAccountData).toHaveBeenCalledWith("user_1");
+    });
+
+    it("user.deleted returns 500 when erasure fails, so Clerk retries", async () => {
+        const errorLog = vi.spyOn(console, "error").mockImplementation(() => {});
+        vi.mocked(deleteAccountData).mockRejectedValue(new Error("stripe down"));
+        verify.mockReturnValue({ type: "user.deleted", data: { id: "user_1" } });
+        expect((await post()).status).toBe(500);
+        // The vector purge was still started.
+        expect(syncUserDeleted).toHaveBeenCalledWith("user_1");
         errorLog.mockRestore();
     });
 

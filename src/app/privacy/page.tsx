@@ -30,8 +30,13 @@ const sections: { title: string; body: React.ReactNode }[] = [
                     Stripe — payments. We keep only your Stripe customer id and plan status, never
                     card details.
                 </li>
-                <li>Resend — the welcome email and optional follow-up reminder digests.</li>
+                <li>Resend — the welcome email and a daily digest when applications need a follow-up.</li>
                 <li>Upstash Redis — short-lived rate-limit counters and reminder de-duplication keys.</li>
+                <li>
+                    OpenAI and Pinecone — only if you turn on AI interview prep in Settings: your job
+                    descriptions and notes are embedded and stored as vectors, and the matching
+                    passages are sent to OpenAI to write your prep.
+                </li>
             </ul>
         ),
     },
@@ -40,7 +45,8 @@ const sections: { title: string; body: React.ReactNode }[] = [
         body: (
             <>
                 Job fit, offer ranking, and career health are computed by deterministic
-                functions from your own data. Nothing is sent to third-party AI services.
+                functions from your own data. Nothing is sent to a third-party AI service unless
+                you opt in to AI interview prep, and turning it off deletes your stored vectors.
             </>
         ),
     },
@@ -49,7 +55,9 @@ const sections: { title: string; body: React.ReactNode }[] = [
         body: (
             <>
                 You can edit or delete any record at any time. Pro accounts can export their data
-                from Settings. Billing is managed through the Stripe customer portal.
+                from Settings. Billing is managed through the Stripe customer portal. Deleting your
+                account cancels any subscription and erases your applications, notes, offers,
+                profile, plan record, and AI vectors.
             </>
         ),
     },

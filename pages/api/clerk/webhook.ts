@@ -4,6 +4,7 @@ import { sendWelcomeEmail } from "../../../lib/email";
 import { syncUserDeleted } from "../../../lib/ai-sync";
 import { connectDB } from "../../../lib/db";
 import CareerProfile from "../../../models/CareerProfile";
+import { deleteAccountData } from "../../../lib/account-deletion";
 
 // Clerk delivers a raw JSON body that must be verified with Svix using the
 // exact bytes — so disable Next's body parser and read the raw buffer.
@@ -59,7 +60,9 @@ async function clearAiConsent(userId: string): Promise<void> {
 /**
  * Clerk webhook receiver.
  *
- * On `user.deleted` it turns AI prep off and removes the user's AI vectors. On `user.created` it sends a branded welcome email (best-effort — email
+ * On `user.deleted` it turns AI prep off, removes the user's AI vectors,
+ * cancels their Stripe subscriptions and deletes all their data (a failure
+ * returns 500 so Clerk retries). On `user.created` it sends a branded welcome email (best-effort — email
  * failures never fail the webhook, so Clerk won't retry forever). Requires
  * CLERK_WEBHOOK_SECRET; if unset, the endpoint returns 200 and no-ops so an
  * unconfigured environment doesn't error.
@@ -107,6 +110,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             await clearAiConsent(evt.data.id);
             // Vectors are removed in the background, so we still reply promptly.
             syncUserDeleted(evt.data.id);
+            try {
+                await deleteAccountData(evt.data.id);
+            } catch (err) {
+                // Unlike a welcome email, erasure must finish: a 500 makes Clerk
+                // retry, and every step is safe to repeat.
+                const reason = err instanceof Error ? err.name : "unknown";
+                console.error(`[clerk/webhook] account erasure failed userId=${evt.data.id}:`, reason);
+                return res.status(500).json({ error: "Account erasure failed; will retry" });
+            }
         }
     } catch (err) {
         // Log but still 200 — a transient email error shouldn't trigger endless
