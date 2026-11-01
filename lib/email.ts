@@ -48,13 +48,13 @@ export async function sendWelcomeEmail(params: {
     return send(params.to, "Welcome to TrackIQ — your job search command center", html);
 }
 
-/** Follow-up reminder digest (sent by the scheduled cron job). */
-export async function sendFollowUpDigest(params: {
+export interface DigestParams {
     to: string;
     firstName?: string;
     items: DigestItem[];
-}): Promise<SendResult> {
-    if (params.items.length === 0) return { sent: false, skipped: true };
+}
+
+function renderDigest(params: DigestParams): { subject: string; html: string } {
     const html = renderFollowUpDigestEmail({
         firstName: params.firstName,
         items: params.items,
@@ -63,5 +63,45 @@ export async function sendFollowUpDigest(params: {
     const subject = `${params.items.length} follow-up${
         params.items.length === 1 ? "" : "s"
     } due on TrackIQ`;
+    return { subject, html };
+}
+
+/** Follow-up reminder digest (sent by the scheduled cron job). */
+export async function sendFollowUpDigest(params: DigestParams): Promise<SendResult> {
+    if (params.items.length === 0) return { sent: false, skipped: true };
+    const { subject, html } = renderDigest(params);
     return send(params.to, subject, html);
+}
+
+/** Resend accepts at most 100 emails per batch call. */
+export const DIGEST_BATCH_SIZE = 100;
+
+/**
+ * Send many digests with one Resend call per 100, instead of one call each,
+ * so the daily cron stays inside its time limit as users grow. Returns how
+ * many were accepted; a failed batch is logged and skipped, not thrown.
+ */
+export async function sendFollowUpDigests(digests: DigestParams[]): Promise<number> {
+    const toSend = digests.filter((d) => d.items.length > 0);
+    if (toSend.length === 0) return 0;
+    if (!resend) {
+        console.warn(`[email] RESEND_API_KEY not set; skipped ${toSend.length} digest emails`);
+        return 0;
+    }
+    let sent = 0;
+    for (let i = 0; i < toSend.length; i += DIGEST_BATCH_SIZE) {
+        const batch = toSend.slice(i, i + DIGEST_BATCH_SIZE).map((d) => ({
+            from: FROM,
+            to: d.to,
+            ...renderDigest(d),
+        }));
+        try {
+            const { error } = await resend.batch.send(batch);
+            if (error) console.error(`[email] digest batch failed: ${error.message}`);
+            else sent += batch.length;
+        } catch (err) {
+            console.error("[email] digest batch failed:", err instanceof Error ? err.message : err);
+        }
+    }
+    return sent;
 }

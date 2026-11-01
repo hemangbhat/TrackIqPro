@@ -145,7 +145,7 @@ cron job) repairs any sync that still failed.
 | `MONGODB_URI` | ✅ | Database |
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | ✅ | Auth (client) |
 | `CLERK_SECRET_KEY` | ✅ | Auth (server) |
-| `NEXT_PUBLIC_APP_URL` | ✅ | Links in emails |
+| `NEXT_PUBLIC_APP_URL` | ✅ | Links in emails and Stripe redirect URLs (checkout fails without it) |
 | `STRIPE_SECRET_KEY` | ✅ (billing) | Stripe server |
 | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | ✅ (billing) | Stripe client |
 | `STRIPE_PRICE_ID` | ✅ (billing) | Pro price |

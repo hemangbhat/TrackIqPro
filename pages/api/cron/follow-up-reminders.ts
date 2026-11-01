@@ -4,7 +4,7 @@ import { clerkClient } from "@clerk/nextjs/server";
 import { connectDB } from "../../../lib/db";
 import Job from "../../../models/Job";
 import { getPriorityQueue } from "../../../lib/follow-up-intelligence";
-import { sendFollowUpDigest, emailEnabled } from "../../../lib/email";
+import { sendFollowUpDigests, emailEnabled, DIGEST_BATCH_SIZE, type DigestParams } from "../../../lib/email";
 import type { Job as JobType } from "../../../types";
 
 /**
@@ -20,6 +20,10 @@ import type { Job as JobType } from "../../../types";
  * endpoint refuses to run, so it can never be triggered anonymously.
  */
 
+// Users are handled in batches: one Clerk lookup and one Resend call per batch
+// (instead of one of each per user), so the run fits the time limit at scale.
+export const config = { maxDuration: 60 };
+
 // Cooldown so a user isn't reminded about the same queue repeatedly. ~20h means
 // a daily cron sends at most once per day per user.
 const COOLDOWN_SECONDS = 20 * 60 * 60;
@@ -33,14 +37,25 @@ function authorized(req: NextApiRequest): boolean {
     return supplied.length === expected.length && timingSafeEqual(supplied, expected);
 }
 
-/** Optional Upstash-backed dedupe. Returns true if we may send to this user. */
-async function claimSend(userId: string): Promise<boolean> {
+type DedupeClient = import("@upstash/redis").Redis;
+
+/** One Upstash client per run (optional; null when dedupe isn't configured). */
+async function dedupeClient(): Promise<DedupeClient | null> {
     const url = process.env.UPSTASH_REDIS_REST_URL;
     const token = process.env.UPSTASH_REDIS_REST_TOKEN;
-    if (!url || !token) return true; // no dedupe configured → always allow
+    if (!url || !token) return null;
     try {
         const { Redis } = await import("@upstash/redis");
-        const redis = new Redis({ url, token });
+        return new Redis({ url, token });
+    } catch {
+        return null;
+    }
+}
+
+/** Optional Upstash-backed dedupe. Returns true if we may send to this user. */
+async function claimSend(redis: DedupeClient | null, userId: string): Promise<boolean> {
+    if (!redis) return true; // no dedupe configured → always allow
+    try {
         // SET key NX EX cooldown → returns "OK" only if it didn't already exist.
         const res = await redis.set(`reminded:${userId}`, Date.now(), {
             nx: true,
@@ -83,50 +98,64 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             else byUser.set(uid, [job]);
         }
 
-        const clerk = await clerkClient();
-        let usersWithQueue = 0;
-        let emailsSent = 0;
-
+        const candidates: { userId: string; queue: ReturnType<typeof getPriorityQueue> }[] = [];
         for (const [userId, jobs] of byUser) {
             const queue = getPriorityQueue(jobs, 8);
-            if (queue.length === 0) continue;
-            usersWithQueue++;
+            if (queue.length > 0) candidates.push({ userId, queue });
+        }
 
-            // Dedupe before doing the (rate-limited) Clerk lookup + send.
-            if (!(await claimSend(userId))) continue;
+        const clerk = await clerkClient();
+        const redis = await dedupeClient();
+        let emailsSent = 0;
 
-            let email: string | undefined;
-            let firstName: string | undefined;
+        for (let i = 0; i < candidates.length; i += DIGEST_BATCH_SIZE) {
+            const chunk = candidates.slice(i, i + DIGEST_BATCH_SIZE);
+
+            // Dedupe before the Clerk lookup + send; the claims run in parallel.
+            const claimed = await Promise.all(chunk.map((c) => claimSend(redis, c.userId)));
+            const toSend = chunk.filter((_, j) => claimed[j]);
+            if (toSend.length === 0) continue;
+
+            let users;
             try {
-                const user = await clerk.users.getUser(userId);
-                firstName = user.firstName ?? undefined;
-                email =
-                    user.primaryEmailAddress?.emailAddress ??
-                    user.emailAddresses?.[0]?.emailAddress;
-            } catch {
-                continue; // user no longer exists / not retrievable
+                ({ data: users } = await clerk.users.getUserList({
+                    userId: toSend.map((c) => c.userId),
+                    limit: DIGEST_BATCH_SIZE,
+                }));
+            } catch (err) {
+                console.error("[cron/follow-up-reminders] user lookup failed:", err);
+                continue;
             }
-            if (!email) continue;
+            // Users missing from the result no longer exist; skip them.
+            const byId = new Map(users.map((u) => [u.id, u]));
 
-            const result = await sendFollowUpDigest({
-                to: email,
-                firstName,
-                items: queue.map((q) => ({
-                    title: q.title,
-                    company: q.company,
-                    stage: q.stage,
-                    action: q.action,
-                    daysStale: q.daysStale,
-                    impact: q.impact,
-                })),
+            const digests: DigestParams[] = toSend.flatMap(({ userId, queue }) => {
+                const user = byId.get(userId);
+                const email =
+                    user?.primaryEmailAddress?.emailAddress ?? user?.emailAddresses?.[0]?.emailAddress;
+                if (!user || !email) return [];
+                return [
+                    {
+                        to: email,
+                        firstName: user.firstName ?? undefined,
+                        items: queue.map((q) => ({
+                            title: q.title,
+                            company: q.company,
+                            stage: q.stage,
+                            action: q.action,
+                            daysStale: q.daysStale,
+                            impact: q.impact,
+                        })),
+                    },
+                ];
             });
-            if (result.sent) emailsSent++;
+            emailsSent += await sendFollowUpDigests(digests);
         }
 
         return res.status(200).json({
             ok: true,
             usersScanned: byUser.size,
-            usersWithFollowUps: usersWithQueue,
+            usersWithFollowUps: candidates.length,
             emailsSent,
         });
     } catch (err) {
