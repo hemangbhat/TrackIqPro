@@ -11,7 +11,7 @@ const IMPACT_TONE: Record<Impact, string> = {
     low: "bg-indigo-500/15 text-indigo-600 dark:text-indigo-300",
 };
 
-function QueueRow({ item }: { item: PriorityItem }) {
+function QueueRow({ item, linkToJob }: { item: PriorityItem; linkToJob: boolean }) {
     return (
         <li className="rounded-xl border border-[var(--border)] bg-[var(--surface-2)] p-4 transition-colors hover:border-indigo-500/40">
             <div className="flex items-start justify-between gap-3">
@@ -38,12 +38,14 @@ function QueueRow({ item }: { item: PriorityItem }) {
                     <CheckIcon size={14} className="mt-px shrink-0" />
                     {item.expectedImpact}
                 </span>
-                <Link
-                    href={`/dashboard/jobs/${item.jobId}`}
-                    className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-indigo-600 transition-colors hover:text-indigo-500 dark:text-indigo-300"
-                >
-                    View job <ArrowRightIcon size={14} />
-                </Link>
+                {linkToJob && (
+                    <Link
+                        href={`/dashboard/jobs/${item.jobId}`}
+                        className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-indigo-600 transition-colors hover:text-indigo-500 dark:text-indigo-300"
+                    >
+                        View job <ArrowRightIcon size={14} />
+                    </Link>
+                )}
             </div>
         </li>
     );
@@ -52,9 +54,10 @@ function QueueRow({ item }: { item: PriorityItem }) {
 /**
  * Ranked follow-up priority queue: each item shows its impact badge, transparent
  * value score, the bold action to take, why it matters now, the expected impact,
- * and a link to the underlying job.
+ * and a link to the underlying job. The demo turns the link off: its jobs are
+ * sample data with no page behind them.
  */
-export function PriorityQueue({ items }: { items: PriorityItem[] }) {
+export function PriorityQueue({ items, linkToJobs = true }: { items: PriorityItem[]; linkToJobs?: boolean }) {
     return (
         <Card className="glass-panel gradient-border flex h-full flex-col p-6 sm:p-7">
             <div className="flex items-center gap-3">
@@ -82,7 +85,7 @@ export function PriorityQueue({ items }: { items: PriorityItem[] }) {
             ) : (
                 <ul className="mt-6 space-y-3">
                     {items.map((item) => (
-                        <QueueRow key={item.jobId} item={item} />
+                        <QueueRow key={item.jobId} item={item} linkToJob={linkToJobs} />
                     ))}
                 </ul>
             )}

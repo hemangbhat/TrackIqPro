@@ -13,9 +13,11 @@ const isPublicRoute = createRouteMatcher([
     "/api/cron(.*)",
 ]);
 
-export const middleware = clerkMiddleware((auth, req) => {
+export const middleware = clerkMiddleware(async (auth, req) => {
     if (!isPublicRoute(req)) {
-        auth.protect();
+        // Must be awaited: protect() is async in Clerk v6, and an un-awaited
+        // call lets signed-out visitors through to the page.
+        await auth.protect();
     }
 });
 

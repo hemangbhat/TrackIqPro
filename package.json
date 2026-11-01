@@ -9,7 +9,8 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.28.1",
@@ -34,6 +35,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@playwright/test": "1.64.1",
     "@tailwindcss/postcss": "^4.1.11",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
@@ -54,7 +56,7 @@
     "vitest-axe": "^0.1.0"
   },
   "license": "MIT",
-  "description": "Job-search command center with explainable scoring engines — Next.js, TypeScript, MongoDB, Clerk, Stripe.",
+  "description": "Job-search command center with explainable scoring engines \u2014 Next.js, TypeScript, MongoDB, Clerk, Stripe.",
   "overrides": {
     "@vercel/cli-config": {
       "zod": "4.6.7"

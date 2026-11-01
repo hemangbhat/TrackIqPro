@@ -12,7 +12,7 @@ export default defineConfig({
     globals: true,
     setupFiles: ["./test/setup.ts"],
     include: ["**/*.{test,spec}.{ts,tsx}"],
-    exclude: ["node_modules", ".next", "dist"],
+    exclude: ["node_modules", ".next", "dist", "e2e"],
     css: true,
     // The default 5s is too tight for the heavier UI and property tests when the
     // whole suite runs in parallel (they pass alone but time out under load).

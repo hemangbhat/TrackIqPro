@@ -184,7 +184,7 @@ export default function DemoPage() {
                 <section aria-label="Career intelligence" className="mt-10">
                     <div className="grid items-start gap-6 lg:grid-cols-2">
                         <CareerHealthCard health={health} />
-                        <PriorityQueue items={priority} />
+                        <PriorityQueue items={priority} linkToJobs={false} />
                     </div>
                 </section>
 

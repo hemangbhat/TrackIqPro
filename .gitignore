@@ -52,3 +52,7 @@ __pycache__/
 .kiro/
 .vscode/
 .stitch-ref/
+
+# playwright
+/test-results/
+/playwright-report/
