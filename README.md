@@ -8,7 +8,7 @@ back.
 [![CI](https://github.com/hemangbhat/TrackIqPro/actions/workflows/ci.yml/badge.svg)](https://github.com/hemangbhat/TrackIqPro/actions/workflows/ci.yml)
 ![Next.js 15](https://img.shields.io/badge/Next.js-15-black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6)
-![Tests](https://img.shields.io/badge/tests-425%20passing-2ea44f)
+![Tests](https://img.shields.io/badge/tests-458%20passing-2ea44f)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
 **[Live app](https://track-iq-pro.vercel.app)** · **[Demo with sample data — no sign-up](https://track-iq-pro.vercel.app/demo)** · **[Architecture & design notes](docs/README.md)**
@@ -71,10 +71,20 @@ back.
 
 ## Quality
 
-- 368 app tests (Vitest, Testing Library, fast-check property tests, vitest-axe,
-  mongodb-memory-server) and 57 Python tests for the AI service (pytest, with fake
+- 391 app tests (Vitest, Testing Library, fast-check property tests, vitest-axe,
+  mongodb-memory-server) and 60 Python tests for the AI service (pytest, with fake
   OpenAI and Pinecone clients so they run offline).
-- GitHub Actions CI runs lint, typecheck, tests, and a production build.
+- 7 Playwright end-to-end checks, run on desktop and mobile against a production
+  build. They cover public pages with no Content-Security-Policy violations, the
+  signed-out redirect, anonymous API rejection, security headers, and Clerk sign-in.
+- Load test (`npm run load-test`): one local production server handled 100
+  concurrent connections at roughly 360–540 requests/s per route, with p99 under
+  430 ms and zero errors across about 25,600 requests.
+- Security: an OWASP-style audit (see the git history for the fixes), security
+  headers with a CSP allowlist, user-scoped queries, signature-checked webhooks,
+  and `npm audit` / `pip-audit` clean for everything that ships.
+- GitHub Actions CI runs lint, typecheck, tests, and a production build, plus the
+  Python tests, with a read-only token and SHA-pinned actions.
 - Presenting this project? See [`docs/INTERVIEW_GUIDE.md`](docs/INTERVIEW_GUIDE.md) and the readiness checklist in [`docs/INTERVIEW_READINESS.md`](docs/INTERVIEW_READINESS.md).
 
 ## Tech stack
@@ -167,6 +177,8 @@ Use the printed signing secret as `STRIPE_WEBHOOK_SECRET`.
 | `npm run lint` | Lint the project |
 | `npm run typecheck` | Type-check the whole project, tests included |
 | `npm test` | Run the test suite |
+| `npm run test:e2e` | Browser end-to-end tests (run `npm run build` first; `npx playwright install chromium` once) |
+| `npm run load-test` | Load-test a running server (`--url`, `--connections`, `--duration`; remote targets need `--allow-remote`) |
 
 ## License
 
