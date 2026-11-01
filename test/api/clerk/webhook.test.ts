@@ -17,7 +17,7 @@ import { syncUserDeleted } from "../../../lib/ai-sync";
 import { connectDB } from "../../../lib/db";
 import CareerProfile from "../../../models/CareerProfile";
 import { deleteAccountData } from "../../../lib/account-deletion";
-import handler from "./webhook";
+import handler from "../../../pages/api/clerk/webhook";
 
 /** A POST request that streams a body, and a res that records status/json. */
 async function post() {

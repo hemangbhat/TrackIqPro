@@ -30,7 +30,10 @@ const sections: { title: string; body: React.ReactNode }[] = [
                     Stripe — payments. We keep only your Stripe customer id and plan status, never
                     card details.
                 </li>
-                <li>Resend — the welcome email and a daily digest when applications need a follow-up.</li>
+                <li>
+                    Resend — the welcome email and a daily digest when applications need a follow-up.
+                    Every digest has an unsubscribe link, and you can turn it off in Settings.
+                </li>
                 <li>Upstash Redis — short-lived rate-limit counters and reminder de-duplication keys.</li>
                 <li>
                     OpenAI and Pinecone — only if you turn on AI interview prep in Settings: your job

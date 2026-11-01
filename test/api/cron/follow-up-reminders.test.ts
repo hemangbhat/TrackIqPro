@@ -28,8 +28,17 @@ vi.mock("../../../models/Job", () => ({
     default: { find: (...args: unknown[]) => jobFind(...args) },
 }));
 
+// Users who unsubscribed (remindersEnabled: false), per test.
+let optedOut: string[] = [];
+vi.mock("../../../models/CareerProfile", () => ({
+    default: {
+        find: () => ({ select: () => ({ lean: async () => optedOut.map((userId) => ({ userId })) }) }),
+    },
+}));
+
 import { sendFollowUpDigests } from "../../../lib/email";
-import handler from "./follow-up-reminders";
+import { verifyUnsubscribeToken } from "../../../lib/unsubscribe";
+import handler from "../../../pages/api/cron/follow-up-reminders";
 
 function run(auth = "Bearer cron-secret") {
     const out = { status: 0, body: undefined as unknown };
@@ -73,6 +82,8 @@ function clerkKnowsAllExcept(missing: Set<string> = new Set()) {
 beforeEach(() => {
     vi.clearAllMocks();
     process.env.CRON_SECRET = "cron-secret";
+    process.env.NEXT_PUBLIC_APP_URL = "https://app.test";
+    optedOut = [];
     delete process.env.UPSTASH_REDIS_REST_URL;
     delete process.env.UPSTASH_REDIS_REST_TOKEN;
 });
@@ -110,5 +121,21 @@ describe("GET /api/cron/follow-up-reminders", () => {
         const digests = vi.mocked(sendFollowUpDigests).mock.calls[0][0];
         expect(digests.map((d) => d.to)).toEqual(["u0@x.test"]);
         expect(out.body).toMatchObject({ emailsSent: 1 });
+    });
+
+    it("skips users who unsubscribed and gives everyone else a signed unsubscribe link", async () => {
+        activeJobsFor(3);
+        clerkKnowsAllExcept();
+        optedOut = ["u1"];
+
+        await run();
+
+        expect(getUserList).toHaveBeenCalledWith(expect.objectContaining({ userId: ["u0", "u2"] }));
+        const digests = vi.mocked(sendFollowUpDigests).mock.calls[0][0];
+        expect(digests.map((d) => d.to)).toEqual(["u0@x.test", "u2@x.test"]);
+        const page = new URL(digests[0].unsubscribe!.page);
+        expect(page.origin).toBe("https://app.test");
+        expect(page.searchParams.get("u")).toBe("u0");
+        expect(verifyUnsubscribeToken("u0", page.searchParams.get("t"))).toBe(true);
     });
 });

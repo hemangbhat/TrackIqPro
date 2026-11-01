@@ -7,6 +7,9 @@ const isPublicRoute = createRouteMatcher([
     "/pricing",
     "/privacy",
     "/demo(.*)",
+    // Reminder-email unsubscribe works without signing in (signed link instead).
+    "/unsubscribe",
+    "/api/email/unsubscribe",
     "/api/health",
     "/api/stripe/webhook",
     "/api/clerk/webhook",
@@ -19,6 +22,11 @@ export const middleware = clerkMiddleware(async (auth, req) => {
         // call lets signed-out visitors through to the page.
         await auth.protect();
     }
+}, {
+    // Same as ClerkProvider in the root layout: send signed-out visitors to our
+    // own sign-in page, not Clerk's hosted one on another domain.
+    signInUrl: "/sign-in",
+    signUpUrl: "/sign-up",
 });
 
 export const config = {

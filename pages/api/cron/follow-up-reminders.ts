@@ -3,6 +3,9 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { clerkClient } from "@clerk/nextjs/server";
 import { connectDB } from "../../../lib/db";
 import Job from "../../../models/Job";
+import CareerProfile from "../../../models/CareerProfile";
+import { appBaseUrl } from "../../../lib/app-url";
+import { unsubscribeLinks } from "../../../lib/unsubscribe";
 import { getPriorityQueue } from "../../../lib/follow-up-intelligence";
 import { sendFollowUpDigests, emailEnabled, DIGEST_BATCH_SIZE, type DigestParams } from "../../../lib/email";
 import type { Job as JobType } from "../../../types";
@@ -106,10 +109,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         const clerk = await clerkClient();
         const redis = await dedupeClient();
+        const appUrl = appBaseUrl(req);
         let emailsSent = 0;
 
         for (let i = 0; i < candidates.length; i += DIGEST_BATCH_SIZE) {
-            const chunk = candidates.slice(i, i + DIGEST_BATCH_SIZE);
+            const batch = candidates.slice(i, i + DIGEST_BATCH_SIZE);
+
+            // Drop users who unsubscribed (before claiming, so no cooldown is spent).
+            const optedOut = new Set(
+                (
+                    (await CareerProfile.find({
+                        userId: { $in: batch.map((c) => c.userId) },
+                        remindersEnabled: false,
+                    })
+                        .select("userId")
+                        .lean()) as unknown as { userId: string }[]
+                ).map((p) => p.userId)
+            );
+            const chunk = batch.filter((c) => !optedOut.has(c.userId));
 
             // Dedupe before the Clerk lookup + send; the claims run in parallel.
             const claimed = await Promise.all(chunk.map((c) => claimSend(redis, c.userId)));
@@ -138,6 +155,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     {
                         to: email,
                         firstName: user.firstName ?? undefined,
+                        unsubscribe: unsubscribeLinks(appUrl, userId) ?? undefined,
                         items: queue.map((q) => ({
                             title: q.title,
                             company: q.company,

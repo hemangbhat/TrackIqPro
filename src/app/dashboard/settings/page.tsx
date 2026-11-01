@@ -246,6 +246,99 @@ function AiPrepToggle() {
     );
 }
 
+/**
+ * On/off switch for the daily follow-up reminder digest. The same flag is
+ * turned off by the signed unsubscribe link in each email.
+ */
+function RemindersToggle() {
+    const [enabled, setEnabled] = useState<boolean | null>(null);
+    const [failed, setFailed] = useState(false);
+    const [busy, setBusy] = useState(false);
+
+    async function load() {
+        setFailed(false);
+        try {
+            const res = await fetch("/api/email-preferences");
+            if (!res.ok) throw new Error(String(res.status));
+            const data = (await res.json()) as { remindersEnabled?: boolean };
+            setEnabled(data.remindersEnabled !== false);
+        } catch {
+            setFailed(true);
+        }
+    }
+
+    useEffect(() => {
+        void load();
+    }, []);
+
+    async function toggle() {
+        if (enabled === null) return;
+        const next = !enabled;
+        setBusy(true);
+        setFailed(false);
+        try {
+            const res = await fetch("/api/email-preferences", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ remindersEnabled: next }),
+            });
+            if (!res.ok) throw new Error(String(res.status));
+            setEnabled(next);
+        } catch {
+            setFailed(true);
+        } finally {
+            setBusy(false);
+        }
+    }
+
+    return (
+        <div className="mb-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3">
+            <div className="flex items-center justify-between gap-4">
+                <div>
+                    <span id="reminders-label" className="text-sm font-medium text-[var(--text)]">
+                        Follow-up reminder emails
+                    </span>
+                    <p className="mt-0.5 text-xs text-[var(--text-muted)]">
+                        A daily digest when applications need a nudge.
+                    </p>
+                </div>
+                {enabled !== null && (
+                    <button
+                        type="button"
+                        role="switch"
+                        aria-checked={enabled}
+                        aria-labelledby="reminders-label"
+                        disabled={busy}
+                        onClick={() => void toggle()}
+                        className={
+                            "relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 disabled:opacity-60 " +
+                            (enabled ? "bg-indigo-600" : "bg-slate-400/60")
+                        }
+                    >
+                        <span
+                            aria-hidden
+                            className={
+                                "inline-block h-5 w-5 rounded-full bg-white shadow transition-transform " +
+                                (enabled ? "translate-x-6" : "translate-x-1")
+                            }
+                        />
+                    </button>
+                )}
+            </div>
+            {failed && (
+                <div className="mt-2 flex items-center gap-3">
+                    <p role="alert" className="text-sm text-rose-600 dark:text-rose-400">
+                        Couldn&apos;t {enabled === null ? "load" : "save"} your email preference.
+                    </p>
+                    <Button variant="secondary" size="sm" onClick={() => void (enabled === null ? load() : toggle())}>
+                        Try again
+                    </Button>
+                </div>
+            )}
+        </div>
+    );
+}
+
 export default function SettingsPage() {
     const { user } = useUser();
     const { signOut } = useClerk();
@@ -469,6 +562,7 @@ export default function SettingsPage() {
                 title="Privacy"
                 description="How your data is handled."
             >
+                <RemindersToggle />
                 <ul className="space-y-3 text-sm text-[var(--text-muted)]">
                     <li className="flex items-start gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3">
                         <LockIcon size={16} className="mt-0.5 shrink-0 text-indigo-500 dark:text-indigo-300" />

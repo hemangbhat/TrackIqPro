@@ -21,6 +21,8 @@ const CareerProfileSchema = new mongoose.Schema(
         // Set once the initial bulk index finished; lets a repeat "enable" skip
         // re-embedding the whole corpus. Cleared when the user opts out.
         aiIndexedAt: { type: Date, default: null },
+        // Daily follow-up reminder digest; turned off from Settings or an email's unsubscribe link.
+        remindersEnabled: { type: Boolean, default: true },
     },
     { timestamps: true }
 );

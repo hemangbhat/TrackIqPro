@@ -23,10 +23,10 @@ vi.mock("../../lib/ai-sync", () => ({
 import { getAuth } from "@clerk/nextjs/server";
 import { getUserPlan } from "../../lib/stripe";
 import { syncJobSaved, syncNoteSaved } from "../../lib/ai-sync";
-import offerByIdHandler from "./offers/[id]";
-import jobsHandler from "./jobs/index";
-import jobByIdHandler from "./jobs/[id]";
-import noteByIdHandler from "./notes/[id]";
+import offerByIdHandler from "../../pages/api/offers/[id]";
+import jobsHandler from "../../pages/api/jobs/index";
+import jobByIdHandler from "../../pages/api/jobs/[id]";
+import noteByIdHandler from "../../pages/api/notes/[id]";
 
 function call(
     handler: (req: never, res: never) => unknown,

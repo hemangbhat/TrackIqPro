@@ -16,7 +16,7 @@ const TEXT = "#0f172a";
 const MUTED = "#475569";
 const BORDER = "#e2e8f0";
 
-function shell(bodyHtml: string): string {
+function shell(bodyHtml: string, unsubscribeUrl?: string): string {
     return `<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
@@ -33,6 +33,11 @@ function shell(bodyHtml: string): string {
         ${bodyHtml}
         <tr><td style="padding:24px 32px 28px 32px;border-top:1px solid ${BORDER};">
           <p style="margin:0;font-size:12px;color:${MUTED};">You're receiving this because you created a TrackIQ account.</p>
+          ${
+              unsubscribeUrl
+                  ? `<p style="margin:6px 0 0 0;font-size:12px;color:${MUTED};">Don't want these reminders? <a href="${escapeHtml(unsubscribeUrl)}" style="color:${MUTED};text-decoration:underline;">Unsubscribe</a>.</p>`
+                  : ""
+          }
           <p style="margin:6px 0 0 0;font-size:12px;color:${MUTED};">&copy; ${new Date().getFullYear()} TrackIQ. All rights reserved.</p>
         </td></tr>
       </table>
@@ -91,6 +96,7 @@ export function renderFollowUpDigestEmail(params: {
     firstName?: string;
     items: DigestItem[];
     appUrl: string;
+    unsubscribeUrl?: string;
 }): string {
     const name = params.firstName ? escapeHtml(params.firstName) : "there";
     const dashUrl = `${params.appUrl.replace(/\/$/, "")}/dashboard/intelligence`;
@@ -126,5 +132,5 @@ export function renderFollowUpDigestEmail(params: {
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${rows}</table>
       </td></tr>
       <tr><td style="padding:24px 32px 0 32px;">${button(dashUrl, "Review in TrackIQ")}</td></tr>`;
-    return shell(body);
+    return shell(body, params.unsubscribeUrl);
 }

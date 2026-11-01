@@ -21,7 +21,7 @@ vi.mock("../../../lib/ai-client", async () => {
 
 import { getAuth } from "@clerk/nextjs/server";
 import * as ai from "../../../lib/ai-client";
-import jobsHandler from "./index";
+import jobsHandler from "../../../pages/api/jobs/index";
 
 const mocked = vi.mocked(ai);
 

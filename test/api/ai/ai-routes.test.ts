@@ -28,9 +28,9 @@ vi.mock("../../../lib/ai-client", async () => {
 import { getAuth } from "@clerk/nextjs/server";
 import { waitUntil } from "@vercel/functions";
 import * as ai from "../../../lib/ai-client";
-import prepHandler from "./prep";
-import statusHandler from "./status";
-import enableHandler from "./enable";
+import prepHandler from "../../../pages/api/ai/prep";
+import statusHandler from "../../../pages/api/ai/status";
+import enableHandler from "../../../pages/api/ai/enable";
 
 const mocked = vi.mocked(ai);
 

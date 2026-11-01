@@ -52,6 +52,8 @@ export interface DigestParams {
     to: string;
     firstName?: string;
     items: DigestItem[];
+    /** Signed links from lib/unsubscribe: the footer link, and the RFC 8058 one-click target. */
+    unsubscribe?: { page: string; oneClick: string };
 }
 
 function renderDigest(params: DigestParams): { subject: string; html: string } {
@@ -59,6 +61,7 @@ function renderDigest(params: DigestParams): { subject: string; html: string } {
         firstName: params.firstName,
         items: params.items,
         appUrl: APP_URL,
+        unsubscribeUrl: params.unsubscribe?.page,
     });
     const subject = `${params.items.length} follow-up${
         params.items.length === 1 ? "" : "s"
@@ -94,6 +97,13 @@ export async function sendFollowUpDigests(digests: DigestParams[]): Promise<numb
             from: FROM,
             to: d.to,
             ...renderDigest(d),
+            // Lets Gmail/Outlook show their own one-click "Unsubscribe" button.
+            ...(d.unsubscribe && {
+                headers: {
+                    "List-Unsubscribe": `<${d.unsubscribe.oneClick}>`,
+                    "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+                },
+            }),
         }));
         try {
             const { error } = await resend.batch.send(batch);

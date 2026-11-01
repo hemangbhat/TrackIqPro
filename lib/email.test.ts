@@ -49,4 +49,21 @@ describe("sendFollowUpDigests", () => {
         expect(await sendFollowUpDigests([{ to: "a@x.test", items: [] }])).toBe(0);
         expect(batchSend).not.toHaveBeenCalled();
     });
+
+    it("adds the unsubscribe footer link and one-click headers when links are given", async () => {
+        const { sendFollowUpDigests } = await load();
+        await sendFollowUpDigests([
+            {
+                ...digest("a@x.test"),
+                unsubscribe: { page: "https://app.test/unsubscribe?u=a&t=b", oneClick: "https://app.test/api/email/unsubscribe?u=a&t=b" },
+            },
+        ]);
+        const [email] = batchSend.mock.calls[0][0];
+        expect(email.html).toContain('href="https://app.test/unsubscribe?u=a&amp;t=b"');
+        expect(email.headers).toEqual({
+            "List-Unsubscribe": "<https://app.test/api/email/unsubscribe?u=a&t=b>",
+            "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+        });
+    });
 });
+

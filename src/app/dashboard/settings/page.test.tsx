@@ -382,3 +382,50 @@ describe("Settings page — AI interview prep toggle", () => {
         expect(screen.queryByText("Couldn't load AI prep settings.")).toBeNull();
     });
 });
+
+describe("Settings page — reminder email switch", () => {
+    afterEach(() => {
+        vi.unstubAllGlobals();
+    });
+
+    it("shows the saved preference and saves a change", async () => {
+        const fetchFn = vi.fn((url: string, init?: RequestInit) => {
+            if (url === "/api/email-preferences") {
+                const body = init?.method === "PUT" ? JSON.parse(init.body as string) : { remindersEnabled: true };
+                return Promise.resolve(new Response(JSON.stringify(body), { status: 200 }));
+            }
+            return Promise.resolve(new Response(JSON.stringify({ configured: false }), { status: 200 }));
+        });
+        vi.stubGlobal("fetch", fetchFn);
+        const user = userEvent.setup();
+        renderSettings();
+
+        const toggle = await screen.findByRole("switch", { name: "Follow-up reminder emails" });
+        expect(toggle).toHaveAttribute("aria-checked", "true");
+        await user.click(toggle);
+
+        const put = fetchFn.mock.calls.find((c) => c[0] === "/api/email-preferences" && c[1]?.method === "PUT")!;
+        expect(JSON.parse(put[1]!.body as string)).toEqual({ remindersEnabled: false });
+        expect(toggle).toHaveAttribute("aria-checked", "false");
+    });
+
+    it("keeps the old state and offers to try again when saving fails", async () => {
+        vi.stubGlobal(
+            "fetch",
+            vi.fn((url: string, init?: RequestInit) =>
+                Promise.resolve(
+                    url === "/api/email-preferences" && init?.method === "PUT"
+                        ? new Response("{}", { status: 500 })
+                        : new Response(JSON.stringify({ remindersEnabled: true, configured: false }), { status: 200 })
+                )
+            )
+        );
+        const user = userEvent.setup();
+        renderSettings();
+        const toggle = await screen.findByRole("switch", { name: "Follow-up reminder emails" });
+        await user.click(toggle);
+        expect(await screen.findByText("Couldn't save your email preference.")).toBeInTheDocument();
+        expect(toggle).toHaveAttribute("aria-checked", "true");
+        expect(screen.getByRole("button", { name: "Try again" })).toBeInTheDocument();
+    });
+});

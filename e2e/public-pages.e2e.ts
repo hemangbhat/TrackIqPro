@@ -43,10 +43,19 @@ test("pricing and privacy pages render", async ({ page }) => {
     expect(problems).toEqual([]);
 });
 
-test("the dashboard is not reachable while signed out", async ({ page }) => {
+test("an unsubscribe link that was tampered with is refused, and opening it changes nothing", async ({ page }) => {
+    const problems = watchForProblems(page);
+    await page.goto("/unsubscribe?u=user_1&t=forged");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("This link doesn't work");
+    await expect(page.getByRole("button", { name: /unsubscribe/i })).toHaveCount(0);
+    expect(problems).toEqual([]);
+});
+
+test("the dashboard is not reachable while signed out", async ({ page, baseURL }) => {
     await page.goto("/dashboard/jobs");
-    // Clerk redirects to sign-in; the dashboard path may only survive in the return URL.
-    await expect.poll(() => new URL(page.url()).pathname).not.toMatch(/^\/dashboard/);
+    // Our own sign-in page (same origin), not Clerk's hosted one.
+    await expect.poll(() => new URL(page.url()).pathname).toMatch(/^\/sign-in/);
+    expect(new URL(page.url()).origin).toBe(new URL(baseURL!).origin);
     await expect(page.getByRole("link", { name: "Add job" })).toHaveCount(0);
 });
 

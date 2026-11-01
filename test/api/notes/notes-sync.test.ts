@@ -20,8 +20,8 @@ vi.mock("../../../lib/ai-client", async () => {
 
 import { getAuth } from "@clerk/nextjs/server";
 import * as ai from "../../../lib/ai-client";
-import notesHandler from "./index";
-import noteHandler from "./[id]";
+import notesHandler from "../../../pages/api/notes/index";
+import noteHandler from "../../../pages/api/notes/[id]";
 
 const mocked = vi.mocked(ai);
 
