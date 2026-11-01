@@ -40,7 +40,7 @@ Browser ──► Next.js (Vercel)                         Python ai-service (Re
 
 ## Run locally
 
-Needs Python 3.10 or newer (`.python-version` pins 3.10.11).
+Needs Python 3.13 (`.python-version` pins 3.13.3).
 
 ```bash
 cd ai-service
@@ -78,7 +78,7 @@ Create one index in the Pinecone console:
 1. New Web Service from this repo, root directory `ai-service`.
 2. Build command: `pip install -r requirements.txt`
 3. Start command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
-4. Add the environment variables above, plus `PYTHON_VERSION=3.10.11` so Render
+4. Add the environment variables above, plus `PYTHON_VERSION=3.13.3` so Render
    uses a supported Python.
 5. In Next.js set `AI_SERVICE_URL` (the Render URL) and `AI_SERVICE_SECRET`.
 

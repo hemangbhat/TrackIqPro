@@ -106,7 +106,7 @@ and nothing is sent anywhere.
 | `PINECONE_INDEX` | ✅ | Index created above |
 | `PINECONE_NAMESPACE` | optional | Defaults to the default namespace |
 | `MONGODB_URI` | reindex only | Include the database name |
-| `PYTHON_VERSION` | ✅ | `3.10.11` (the service needs Python 3.10+) |
+| `PYTHON_VERSION` | ✅ | `3.13.3` (matches `ai-service/.python-version`) |
 
 The free tier sleeps when idle; the first prep after a quiet period shows
 "Waking up the AI service…" while it starts.
