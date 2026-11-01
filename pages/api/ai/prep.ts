@@ -18,7 +18,7 @@ import {
     AuthenticatedRequest,
 } from "../../../lib/api-helpers";
 import { enforceRateLimit } from "../../../lib/rate-limit";
-import { aiConfigured, requestPrep } from "../../../lib/ai-client";
+import { AiServiceError, aiConfigured, requestPrep } from "../../../lib/ai-client";
 import { consumePrep, refundPrep } from "../../../lib/ai-usage";
 import { filterStaleCitations, normalizePrepResult } from "../../../lib/ai-citations";
 
@@ -109,12 +109,18 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
                 new Set(jobs.map((j) => String(j._id)))
             );
         } catch (error) {
-            // The user got nothing, so give the prep back (on the day it was taken).
             console.error("AI prep failed:", error);
-            try {
-                await refundPrep(userId, usage.date);
-            } catch (refundError) {
-                console.error("Prep refund failed:", refundError);
+            // The user got nothing, so normally give the prep back (on the day it
+            // was taken). Not on a timeout: the service keeps generating, and is
+            // billed, after we stop waiting, so refunding would let slow preps
+            // bypass the daily spend cap.
+            const timedOut = error instanceof AiServiceError && error.timedOut;
+            if (!timedOut) {
+                try {
+                    await refundPrep(userId, usage.date);
+                } catch (refundError) {
+                    console.error("Prep refund failed:", refundError);
+                }
             }
             return errorResponse(res, 503, UNAVAILABLE_MESSAGE);
         }

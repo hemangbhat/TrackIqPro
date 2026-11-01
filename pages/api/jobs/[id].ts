@@ -59,19 +59,29 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
                 Object.entries(req.body ?? {}).filter(([key]) => EDITABLE_FIELDS.has(key))
             );
 
+            const before = (await Job.findOne({ _id: id, userId }).lean()) as Record<string, unknown> | null;
             const job = await Job.findOneAndUpdate(
                 { _id: id, userId },
                 update,
                 { new: true, runValidators: true }
             );
-            
-            if (!job) {
+
+            if (!before || !job) {
                 return errorResponse(res, 404, "Job not found");
             }
-            
-            syncJobSaved(userId, job, Object.keys(update));
+
+            // Re-index only fields whose value actually changed: the UI sends the
+            // whole form on every save, and an unchanged title would otherwise
+            // re-embed every note of this job (paid work per request).
+            const changed = Object.keys(update).filter(
+                (key) => JSON.stringify(before[key]) !== JSON.stringify(job.get(key))
+            );
+            syncJobSaved(userId, job, changed);
             return successResponse(res, job);
         } catch (error) {
+            if (error instanceof Error && error.name === "ValidationError") {
+                return errorResponse(res, 400, error.message);
+            }
             console.error("Error updating job:", error);
             return errorResponse(res, 500, "Failed to update job");
         }

@@ -21,10 +21,10 @@ import { enforceRateLimit } from "../../../lib/rate-limit";
 import {
     aiConfigured,
     deleteUserVectors,
-    indexSources,
     INDEX_BATCH_SIZE,
     type IndexSource,
 } from "../../../lib/ai-client";
+import { indexWhileOptedIn } from "../../../lib/ai-sync";
 import { jobToSources, noteToSource, type JobLike, type NoteLike } from "../../../lib/ai-sources";
 
 // Initial indexing awaits batched calls to a possibly cold service.
@@ -66,6 +66,16 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
         if (enabled) {
             if (!aiConfigured()) return errorResponse(res, 503, "AI copilot is not available");
 
+            // Already on and fully indexed: saves keep the index current, so a
+            // repeat request must not re-embed the whole corpus (operator spend).
+            const existing = (await CareerProfile.findOne({ userId }).lean()) as {
+                aiEnabled?: boolean;
+                aiIndexedAt?: Date | null;
+            } | null;
+            if (existing?.aiEnabled && existing.aiIndexedAt) {
+                return successResponse(res, { enabled: true });
+            }
+
             // Flag first: from here on, job/note saves sync on their own.
             await CareerProfile.findOneAndUpdate(
                 { userId },
@@ -76,8 +86,12 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
             try {
                 const sources = await buildSources(userId);
                 for (let i = 0; i < sources.length; i += INDEX_BATCH_SIZE) {
-                    await indexSources(userId, sources.slice(i, i + INDEX_BATCH_SIZE));
+                    // Re-checks consent per batch: a disable mid-run stops the loop
+                    // and undoes a batch that landed after the purge.
+                    const stillOptedIn = await indexWhileOptedIn(userId, sources.slice(i, i + INDEX_BATCH_SIZE));
+                    if (!stillOptedIn) return successResponse(res, { enabled: false });
                 }
+                await CareerProfile.updateOne({ userId, aiEnabled: true }, { $set: { aiIndexedAt: new Date() } });
             } catch (error) {
                 // Flag stays on; the reindex script can repair a partial index.
                 console.error("AI initial indexing failed:", error);
@@ -92,7 +106,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
         // there, so the user can retry; a retry re-runs the delete.
         await CareerProfile.findOneAndUpdate(
             { userId },
-            { $set: { aiEnabled: false } },
+            { $set: { aiEnabled: false, aiIndexedAt: null } },
             { upsert: true, setDefaultsOnInsert: true }
         );
         try {

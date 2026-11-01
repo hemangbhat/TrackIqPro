@@ -4,6 +4,7 @@ import { getAuth } from "@clerk/nextjs/server";
 import { connectDB } from "../../../lib/db";
 import { getUserPlan } from "../../../lib/stripe";
 import { enforceRateLimit } from "../../../lib/rate-limit";
+import { appBaseUrl } from "../../../lib/app-url";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
     apiVersion: "2025-07-30.basil",
@@ -31,7 +32,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         const session = await stripe.billingPortal.sessions.create({
             customer: customerId,
-            return_url: `${req.headers.origin}/dashboard/settings`,
+            return_url: `${appBaseUrl(req)}/dashboard/settings`,
         });
 
         return res.status(200).json({ url: session.url });

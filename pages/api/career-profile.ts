@@ -49,7 +49,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             const skills = Array.isArray(body.skills)
                 ? body.skills
                       .filter((s): s is string => typeof s === "string")
-                      .map((s) => s.trim())
+                      .map((s) => s.trim().slice(0, 60))
                       .filter(Boolean)
                       .slice(0, 50)
                 : [];

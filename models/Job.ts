@@ -18,9 +18,9 @@ export interface IJob extends Document {
 
 const JobSchema = new Schema<IJob>({
     userId: { type: String, required: true, index: true },
-    title: { type: String, required: true, trim: true },
-    company: { type: String, required: true, trim: true },
-    location: { type: String, trim: true },
+    title: { type: String, required: true, trim: true, maxlength: 200 },
+    company: { type: String, required: true, trim: true, maxlength: 200 },
+    location: { type: String, trim: true, maxlength: 200 },
     stage: { 
         type: String, 
         required: true,
@@ -33,10 +33,20 @@ const JobSchema = new Schema<IJob>({
         enum: ["active", "closed"],
         default: "active"
     },
-    link: { type: String, trim: true },
+    // http(s) only: a javascript: URL here would run when the link is clicked.
+    link: {
+        type: String,
+        trim: true,
+        maxlength: 2000,
+        validate: {
+            validator: (v: string) => !v || /^https?:\/\//i.test(v),
+            message: "Link must start with http:// or https://",
+        },
+    },
     salary: { type: Number, min: 0 },
-    jobDescription: { type: String },
-    notes: { type: String },
+    // Size caps bound storage and the paid embedding work each save triggers.
+    jobDescription: { type: String, maxlength: 20000 },
+    notes: { type: String, maxlength: 20000 },
     dateApplied: { type: Date, default: Date.now, required: true }
 }, {
     timestamps: true

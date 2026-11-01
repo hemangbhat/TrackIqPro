@@ -49,7 +49,7 @@ async function clearAiConsent(userId: string): Promise<void> {
     try {
         await connectDB();
         // No upsert: a user without a profile has nothing to withdraw.
-        await CareerProfile.updateOne({ userId }, { $set: { aiEnabled: false } });
+        await CareerProfile.updateOne({ userId }, { $set: { aiEnabled: false, aiIndexedAt: null } });
     } catch (err) {
         const reason = err instanceof Error ? err.name : "unknown";
         console.error(`[clerk/webhook] could not clear aiEnabled userId=${userId}:`, reason);

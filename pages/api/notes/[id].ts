@@ -51,15 +51,23 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
                 return errorResponse(res, 400, "Title and content are required");
             }
 
+            const before = (await Note.findOne({ _id: id, userId }).lean()) as Record<string, unknown> | null;
             const note = await Note.findOneAndUpdate(
                 { _id: id, userId },
                 { title, content, round, jobId },
                 { new: true, runValidators: true }
             );
-            if (!note) return errorResponse(res, 404, "Note not found");
-            syncNoteSaved(userId, note);
+            if (!before || !note) return errorResponse(res, 404, "Note not found");
+            // Skip re-embedding when nothing indexed changed (paid work per save).
+            const changed = ["title", "content", "round", "jobId"].some(
+                (key) => JSON.stringify(before[key] ?? null) !== JSON.stringify(note.get(key) ?? null)
+            );
+            if (changed) syncNoteSaved(userId, note);
             return successResponse(res, note);
         } catch (error) {
+            if (error instanceof Error && error.name === "ValidationError") {
+                return errorResponse(res, 400, error.message);
+            }
             console.error("Note PUT error:", error);
             return errorResponse(res, 500, "Failed to update note");
         }

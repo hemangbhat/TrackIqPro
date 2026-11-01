@@ -3,6 +3,7 @@ import Job from "../../../models/Job";
 import { NextApiResponse } from "next";
 import { withAuth, methodNotAllowed, errorResponse, successResponse, AuthenticatedRequest } from "../../../lib/api-helpers";
 import { getUserPlan } from "../../../lib/stripe";
+import { FREE_JOB_LIMIT } from "../../../lib/plans";
 import { enforceRateLimit } from "../../../lib/rate-limit";
 import { syncJobSaved } from "../../../lib/ai-sync";
 
@@ -38,10 +39,11 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
         try {
             const { plan } = await getUserPlan(userId);
             
+            const limitMessage = `Free tier limit reached (${FREE_JOB_LIMIT} jobs max)`;
             if (plan === "free") {
                 const jobCount = await Job.countDocuments({ userId });
-                if (jobCount >= 10) {
-                    return errorResponse(res, 403, "Free tier limit reached (10 jobs max)");
+                if (jobCount >= FREE_JOB_LIMIT) {
+                    return errorResponse(res, 403, limitMessage);
                 }
             }
 
@@ -66,9 +68,28 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
             });
             
             await newJob.save();
+
+            // The count above is check-then-act: concurrent creates can all pass
+            // it. Re-check after inserting and roll back our own insert if the
+            // limit was crossed, so a burst can never leave more than the limit.
+            if (plan === "free") {
+                const olderJobs = await Job.countDocuments({
+                    userId,
+                    _id: { $ne: newJob._id },
+                    createdAt: { $lte: newJob.createdAt },
+                });
+                if (olderJobs >= FREE_JOB_LIMIT) {
+                    await Job.deleteOne({ _id: newJob._id, userId });
+                    return errorResponse(res, 403, limitMessage);
+                }
+            }
+
             syncJobSaved(userId, newJob);
             return successResponse(res, newJob, 201);
         } catch (error) {
+            if (error instanceof Error && error.name === "ValidationError") {
+                return errorResponse(res, 400, error.message);
+            }
             console.error("Error creating job:", error);
             return errorResponse(res, 500, "Failed to create job");
         }

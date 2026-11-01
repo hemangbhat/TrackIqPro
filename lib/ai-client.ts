@@ -62,10 +62,13 @@ export class AiNotConfiguredError extends Error {
 
 export class AiServiceError extends Error {
     status: number;
-    constructor(status: number, message = `AI service responded with ${status}`) {
+    /** We gave up waiting; the service may still be doing (paid) work. */
+    timedOut: boolean;
+    constructor(status: number, message = `AI service responded with ${status}`, timedOut = false) {
         super(message);
         this.name = "AiServiceError";
         this.status = status;
+        this.timedOut = timedOut;
     }
 }
 
@@ -100,7 +103,7 @@ async function call(path: string, init: { method: string; body?: unknown; timeou
     } catch (e) {
         // Timeouts and network failures: callers only ever see AiServiceError (status 0 = no HTTP response).
         const reason = e instanceof Error ? e.name : "unknown";
-        throw new AiServiceError(0, `AI service request failed (${reason})`);
+        throw new AiServiceError(0, `AI service request failed (${reason})`, reason === "TimeoutError");
     }
     if (!res.ok) throw new AiServiceError(res.status);
     return res;

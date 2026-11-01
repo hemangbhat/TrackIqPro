@@ -1,8 +1,13 @@
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 SourceType = Literal["job_description", "job_notes", "note"]
+
+# Above the Next.js field caps (20k chars plus a title prefix); bounds the
+# embedding cost of one source that arrives over HTTP even if a caller skips
+# those caps. The operator reindex script builds IndexSource directly.
+MAX_SOURCE_TEXT = 25_000
 
 
 class IndexSource(BaseModel):
@@ -14,6 +19,12 @@ class IndexSource(BaseModel):
     round: str = ""
     createdAt: str  # ISO timestamp
     text: str
+
+
+class ApiIndexSource(IndexSource):
+    """An IndexSource received on the /index route, with a size cap."""
+
+    text: str = Field(max_length=MAX_SOURCE_TEXT)
 
 
 class SourceRef(BaseModel):

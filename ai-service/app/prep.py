@@ -136,6 +136,14 @@ def get_chat():
     from langchain_openai import ChatOpenAI
 
     settings = get_settings()
+    # Bounded cost per call: an output-token cap and a deadline just under the
+    # Next.js client's 55s timeout, so a prompt steered toward huge output can't
+    # keep generating (and billing) after the caller has given up.
     return ChatOpenAI(
-        model=settings.openai_chat_model, temperature=0, api_key=settings.openai_api_key
+        model=settings.openai_chat_model,
+        temperature=0,
+        api_key=settings.openai_api_key,
+        max_tokens=4000,
+        timeout=50,
+        max_retries=1,
     )

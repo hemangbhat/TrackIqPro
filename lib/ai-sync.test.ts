@@ -219,6 +219,22 @@ describe("ai-sync", () => {
         expect(mocked.indexSources).toHaveBeenCalledTimes(1);
     });
 
+    it("deletes what it just indexed when consent is withdrawn while the call is in flight", async () => {
+        await CareerProfile.create({ userId: "u1", aiEnabled: true });
+        const job = await Job.create({ userId: "u1", title: "Eng", company: "Acme", jobDescription: "jd" });
+        // The purge runs while this index call is on the wire.
+        mocked.indexSources.mockImplementationOnce(async () => {
+            await CareerProfile.updateOne({ userId: "u1" }, { aiEnabled: false });
+        });
+        syncJobSaved("u1", job);
+        await flush();
+        expect(mocked.deleteSources).toHaveBeenCalledWith(
+            "u1",
+            [{ sourceType: "job_description", sourceId: String(job._id) }],
+            SLOW
+        );
+    });
+
     it("a stage-only change makes no index or delete calls", async () => {
         await CareerProfile.create({ userId: "u1", aiEnabled: true });
         const job = await Job.create({ userId: "u1", title: "Eng", company: "Acme", jobDescription: "jd" });

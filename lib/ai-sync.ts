@@ -16,6 +16,7 @@ import {
     indexSources,
     INDEX_BATCH_SIZE,
     pingHealth,
+    type IndexSource,
     type SourceRef,
 } from "./ai-client";
 import { jobSourceRefs, jobToSources, noteToSource, type JobLike, type NoteLike } from "./ai-sources";
@@ -62,6 +63,32 @@ async function startSync(userId: string): Promise<boolean> {
     return true;
 }
 
+/**
+ * Index `sources` only while the user is opted in, and undo the write if they
+ * opted out while it was in flight.
+ *
+ * Disabling clears the flag BEFORE purging vectors, so a purge can run while an
+ * earlier index call is still on the wire; that call would then re-create
+ * vectors after the purge. Re-reading the flag once the call returns closes
+ * that gap: if consent is gone, delete exactly what we just wrote. Returns
+ * false when it stopped because the user is not (or no longer) opted in.
+ */
+export async function indexWhileOptedIn(
+    userId: string,
+    sources: IndexSource[],
+    opts: { timeoutMs?: number } = {}
+): Promise<boolean> {
+    if (!(await shouldSync(userId))) return false;
+    await indexSources(userId, sources, opts);
+    if (await userOptedIn(userId)) return true;
+    await deleteSources(userId, sources.map(sourceRef), opts);
+    return false;
+}
+
+function sourceRef(source: IndexSource): SourceRef {
+    return { sourceType: source.sourceType, sourceId: source.sourceId };
+}
+
 // Job fields that appear in the job's own sources (title/company are in the text prefix).
 const JOB_SOURCE_FIELDS = ["jobDescription", "notes", "title", "company"];
 // Job fields copied onto each of the job's notes' metadata.
@@ -84,7 +111,7 @@ export function syncJobSaved(userId: string, job: JobLike, changedFields?: strin
 
         if (touches(JOB_SOURCE_FIELDS)) {
             const sources = jobToSources(job);
-            if (sources.length > 0) await indexSources(userId, sources, SLOW);
+            if (sources.length > 0 && !(await indexWhileOptedIn(userId, sources, SLOW))) return;
 
             // A field that was cleared must disappear from the index.
             const present = new Set(sources.map((s) => s.sourceType));
@@ -97,8 +124,8 @@ export function syncJobSaved(userId: string, job: JobLike, changedFields?: strin
             const notes = (await Note.find({ userId, jobId }).lean()) as unknown as NoteLike[];
             const noteSources = notes.flatMap((n) => noteToSource(n, job) ?? []);
             for (let i = 0; i < noteSources.length; i += INDEX_BATCH_SIZE) {
-                if (!(await shouldSync(userId))) return;
-                await indexSources(userId, noteSources.slice(i, i + INDEX_BATCH_SIZE), SLOW);
+                const batch = noteSources.slice(i, i + INDEX_BATCH_SIZE);
+                if (!(await indexWhileOptedIn(userId, batch, SLOW))) return;
             }
         }
     }, "job saved");
@@ -120,8 +147,7 @@ export function syncNoteSaved(userId: string, note: NoteLike): void {
         const job = note.jobId ? await findJob(userId, String(note.jobId)) : null;
         const source = noteToSource(note, job);
         if (source) {
-            if (!(await shouldSync(userId))) return;
-            await indexSources(userId, [source], SLOW);
+            await indexWhileOptedIn(userId, [source], SLOW);
         } else {
             // Blank note: nothing worth indexing, and any older version must go.
             await deleteSources(userId, [noteRef(note._id)], SLOW);

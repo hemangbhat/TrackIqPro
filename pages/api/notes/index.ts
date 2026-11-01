@@ -58,6 +58,9 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
             syncNoteSaved(userId, note);
             return successResponse(res, note, 201);
         } catch (error) {
+            if (error instanceof Error && error.name === "ValidationError") {
+                return errorResponse(res, 400, error.message);
+            }
             console.error("Notes POST error:", error);
             return errorResponse(res, 500, "Failed to create note", error);
         }

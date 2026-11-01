@@ -3,14 +3,16 @@ import hmac
 from typing import Callable
 
 from fastapi import Depends, FastAPI, Header, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.config import Settings, get_settings
 from app.prep import get_chat, run_prep
-from app.schemas import IndexSource, PrepRequest, PrepResult, SourceRef
+from app.schemas import ApiIndexSource, PrepRequest, PrepResult, SourceRef
 from app.store import UserStore, get_store_factory
 
-app = FastAPI(title="TrackIQ AI service")
+# Internal service: only the Next.js server calls it, so don't publish
+# interactive docs or the OpenAPI schema on the public URL.
+app = FastAPI(title="TrackIQ AI service", docs_url=None, redoc_url=None, openapi_url=None)
 
 
 def require_service_key(
@@ -31,14 +33,16 @@ def health() -> dict:
     return {"status": "ok"}
 
 
+# The Next.js app sends at most INDEX_BATCH_SIZE (10) sources per call; the
+# caps bound the paid embedding work a single request can trigger.
 class IndexRequest(BaseModel):
     userId: str
-    sources: list[IndexSource]
+    sources: list[ApiIndexSource] = Field(max_length=50)
 
 
 class DeleteSourcesRequest(BaseModel):
     userId: str
-    sources: list[SourceRef]
+    sources: list[SourceRef] = Field(max_length=200)
 
 
 StoreFactory = Callable[[str], UserStore]

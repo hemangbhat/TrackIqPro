@@ -1,3 +1,4 @@
+import { timingSafeEqual } from "crypto";
 import type { NextApiRequest, NextApiResponse } from "next";
 import { clerkClient } from "@clerk/nextjs/server";
 import { connectDB } from "../../../lib/db";
@@ -26,8 +27,10 @@ const COOLDOWN_SECONDS = 20 * 60 * 60;
 function authorized(req: NextApiRequest): boolean {
     const secret = process.env.CRON_SECRET;
     if (!secret) return false;
-    const header = req.headers.authorization || "";
-    return header === `Bearer ${secret}`;
+    const supplied = Buffer.from(req.headers.authorization || "");
+    const expected = Buffer.from(`Bearer ${secret}`);
+    // Constant-time compare so response timing can't leak the secret.
+    return supplied.length === expected.length && timingSafeEqual(supplied, expected);
 }
 
 /** Optional Upstash-backed dedupe. Returns true if we may send to this user. */

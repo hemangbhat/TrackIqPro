@@ -2,6 +2,9 @@ import Stripe from "stripe";
 import { NextApiRequest, NextApiResponse } from "next";
 import { getAuth, clerkClient } from "@clerk/nextjs/server";
 import { enforceRateLimit } from "../../../lib/rate-limit";
+import { connectDB } from "../../../lib/db";
+import { getUserPlan, isPro } from "../../../lib/stripe";
+import { appBaseUrl } from "../../../lib/app-url";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
     apiVersion: "2025-07-30.basil",
@@ -29,6 +32,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     try {
+        await connectDB();
+        // One subscription per user: a second checkout would bill twice and
+        // leave two subscriptions fighting over the same plan record.
+        const current = await getUserPlan(userId);
+        if (isPro(current.plan)) {
+            return res.status(409).json({ error: "You already have an active Pro subscription" });
+        }
+
         let email: string | undefined;
         try {
             const client = await clerkClient();
@@ -44,14 +55,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const session = await stripe.checkout.sessions.create({
             mode: "subscription",
             payment_method_types: ["card"],
-            customer_email: email,
+            // Reuse the existing Stripe customer so history stays on one record.
+            ...(current.customerId ? { customer: current.customerId } : { customer_email: email }),
             line_items: [{ price: PRICE_ID, quantity: 1 }],
             // Metadata on both the session and the subscription so every
             // webhook event type can resolve the user.
             metadata: { userId },
             subscription_data: { metadata: { userId } },
-            success_url: `${req.headers.origin}/dashboard?upgrade=success`,
-            cancel_url: `${req.headers.origin}/pricing?upgrade=cancel`,
+            success_url: `${appBaseUrl(req)}/dashboard?upgrade=success`,
+            cancel_url: `${appBaseUrl(req)}/pricing?upgrade=cancel`,
         });
 
         // IMPORTANT: do not grant the plan here. The user is only upgraded

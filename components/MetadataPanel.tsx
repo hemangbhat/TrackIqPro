@@ -65,7 +65,9 @@ export default function MetadataPanel({ job }: MetadataPanelProps) {
                     </Badge>
                 </Row>
                 <Row icon={<LinkIcon size={18} />} label="Link">
-                    {job.link ? (
+                    {/* http(s) only, so a stored javascript: URL (saved before the
+                        server-side check existed) can never become a clickable link. */}
+                    {job.link && /^https?:\/\//i.test(job.link) ? (
                         <a
                             href={job.link}
                             target="_blank"

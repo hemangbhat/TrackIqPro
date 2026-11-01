@@ -14,9 +14,10 @@ const NoteSchema = new Schema<INote>(
     {
         userId: { type: String, required: true, index: true },
         jobId: { type: String, default: null, index: true },
-        title: { type: String, required: true, trim: true },
-        content: { type: String, required: true },
-        round: { type: String, trim: true, default: "" },
+        // Size caps bound storage and the paid embedding work each save triggers.
+        title: { type: String, required: true, trim: true, maxlength: 300 },
+        content: { type: String, required: true, maxlength: 20000 },
+        round: { type: String, trim: true, default: "", maxlength: 100 },
     },
     { timestamps: true }
 );

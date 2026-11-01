@@ -157,6 +157,13 @@ describe("POST /api/ai/prep", () => {
         expect(await remainingPreps("u1")).toBe(5);
     });
 
+    it("does not refund when the AI call timed out (the service may still be billing)", async () => {
+        mocked.requestPrep.mockRejectedValue(new ai.AiServiceError(0, "timed out", true));
+        const r = await prep({ jobId });
+        expect(r.status).toBe(503);
+        expect(await remainingPreps("u1")).toBe(4);
+    });
+
     it("drops citations to deleted notes", async () => {
         const live = await Note.create({ userId: "u1", title: "Round 1", content: "x", jobId });
         const liveId = String(live._id);
@@ -265,6 +272,23 @@ describe("POST /api/ai/enable", () => {
         const sizes = mocked.indexSources.mock.calls.map((c) => c[1].length);
         expect(sizes).toEqual([10, 10, 10, 10, 10, 10, 1]);
         expect(mocked.indexSources.mock.calls[0][0]).toBe("u1");
+    });
+
+    it("a repeat enable after a completed index does not re-embed the corpus", async () => {
+        await CareerProfile.updateOne({ userId: "u1" }, { aiEnabled: false });
+        expect((await call(enableHandler, "POST", { enabled: true })).status).toBe(200);
+        const firstRun = mocked.indexSources.mock.calls.length;
+        expect(firstRun).toBeGreaterThan(0);
+        expect((await call(enableHandler, "POST", { enabled: true })).status).toBe(200);
+        expect(mocked.indexSources.mock.calls.length).toBe(firstRun);
+    });
+
+    it("a failed index can be retried by enabling again", async () => {
+        await CareerProfile.updateOne({ userId: "u1" }, { aiEnabled: false });
+        mocked.indexSources.mockRejectedValueOnce(new ai.AiServiceError(500));
+        expect((await call(enableHandler, "POST", { enabled: true })).status).toBe(502);
+        expect((await call(enableHandler, "POST", { enabled: true })).status).toBe(200);
+        expect(mocked.indexSources).toHaveBeenCalledTimes(2);
     });
 
     it("enable true returns 503 and leaves the flag off when AI is not configured", async () => {

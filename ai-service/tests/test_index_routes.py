@@ -59,3 +59,12 @@ def test_delete_user_removes_all_their_vectors(client, index):
 def test_index_routes_require_service_key(client):
     assert client.post("/index", json={"userId": "u1", "sources": []}).status_code == 401
     assert client.delete("/users/u1").status_code == 401
+
+
+def test_index_rejects_oversized_requests(client):
+    # Caps bound the paid embedding work one request can trigger.
+    too_many = client.post("/index", json={"userId": "u1", "sources": [SOURCE] * 51}, headers=HEADERS)
+    assert too_many.status_code == 422
+    huge = {**SOURCE, "text": "x" * 25_001}
+    too_long = client.post("/index", json={"userId": "u1", "sources": [huge]}, headers=HEADERS)
+    assert too_long.status_code == 422

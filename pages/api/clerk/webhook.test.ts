@@ -66,7 +66,10 @@ describe("POST /api/clerk/webhook", () => {
         });
         verify.mockReturnValue({ type: "user.deleted", data: { id: "user_1" } });
         expect((await post()).status).toBe(200);
-        expect(updateOne).toHaveBeenCalledWith({ userId: "user_1" }, { $set: { aiEnabled: false } });
+        expect(updateOne).toHaveBeenCalledWith(
+            { userId: "user_1" },
+            { $set: { aiEnabled: false, aiIndexedAt: null } }
+        );
         expect(order).toEqual(["flag off", "purge"]);
     });
 

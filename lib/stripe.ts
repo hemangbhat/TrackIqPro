@@ -21,16 +21,25 @@ export async function getUserPlan(userId: string): Promise<UserPlanData> {
     };
 }
 
+/** The subscription id the user's plan is currently bound to, if any. */
+export async function getPlanSubscriptionId(userId: string): Promise<string | null> {
+    const record = await UserPlan.findOne({ userId }).select("subscriptionId").lean<{
+        subscriptionId?: string | null;
+    }>();
+    return record?.subscriptionId ?? null;
+}
+
 export async function updateUserPlanInDB(
     userId: string,
     plan: Plan,
     customerId: string | null,
     status: PlanStatus = "active",
-    trialEnd: Date | null = null
+    trialEnd: Date | null = null,
+    subscriptionId: string | null = null
 ) {
     return UserPlan.findOneAndUpdate(
         { userId },
-        { plan, customerId, status, trialEnd },
+        { plan, customerId, status, trialEnd, subscriptionId },
         { upsert: true, new: true }
     );
 }

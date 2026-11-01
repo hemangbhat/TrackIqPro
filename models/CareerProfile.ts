@@ -18,6 +18,9 @@ const CareerProfileSchema = new mongoose.Schema(
         // Opt-in consent for sending jobs/notes to the AI service (off by default).
         aiEnabled: { type: Boolean, default: false },
         aiEnabledAt: { type: Date, default: null },
+        // Set once the initial bulk index finished; lets a repeat "enable" skip
+        // re-embedding the whole corpus. Cleared when the user opts out.
+        aiIndexedAt: { type: Date, default: null },
     },
     { timestamps: true }
 );

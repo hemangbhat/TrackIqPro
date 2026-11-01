@@ -84,6 +84,9 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
 
             return successResponse(res, offer, 201);
         } catch (error) {
+            if (error instanceof Error && error.name === "ValidationError") {
+                return errorResponse(res, 400, error.message);
+            }
             console.error("Error creating offer:", error);
             return errorResponse(res, 500, "Failed to create offer");
         }
