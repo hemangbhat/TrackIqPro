@@ -40,6 +40,10 @@ const sections: { title: string; body: React.ReactNode }[] = [
                     descriptions and notes are embedded and stored as vectors, and the matching
                     passages are sent to OpenAI to write your prep.
                 </li>
+                <li>
+                    Sentry — error reports (the error, its stack trace and the page), with request
+                    contents, cookies and your identity removed before they are sent.
+                </li>
             </ul>
         ),
     },

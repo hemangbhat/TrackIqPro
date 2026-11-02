@@ -107,6 +107,7 @@ and nothing is sent anywhere.
 | `PINECONE_NAMESPACE` | optional | Defaults to the default namespace |
 | `MONGODB_URI` | reindex only | Include the database name |
 | `PYTHON_VERSION` | ✅ | `3.13.3` (matches `ai-service/.python-version`) |
+| `SENTRY_DSN` | Optional | Sentry error monitoring for the AI service. Off when unset; never sends request bodies (your notes). |
 
 The free tier sleeps when idle; the first prep after a quiet period shows
 "Waking up the AI service…" while it starts.
@@ -146,6 +147,7 @@ cron job) repairs any sync that still failed.
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | ✅ | Auth (client) |
 | `CLERK_SECRET_KEY` | ✅ | Auth (server) |
 | `NEXT_PUBLIC_APP_URL` | ✅ | Links in emails and Stripe redirect URLs (checkout fails without it) |
+| `SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN` | Optional | Sentry error monitoring for the server and the browser (same DSN). Off when unset. |
 | `STRIPE_SECRET_KEY` | ✅ (billing) | Stripe server |
 | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | ✅ (billing) | Stripe client |
 | `STRIPE_PRICE_ID` | ✅ (billing) | Pro price |

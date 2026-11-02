@@ -9,6 +9,7 @@ that ships to production (`npm audit --omit=dev --audit-level=high`).
 | Advisory | Package | Where it runs | Why it is accepted | Review by |
 |---|---|---|---|---|
 | [GHSA-g3hv-75wg-m249](https://github.com/advisories/GHSA-g3hv-75wg-m249) (moderate, ReDoS) | `minimatch` 3.1.5 | ESLint only (dev tooling) | No fixed 3.x exists; the fix is 11.x, and forcing it breaks ESLint (`minimatch` 11 has no default export). The patterns it matches come from our own lint config, never from user input, and it never runs in production. The TypeScript parser's copy is already overridden to 11.0.3. | 2027-01-31, or when ESLint moves to `minimatch` 11 |
+| [GHSA-3g3m-2fjr-6pw4](https://github.com/advisories/GHSA-3g3m-2fjr-6pw4) and GHSA-g3hv-75wg-m249 (moderate) | `glob` 13.0.6 and its `minimatch` | `@sentry/bundler-plugins` (source-map upload at build time) | Sentry requires `glob` ^13 and the fix is 14.0.2 (a new major, days old). The plugin only runs when `withSentryConfig` uploads source maps, which this app does not use, so the code is installed but never executed. | 2027-01-31, or when Sentry moves to `glob` 14 |
 
 ## Overrides in `package.json`
 

@@ -6,9 +6,13 @@ from fastapi import Depends, FastAPI, Header, HTTPException
 from pydantic import BaseModel, Field
 
 from app.config import Settings, get_settings
+from app.monitoring import init_sentry
 from app.prep import get_chat, run_prep
 from app.schemas import ApiIndexSource, PrepRequest, PrepResult, SourceRef
 from app.store import UserStore, get_store_factory
+
+# Before the app is created, so the FastAPI integration hooks in.
+init_sentry()
 
 # Internal service: only the Next.js server calls it, so don't publish
 # interactive docs or the OpenAPI schema on the public URL.

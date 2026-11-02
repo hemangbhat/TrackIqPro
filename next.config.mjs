@@ -13,6 +13,16 @@ function clerkFrontendApi() {
   }
 }
 
+/** Sentry's ingest origin from the browser DSN (https://<key>@<host>/<id>), if set. */
+function sentryIngestOrigin() {
+  try {
+    const dsn = process.env.NEXT_PUBLIC_SENTRY_DSN;
+    return dsn ? new URL(dsn).origin : null;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Content Security Policy: an allowlist of where scripts, connections,
  * images and frames may come from, so injected markup can't load code or
@@ -44,6 +54,8 @@ function contentSecurityPolicy() {
       "https://clerk-telemetry.com",
       "https://*.clerk-telemetry.com",
       "https://api.stripe.com",
+      // Browser error reports, only when Sentry is configured.
+      ...(sentryIngestOrigin() ? [sentryIngestOrigin()] : []),
     ],
     "img-src": ["'self'", "data:", "blob:", "https://img.clerk.com"],
     "style-src": ["'self'", "'unsafe-inline'"],
