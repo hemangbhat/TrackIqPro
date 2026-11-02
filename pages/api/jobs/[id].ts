@@ -4,6 +4,7 @@ import { NextApiResponse } from "next";
 import { withAuth, methodNotAllowed, errorResponse, successResponse, AuthenticatedRequest, isObjectId } from "../../../lib/api-helpers";
 import { enforceRateLimit } from "../../../lib/rate-limit";
 import { syncJobDeleted, syncJobSaved } from "../../../lib/ai-sync";
+import { withNormalizedStage } from "../../../lib/job-stage";
 
 // The response is sent first; this only lets background AI sync (waitUntil)
 // keep running while a sleeping AI service wakes up.
@@ -44,7 +45,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
             if (!job) {
                 return errorResponse(res, 404, "Job not found");
             }
-            return successResponse(res, job);
+            return successResponse(res, withNormalizedStage(job));
         } catch (error) {
             console.error("Error fetching job:", error);
             return errorResponse(res, 500, "Failed to fetch job");
@@ -77,7 +78,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
                 (key) => JSON.stringify(before[key]) !== JSON.stringify(job.get(key))
             );
             syncJobSaved(userId, job, changed);
-            return successResponse(res, job);
+            return successResponse(res, withNormalizedStage(job.toObject()));
         } catch (error) {
             if (error instanceof Error && error.name === "ValidationError") {
                 return errorResponse(res, 400, error.message);

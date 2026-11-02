@@ -6,6 +6,7 @@ import { getUserPlan } from "../../../lib/stripe";
 import { FREE_JOB_LIMIT } from "../../../lib/plans";
 import { enforceRateLimit } from "../../../lib/rate-limit";
 import { syncJobSaved } from "../../../lib/ai-sync";
+import { withNormalizedStage } from "../../../lib/job-stage";
 
 // The response is sent first; this only lets background AI sync (waitUntil)
 // keep running while a sleeping AI service wakes up.
@@ -27,7 +28,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
             const jobs = await Job.find({ userId })
                 .sort({ createdAt: -1 })
                 .lean();
-            return successResponse(res, jobs);
+            return successResponse(res, jobs.map(withNormalizedStage));
         } catch (error) {
             console.error("Error fetching jobs:", error);
             return errorResponse(res, 500, "Failed to fetch jobs");

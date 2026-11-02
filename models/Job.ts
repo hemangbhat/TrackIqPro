@@ -24,6 +24,9 @@ const JobSchema = new Schema<IJob>({
     stage: { 
         type: String, 
         required: true,
+        // Store "Applied " as "applied": filters and engines match the exact value.
+        lowercase: true,
+        trim: true,
         enum: ["applied", "screening", "interview", "offer", "rejected", "accepted", "withdrawn"],
         default: "applied"
     },

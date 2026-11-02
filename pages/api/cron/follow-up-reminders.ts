@@ -6,6 +6,7 @@ import Job from "../../../models/Job";
 import CareerProfile from "../../../models/CareerProfile";
 import { appBaseUrl } from "../../../lib/app-url";
 import { unsubscribeLinks } from "../../../lib/unsubscribe";
+import { withNormalizedStage } from "../../../lib/job-stage";
 import { getPriorityQueue } from "../../../lib/follow-up-intelligence";
 import { sendFollowUpDigests, emailEnabled, DIGEST_BATCH_SIZE, type DigestParams } from "../../../lib/email";
 import type { Job as JobType } from "../../../types";
@@ -95,7 +96,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         for (const j of activeJobs as unknown as (JobType & { _id: unknown })[]) {
             const uid = j.userId;
             if (!uid) continue;
-            const job: JobType = { ...j, _id: String(j._id) } as JobType;
+            const job: JobType = withNormalizedStage({ ...j, _id: String(j._id) }) as JobType;
             const arr = byUser.get(uid);
             if (arr) arr.push(job);
             else byUser.set(uid, [job]);
