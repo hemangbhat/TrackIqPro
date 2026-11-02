@@ -11,7 +11,7 @@ import time
 from dataclasses import dataclass
 from functools import lru_cache
 
-from app.chunking import chunk_source, vector_id_prefix
+from app.chunking import MAX_CHUNKS_PER_SOURCE, chunk_source, vector_id_prefix
 from app.config import get_settings
 from app.schemas import IndexSource, SourceRef
 
@@ -72,9 +72,12 @@ class UserStore:
 
     def delete_sources(self, refs: list[SourceRef] | list[IndexSource]) -> None:
         for ref in refs:
-            self._delete_by_prefix(
-                vector_id_prefix(self._user_id, ref.sourceType, ref.sourceId)
-            )
+            prefix = vector_id_prefix(self._user_id, ref.sourceType, ref.sourceId)
+            # Every ID chunk_source can produce, plus whatever list() sees (older
+            # vectors from before the chunk cap). Listing alone can miss vectors
+            # upserted moments ago, such as an index call that raced an opt-out.
+            predicted = [f"{prefix}{i}" for i in range(MAX_CHUNKS_PER_SOURCE)]
+            self._delete_by_prefix(prefix, extra_ids=predicted)
 
     def delete_all(self) -> None:
         self._delete_by_prefix(f"{self._user_id}#")
@@ -121,13 +124,14 @@ class UserStore:
             log(f"Waiting for Pinecone: {count}/{expected} vectors visible")
             sleep(poll_s)
 
-    def _delete_by_prefix(self, prefix: str) -> None:
+    def _delete_by_prefix(self, prefix: str, extra_ids: list[str] = ()) -> None:
         # Safety net: never delete anything outside this user's ID space.
         assert prefix.startswith(f"{self._user_id}#")
         # index.list yields pages whose .vectors each carry an .id; collect all ids
         # first so we aren't deleting while paginating.
         pages = self._index.list(prefix=prefix, namespace=self._namespace)
-        ids = [item.id for page in pages for item in page.vectors]
+        listed = [item.id for page in pages for item in page.vectors]
+        ids = list(dict.fromkeys([*extra_ids, *listed]))
         for batch in _batches(ids):
             self._index.delete(ids=batch, namespace=self._namespace)
 

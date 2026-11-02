@@ -6,6 +6,10 @@ from app.schemas import IndexSource
 
 CHUNK_SIZE = 800
 CHUNK_OVERLAP = 100
+# Chunk IDs are "{prefix}{index}" with index below this cap, so a source's
+# vectors can be deleted by ID without listing them first (Pinecone's list can
+# lag a fresh upsert). The API caps text at 25,000 chars, far below the cap.
+MAX_CHUNKS_PER_SOURCE = 100
 splitter = RecursiveCharacterTextSplitter(chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP)
 
 
@@ -31,7 +35,8 @@ def chunk_source(user_id: str, source: IndexSource) -> list[Chunk]:
     base_metadata["userId"] = user_id
 
     chunks = []
-    for index, piece in enumerate(splitter.split_text(source.text)):
+    pieces = splitter.split_text(source.text)[:MAX_CHUNKS_PER_SOURCE]
+    for index, piece in enumerate(pieces):
         metadata = {**base_metadata, "chunkIndex": index, "text": piece}
         chunks.append(Chunk(id=f"{prefix}{index}", text=piece, metadata=metadata))
     return chunks

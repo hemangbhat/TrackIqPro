@@ -52,7 +52,8 @@ def test_user_id_with_hash_rejected():
 def test_upsert_long_source_batches_and_replaces():
     index = FakeIndex()
     store = store_for(index, "u1")
-    count = store.upsert_sources([make_source("word " * 24000)])  # 120,000 chars: >100 chunks forces several batches
+    long_text = "word " * 24000  # 120,000 chars: 100 chunks (the per-source cap) each
+    count = store.upsert_sources([make_source(long_text, "s1"), make_source(long_text, "s2")])
     assert count > 100
     assert max(index.upsert_batches) <= 100
     assert len(index.upsert_batches) > 1
@@ -175,3 +176,28 @@ def test_get_store_reuses_clients_across_requests(monkeypatch):
     b = store_module.get_store("u2", namespace="eval")
     assert len(built) == 1
     assert a._index is b._index
+
+
+class LaggingListIndex(FakeIndex):
+    """Pinecone's list() can lag a fresh upsert; this one never sees anything."""
+
+    def list(self, prefix: str = "", namespace: str = ""):
+        return iter(())
+
+
+def test_delete_sources_does_not_depend_on_list():
+    # An index call that raced an opt-out is undone by deleting its sources;
+    # that delete must land even before the new vectors are listable.
+    index = LaggingListIndex()
+    store = store_for(index, "u1")
+    store.upsert_sources([make_source("a" * 5000, "s1"), make_source("keep", "s2")])
+    store.delete_sources([SourceRef(sourceType="note", sourceId="s1")])
+    assert list(index.vectors) == ["u1#note#s2#0"]
+
+
+def test_chunks_per_source_are_capped():
+    from app.chunking import MAX_CHUNKS_PER_SOURCE, chunk_source
+
+    chunks = chunk_source("u1", make_source("word " * 24000))
+    assert len(chunks) == MAX_CHUNKS_PER_SOURCE
+    assert chunks[-1].id.endswith(f"#{MAX_CHUNKS_PER_SOURCE - 1}")
