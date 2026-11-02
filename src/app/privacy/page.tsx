@@ -23,7 +23,7 @@ const sections: { title: string; body: React.ReactNode }[] = [
     {
         title: "Who processes it",
         body: (
-            <ul className="list-disc space-y-1.5 pl-5">
+            <ul className="list-disc space-y-2 pl-5">
                 <li>Clerk — sign-in and your account email and name.</li>
                 <li>MongoDB — your tracker data.</li>
                 <li>
@@ -69,30 +69,31 @@ const sections: { title: string; body: React.ReactNode }[] = [
 export default function PrivacyPage() {
     return (
         <MarketingShell>
-            <article className="mx-auto max-w-2xl px-6 py-20">
-                <p className="text-sm font-semibold text-indigo-600 dark:text-indigo-300">Privacy</p>
-                <h1 className="font-display mt-2 text-4xl font-bold tracking-tight text-[var(--text)]">
+            <article className="mx-auto w-full max-w-[90rem] px-4 pb-24 pt-10 sm:px-8 sm:pt-12 lg:px-12">
+                <h1 className="gw-display max-w-[14ch] text-[clamp(3rem,7vw,7rem)]">
                     Your data, in plain language
                 </h1>
-                <p className="mt-4 text-[var(--text-muted)]">
+                <p className="mt-8 max-w-[38rem] text-lg leading-relaxed text-[var(--ink-muted)] sm:text-xl">
                     TrackIQ is a private workspace. This page explains exactly what the app keeps and
                     why.
                 </p>
-                <div className="mt-12 space-y-10">
+                <div className="mt-16 border-t-2 border-[var(--ink)]">
                     {sections.map((s) => (
-                        <section key={s.title}>
-                            <h2 className="font-display text-xl font-semibold text-[var(--text)]">
+                        <section
+                            key={s.title}
+                            className="grid gap-4 border-b border-[var(--hair)] py-10 lg:grid-cols-12 lg:gap-6"
+                        >
+                            <h2 className="text-2xl font-extrabold tracking-[-0.02em] lg:col-span-4">
                                 {s.title}
                             </h2>
-                            <div className="mt-3 leading-relaxed text-[var(--text-muted)]">{s.body}</div>
+                            <div className="max-w-[40rem] text-[1.0625rem] leading-relaxed text-[var(--ink-muted)] lg:col-span-7 lg:col-start-6 [&_li]:marker:text-[var(--ink)]">
+                                {s.body}
+                            </div>
                         </section>
                     ))}
                 </div>
-                <Link
-                    href="/"
-                    className="mt-14 inline-flex text-sm font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-300"
-                >
-                    ← Back to home
+                <Link href="/" className="gw-link mt-12 inline-flex min-h-11 items-center gap-2">
+                    Back to home
                 </Link>
             </article>
         </MarketingShell>

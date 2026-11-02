@@ -34,7 +34,7 @@ export function useOffers() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(input),
         });
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data.error || "Failed to create offer");
         setOffers((prev) => [data, ...prev]);
         return data;
@@ -47,7 +47,7 @@ export function useOffers() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(input),
             });
-            const data = await res.json();
+            const data = await res.json().catch(() => ({}));
             if (!res.ok) throw new Error(data.error || "Failed to update offer");
             setOffers((prev) => prev.map((o) => (o._id === id ? data : o)));
             return data;

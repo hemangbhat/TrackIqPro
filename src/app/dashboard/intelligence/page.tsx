@@ -83,17 +83,9 @@ export default function IntelligencePage() {
 
     return (
         <div className="relative mx-auto max-w-6xl space-y-6 p-4 sm:p-6 lg:p-8">
-            {/* Brand glow behind the header for premium depth. */}
-            <div
-                aria-hidden="true"
-                className="hero-gradient pointer-events-none absolute inset-x-0 -top-8 h-56"
-            />
 
             <header className="relative">
-                <span className="font-mono-label text-[11px] uppercase text-[var(--text-muted)]">
-                    Intelligence
-                </span>
-                <h1 className="mt-1 font-display text-2xl font-semibold tracking-tight text-[var(--text)] sm:text-3xl">
+                <h1 className="gw-display text-[clamp(2.25rem,4vw,3.5rem)] text-[var(--ink)] mt-1">
                     Career Intelligence
                 </h1>
                 <p className="mt-1 max-w-2xl text-sm text-[var(--text-muted)]">

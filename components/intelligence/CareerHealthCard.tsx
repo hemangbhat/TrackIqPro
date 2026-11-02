@@ -46,8 +46,8 @@ function MetricBar({
         <div>
             <div className="flex items-baseline justify-between gap-2">
                 <span className="text-sm font-medium text-[var(--text)]">{label}</span>
-                <span className="font-mono-label text-[11px] text-[var(--text-muted)]">
-                    {score} · {Math.round(weight * 100)}% weight
+                <span className="font-bold text-sm text-[var(--text-muted)]">
+                    {score}, weighted {Math.round(weight * 100)}%
                 </span>
             </div>
             <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-[var(--surface-2)]">
@@ -77,9 +77,6 @@ export function CareerHealthCard({ health }: { health: CareerHealthResult }) {
     return (
         <Card className="glass-panel gradient-border flex h-full flex-col p-6 sm:p-7">
             <div className="flex items-center gap-3">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-500 dark:text-indigo-300">
-                    <ActivityIcon size={20} />
-                </span>
                 <div>
                     <h2 className="font-display text-lg font-semibold tracking-tight text-[var(--text)]">
                         Career Health
@@ -126,7 +123,7 @@ export function CareerHealthCard({ health }: { health: CareerHealthResult }) {
 
                     {health.recommendations.length > 0 && (
                         <div className="mt-6">
-                            <h3 className="font-mono-label text-[11px] uppercase text-[var(--text-muted)]">
+                            <h3 className="font-bold text-sm text-[var(--text-muted)]">
                                 Recommendations
                             </h3>
                             <ul className="mt-3 space-y-2.5">

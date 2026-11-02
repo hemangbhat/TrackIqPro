@@ -18,7 +18,7 @@ function watchForProblems(page: Page): string[] {
 test("landing page renders with no CSP violations or script errors", async ({ page }) => {
     const problems = watchForProblems(page);
     await page.goto("/");
-    await expect(page.getByRole("heading", { level: 1 })).toContainText("The command center for your");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("Every score shows its work");
     await page.waitForLoadState("load");
     expect(problems).toEqual([]);
 });

@@ -3,7 +3,10 @@ import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { SunIcon, MoonIcon } from "./ui/icons";
 
-export function ThemeToggle() {
+const defaultClassName =
+    "inline-flex h-11 w-11 cursor-pointer items-center justify-center border-2 border-[var(--ink)] bg-[var(--paper)] text-[var(--ink)] transition-transform duration-150 active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ultra-text)]";
+
+export function ThemeToggle({ className = defaultClassName }: { className?: string }) {
     const { resolvedTheme, setTheme } = useTheme();
     const [mounted, setMounted] = useState(false);
     useEffect(() => setMounted(true), []);
@@ -20,7 +23,7 @@ export function ThemeToggle() {
     return (
         <button
             onClick={() => setTheme(isDark ? "light" : "dark")}
-            className="inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--text-muted)] transition-colors hover:text-[var(--text)] focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+            className={className}
             aria-label={label}
             title={label}
             type="button"

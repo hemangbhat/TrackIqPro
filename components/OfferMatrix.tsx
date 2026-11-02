@@ -1,6 +1,5 @@
 "use client";
 import React, { useEffect, useMemo, useState } from "react";
-import { motion } from "framer-motion";
 import { useOffers, OfferInput } from "../hooks/useOffers";
 import { useToast } from "./ui/Toast";
 import { usePlanGate } from "./usePlanGate";
@@ -32,11 +31,11 @@ import {
     ScoredOffer,
 } from "../lib/scoring";
 import { Offer } from "../types";
+import { formatMoney } from "../lib/format";
 import { WeightSliders } from "./WeightSliders";
 import { ScoreExplanation } from "./ScoreExplanation";
 import { OfferFormDrawer } from "./OfferFormDrawer";
-import { useReducedMotion } from "./useReducedMotion";
-import { staggerItemPreset } from "./motion";
+import { ConfirmDelete } from "./ui/ConfirmDelete";
 
 const WEIGHTS_STORAGE_KEY = "offerWeights";
 
@@ -85,12 +84,13 @@ export default function OfferMatrix() {
     // prompt, whose CTA navigates to /pricing via `goToPricing`.
     const { isPro, exportGate, goToPricing } = usePlanGate();
     const toast = useToast();
-    const reduced = useReducedMotion();
 
     const [weights, setWeights] = useState<Weights>(() => toSliderScale(defaultWeights));
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [editing, setEditing] = useState<Offer | null>(null);
+    // The delete buttons ask first; the delete itself runs from the confirm dialog.
+    const [pendingDelete, setPendingDelete] = useState<Offer | null>(null);
     // Set when a Free_User activates export: the action is blocked and the
     // Plan_Gate upgrade prompt is presented (Req 10.10).
     const [showExportUpgrade, setShowExportUpgrade] = useState(false);
@@ -147,6 +147,7 @@ export default function OfferMatrix() {
     }
 
     async function handleDelete(id?: string) {
+        setPendingDelete(null);
         if (!id) return;
         try {
             await deleteOffer(id);
@@ -192,19 +193,11 @@ export default function OfferMatrix() {
 
     return (
         <div className="relative space-y-6">
-            {/* Decorative atmosphere */}
-            <div
-                aria-hidden="true"
-                className="accent-orb pointer-events-none absolute -top-24 right-0 h-64 w-64"
-            />
 
             {/* Header */}
             <div className="relative flex flex-wrap items-end justify-between gap-4">
                 <div>
-                    <p className="font-mono-label text-[11px] uppercase text-[var(--text-muted)]">
-                        Decision engine
-                    </p>
-                    <h1 className="font-display text-3xl font-bold tracking-tight text-[var(--text)]">
+                    <h1 className="gw-display text-[clamp(2.25rem,4vw,3.5rem)] text-[var(--ink)]">
                         Offer comparison
                     </h1>
                     <p className="mt-1 text-sm text-[var(--text-muted)]">
@@ -274,17 +267,13 @@ export default function OfferMatrix() {
                         trophy hero matching the Stitch "Projected Best Value" panel. */}
                     {!scoringError && best && offers.length > 1 && (
                         <div className="relative overflow-hidden rounded-2xl border border-indigo-500/30 bg-indigo-500/[0.07] p-6">
-                            <div
-                                aria-hidden="true"
-                                className="accent-orb pointer-events-none absolute -right-16 -top-16 h-56 w-56"
-                            />
                             <div className="relative flex flex-col items-start justify-between gap-5 sm:flex-row sm:items-center">
                                 <div className="flex items-start gap-4">
                                     <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-amber-500/15 text-amber-500">
                                         <TrophyIcon />
                                     </span>
                                     <div>
-                                        <p className="font-mono-label text-[11px] uppercase text-indigo-500">
+                                        <p className="font-bold text-sm text-indigo-500">
                                             Best fit for your weights
                                         </p>
                                         <p className="mt-1 font-display text-xl font-semibold text-[var(--text)]">
@@ -293,7 +282,7 @@ export default function OfferMatrix() {
                                     </div>
                                 </div>
                                 <div className="shrink-0 text-left sm:text-right">
-                                    <p className="font-mono-label text-[11px] uppercase text-[var(--text-muted)]">
+                                    <p className="font-bold text-sm text-[var(--text-muted)]">
                                         Fit score
                                     </p>
                                     <p className="font-display text-4xl font-bold leading-none text-[var(--text)]">
@@ -317,7 +306,7 @@ export default function OfferMatrix() {
                                 <span className="text-indigo-500">
                                     <SparklesIcon size={16} />
                                 </span>
-                                <p className="font-mono-label text-[11px] uppercase text-[var(--text-muted)]">
+                                <p className="font-bold text-sm text-[var(--text-muted)]">
                                     How scoring works
                                 </p>
                             </div>
@@ -331,40 +320,36 @@ export default function OfferMatrix() {
                             <table className="w-full min-w-[720px] text-sm">
                                 <thead>
                                     <tr className="border-b border-[var(--border)] bg-[var(--surface-2)]/40 text-left">
-                                        <th className="px-4 py-3 font-mono-label text-[11px] uppercase text-[var(--text-muted)]">
+                                        <th className="font-bold px-4 py-3 text-sm text-[var(--text-muted)]">
                                             Company
                                         </th>
-                                        <th className="px-4 py-3 font-mono-label text-[11px] uppercase text-[var(--text-muted)]">
+                                        <th className="font-bold px-4 py-3 text-sm text-[var(--text-muted)]">
                                             Cash
                                         </th>
-                                        <th className="px-4 py-3 font-mono-label text-[11px] uppercase text-[var(--text-muted)]">
+                                        <th className="font-bold px-4 py-3 text-sm text-[var(--text-muted)]">
                                             Equity
                                         </th>
-                                        <th className="px-4 py-3 font-mono-label text-[11px] uppercase text-[var(--text-muted)]">
+                                        <th className="font-bold px-4 py-3 text-sm text-[var(--text-muted)]">
                                             Growth
                                         </th>
-                                        <th className="px-4 py-3 font-mono-label text-[11px] uppercase text-[var(--text-muted)]">
+                                        <th className="font-bold px-4 py-3 text-sm text-[var(--text-muted)]">
                                             Brand
                                         </th>
-                                        <th className="px-4 py-3 font-mono-label text-[11px] uppercase text-[var(--text-muted)]">
+                                        <th className="font-bold px-4 py-3 text-sm text-[var(--text-muted)]">
                                             Fit score
                                         </th>
-                                        <th className="px-4 py-3 text-right font-mono-label text-[11px] uppercase text-[var(--text-muted)]">
+                                        <th className="font-bold px-4 py-3 text-right text-sm text-[var(--text-muted)]">
                                             Actions
                                         </th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {tableRows.map((o, i) => {
-                                        const motionProps = staggerItemPreset(reduced, i);
+                                    {tableRows.map((o) => {
                                         const isBest =
                                             !scoringError && o.isBest && offers.length > 1;
                                         return (
-                                            <motion.tr
-                                                key={o._id}
-                                                initial={motionProps.initial}
-                                                animate={motionProps.animate}
-                                                transition={motionProps.transition}
+                                            <tr
+                                                key={o._id ?? o.offerId}
                                                 className={`border-b border-[var(--border)] transition-colors last:border-0 hover:bg-[var(--surface-2)]/40 ${
                                                     isBest ? "bg-indigo-500/[0.06]" : ""
                                                 }`}
@@ -395,11 +380,11 @@ export default function OfferMatrix() {
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td className="px-4 py-3 font-mono text-[var(--text)]">
-                                                    ${((o.salaryBase || 0) + (o.bonus || 0) + (o.signingBonus || 0)).toLocaleString()}
+                                                <td className="px-4 py-3 tabular-nums text-[var(--text)]">
+                                                    {formatMoney((o.salaryBase || 0) + (o.bonus || 0) + (o.signingBonus || 0))}
                                                 </td>
-                                                <td className="px-4 py-3 font-mono text-[var(--text)]">
-                                                    ${(o.equity || 0).toLocaleString()}
+                                                <td className="px-4 py-3 tabular-nums text-[var(--text)]">
+                                                    {formatMoney(o.equity || 0)}
                                                 </td>
                                                 <td className="px-4 py-3 text-[var(--text)]">{o.growthScore ?? 0}/10</td>
                                                 <td className="px-4 py-3 text-[var(--text)]">{o.brandScore ?? 0}/10</td>
@@ -418,7 +403,7 @@ export default function OfferMatrix() {
                                                                     style={{ width: `${o.score}%` }}
                                                                 />
                                                             </div>
-                                                            <span className="font-mono font-semibold text-[var(--text)]">
+                                                            <span className="tabular-nums font-semibold text-[var(--text)]">
                                                                 {o.score}
                                                             </span>
                                                         </div>
@@ -434,7 +419,7 @@ export default function OfferMatrix() {
                                                             <PencilIcon size={16} />
                                                         </button>
                                                         <button
-                                                            onClick={() => handleDelete(o._id)}
+                                                            onClick={() => setPendingDelete(o)}
                                                             aria-label={`Delete ${o.company} offer`}
                                                             className="inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-lg text-[var(--text-muted)] transition-colors hover:bg-rose-500/10 hover:text-rose-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
                                                         >
@@ -442,7 +427,7 @@ export default function OfferMatrix() {
                                                         </button>
                                                     </div>
                                                 </td>
-                                            </motion.tr>
+                                            </tr>
                                         );
                                     })}
                                 </tbody>
@@ -456,7 +441,7 @@ export default function OfferMatrix() {
                             const isBest = !scoringError && o.isBest && offers.length > 1;
                             return (
                                 <div
-                                    key={o._id}
+                                    key={o._id ?? o.offerId}
                                     className={`glass-panel gradient-border rounded-2xl p-4 ${
                                         isBest ? "border-indigo-500/40" : ""
                                     }`}
@@ -493,7 +478,7 @@ export default function OfferMatrix() {
                                                 <PencilIcon size={16} />
                                             </button>
                                             <button
-                                                onClick={() => handleDelete(o._id)}
+                                                onClick={() => setPendingDelete(o)}
                                                 aria-label={`Delete ${o.company} offer`}
                                                 className="inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-lg text-[var(--text-muted)] transition-colors hover:bg-rose-500/10 hover:text-rose-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
                                             >
@@ -504,14 +489,14 @@ export default function OfferMatrix() {
                                     <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
                                         <div className="flex justify-between gap-2">
                                             <dt className="text-[var(--text-muted)]">Cash</dt>
-                                            <dd className="font-mono text-[var(--text)]">
-                                                ${((o.salaryBase || 0) + (o.bonus || 0) + (o.signingBonus || 0)).toLocaleString()}
+                                            <dd className="tabular-nums text-[var(--text)]">
+                                                {formatMoney((o.salaryBase || 0) + (o.bonus || 0) + (o.signingBonus || 0))}
                                             </dd>
                                         </div>
                                         <div className="flex justify-between gap-2">
                                             <dt className="text-[var(--text-muted)]">Equity</dt>
-                                            <dd className="font-mono text-[var(--text)]">
-                                                ${(o.equity || 0).toLocaleString()}
+                                            <dd className="tabular-nums text-[var(--text)]">
+                                                {formatMoney(o.equity || 0)}
                                             </dd>
                                         </div>
                                         <div className="flex justify-between gap-2">
@@ -524,7 +509,7 @@ export default function OfferMatrix() {
                                         </div>
                                     </dl>
                                     <div className="mt-3 flex items-center justify-between gap-2 border-t border-[var(--border)] pt-3">
-                                        <span className="font-mono-label text-[11px] uppercase text-[var(--text-muted)]">
+                                        <span className="font-bold text-sm text-[var(--text-muted)]">
                                             Fit score
                                         </span>
                                         {scoringError || o.score == null ? (
@@ -541,7 +526,7 @@ export default function OfferMatrix() {
                                                         style={{ width: `${o.score}%` }}
                                                     />
                                                 </div>
-                                                <span className="font-mono font-semibold text-[var(--text)]">
+                                                <span className="tabular-nums font-semibold text-[var(--text)]">
                                                     {o.score}
                                                 </span>
                                             </div>
@@ -555,6 +540,13 @@ export default function OfferMatrix() {
             )}
 
             {/* Add / edit offer drawer */}
+            <ConfirmDelete
+                title="Delete offer?"
+                target={pendingDelete ? `the ${pendingDelete.company} offer` : null}
+                onCancel={() => setPendingDelete(null)}
+                onConfirm={() => handleDelete(pendingDelete?._id)}
+            />
+
             <OfferFormDrawer
                 open={drawerOpen}
                 mode={editing ? "edit" : "create"}

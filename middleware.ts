@@ -7,6 +7,8 @@ const isPublicRoute = createRouteMatcher([
     "/pricing",
     "/privacy",
     "/demo(.*)",
+    // Link-preview image for shared URLs; crawlers fetch it signed out.
+    "/opengraph-image(.*)",
     // Reminder-email unsubscribe works without signing in (signed link instead).
     "/unsubscribe",
     "/api/email/unsubscribe",

@@ -40,9 +40,6 @@ export function WeightSliders({
                     <SlidersIcon size={18} />
                 </span>
                 <div>
-                    <p className="font-mono-label text-[11px] uppercase text-[var(--text-muted)]">
-                        Decision weights
-                    </p>
                     <h2 className="font-display text-lg font-semibold text-[var(--text)]">
                         Your priorities
                     </h2>
@@ -61,11 +58,11 @@ export function WeightSliders({
                             <div className="mb-2 flex items-center justify-between gap-2">
                                 <label
                                     htmlFor={id}
-                                    className="font-mono-label text-[11px] uppercase tracking-wider text-[var(--text-muted)] transition-colors group-hover:text-[var(--text)]"
+                                    className="font-bold text-sm text-[var(--text-muted)] transition-colors group-hover:text-[var(--text)]"
                                 >
                                     {labels[key]}
                                 </label>
-                                <span className="rounded-md bg-indigo-500/10 px-2 py-0.5 font-mono-label text-xs font-semibold text-indigo-500">
+                                <span className="rounded-md bg-indigo-500/10 px-2 py-0.5 text-xs font-semibold text-indigo-500">
                                     {Math.round(norm[key] * 100)}%
                                 </span>
                             </div>

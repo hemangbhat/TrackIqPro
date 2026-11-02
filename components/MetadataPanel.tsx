@@ -2,6 +2,7 @@
 import React from "react";
 import { Job } from "../types";
 import { Badge, Card } from "./ui/primitives";
+import { formatDate, formatMoney } from "../lib/format";
 import {
     ExternalLinkIcon,
     LinkIcon,
@@ -15,13 +16,6 @@ type MetadataPanelProps = {
     job: Job;
 };
 
-function formatDate(value?: Date | string) {
-    if (!value) return "—";
-    const d = new Date(value);
-    if (isNaN(d.getTime())) return "—";
-    return d.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
-}
-
 function Row({
     icon,
     label,
@@ -32,15 +26,15 @@ function Row({
     children: React.ReactNode;
 }) {
     return (
-        <div className="flex items-center gap-3 py-3">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--surface-2)] text-indigo-500">
+        <div className="flex items-start gap-3 py-3">
+            <span className="mt-0.5 flex shrink-0 text-[var(--ink-muted)]" aria-hidden>
                 {icon}
             </span>
-            <div className="flex min-w-0 flex-1 items-center justify-between gap-4">
-                <dt className="font-mono-label text-[11px] uppercase text-[var(--text-muted)]">
+            <div className="flex min-w-0 flex-1 items-start justify-between gap-4">
+                <dt className="shrink-0 font-bold text-sm text-[var(--text-muted)]">
                     {label}
                 </dt>
-                <dd className="truncate text-right text-sm font-medium text-[var(--text)]">
+                <dd className="min-w-0 text-right text-sm font-medium text-[var(--text)] [overflow-wrap:anywhere]">
                     {children}
                 </dd>
             </div>
@@ -57,7 +51,7 @@ export default function MetadataPanel({ job }: MetadataPanelProps) {
                     {job.location || "—"}
                 </Row>
                 <Row icon={<WalletIcon size={18} />} label="Salary">
-                    {typeof job.salary === "number" ? `$${job.salary.toLocaleString()}` : "—"}
+                    {formatMoney(job.salary)}
                 </Row>
                 <Row icon={<CalendarIcon size={18} />} label="Status">
                     <Badge tone={job.status === "active" ? "applied" : "withdrawn"}>
@@ -72,7 +66,7 @@ export default function MetadataPanel({ job }: MetadataPanelProps) {
                             href={job.link}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-indigo-500 hover:underline"
+                            className="inline-flex items-center gap-1 font-bold text-[var(--ultra-text)] underline-offset-4 hover:underline"
                         >
                             View posting
                             <ExternalLinkIcon size={14} />
@@ -91,7 +85,7 @@ export default function MetadataPanel({ job }: MetadataPanelProps) {
 
             {job.jobDescription && (
                 <div id="job-description" className="mt-4 scroll-mt-24 border-t border-[var(--border)] pt-4">
-                    <h3 className="mb-1.5 font-mono-label text-[11px] uppercase text-[var(--text-muted)]">
+                    <h3 className="font-bold mb-1.5 text-sm text-[var(--text-muted)]">
                         Job description
                     </h3>
                     <p className="whitespace-pre-wrap text-sm leading-relaxed text-[var(--text)]">
@@ -103,7 +97,7 @@ export default function MetadataPanel({ job }: MetadataPanelProps) {
             {/* The ids above and below are scroll targets for AI prep citations (PrepPanel). */}
             {job.notes && (
                 <div id="job-notes" className="mt-4 scroll-mt-24 border-t border-[var(--border)] pt-4">
-                    <h3 className="mb-1.5 font-mono-label text-[11px] uppercase text-[var(--text-muted)]">
+                    <h3 className="font-bold mb-1.5 text-sm text-[var(--text-muted)]">
                         Notes
                     </h3>
                     <p className="whitespace-pre-wrap text-sm leading-relaxed text-[var(--text)]">

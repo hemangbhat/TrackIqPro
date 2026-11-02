@@ -1,6 +1,7 @@
 import React from "react";
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import userEvent from "@testing-library/user-event";
+import { fireEvent } from "@testing-library/react";
 import { renderWithTheme, screen } from "../../test/render";
 
 /**
@@ -51,92 +52,82 @@ function expectInDocumentOrder(elements: (HTMLElement | null)[]) {
 }
 
 describe("Landing page structure (Req 5.1, 5.2)", () => {
-  it("renders the hero with headline, subcopy, and primary/secondary CTAs", () => {
+  it("renders the hero with headline, subcopy, and primary/demo CTAs", () => {
     renderWithTheme(<Home />);
 
-    // Headline (h1) — the words are split across spans, so match a fragment.
-    const headline = screen.getByRole("heading", { level: 1 });
-    expect(headline).toHaveTextContent(/command center/i);
-
-    // Subcopy.
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
+      /every score shows its work/i
+    );
     expect(
       screen.getByText(/track applications, keep private interview notes/i)
     ).toBeInTheDocument();
 
-    // Primary "Get started" and secondary "See pricing" CTAs exist on the page.
     expect(
       screen.getAllByRole("button", { name: /get started/i }).length
     ).toBeGreaterThan(0);
     expect(
-      screen.getAllByRole("button", { name: /^see pricing$/i }).length
-    ).toBeGreaterThan(0);
+      screen.getByRole("link", { name: /open the live demo/i })
+    ).toHaveAttribute("href", "/demo");
   });
 
-  it("renders a feature grid with at least 3 features", () => {
-    renderWithTheme(<Home />);
-
-    // Feature section heading is present...
-    expect(
-      screen.getByRole("heading", { name: /everything your search needs/i })
-    ).toBeInTheDocument();
-
-    // ...and the known feature titles render (>= 3). Use queryAllByText because
-    // some labels (e.g. "Interview notes") also appear in the pricing preview.
-    const featureTitles = [
-      "Application tracker",
-      "Interview notes",
-      "Offer decision engine",
-      "Analytics dashboard",
-    ].filter((t) => screen.queryAllByText(t).length > 0);
-    expect(featureTitles.length).toBeGreaterThanOrEqual(3);
-  });
-
-  it("renders the explainability section with a real engine breakdown", () => {
+  it("draws the hero score from the real engine, as signed contributions", () => {
     const { container } = renderWithTheme(<Home />);
 
-    expect(
-      screen.getByRole("heading", { name: /every score shows its work/i })
-    ).toBeInTheDocument();
-
-    // The breakdown is a <figure> of signed contributions from the real engine.
+    // The breakdown is a <figure> of signed contributions from lib/career-fit.
     const figure = container.querySelector("figure");
     expect(figure).not.toBeNull();
-    expect(figure!.textContent).toMatch(/[+−]\d+/);
+    expect(figure!.textContent).toMatch(/\+\d+/);
+    expect(figure!.textContent).toMatch(/−\d+/);
+    expect(figure!.textContent).toMatch(/real engine/i);
+  });
+
+  it("lets visitors re-weight the sample offers", () => {
+    renderWithTheme(<Home />);
+
+    const ranking = screen.getByRole("list", { name: /offer ranking/i });
+    expect(ranking.querySelectorAll("li")).toHaveLength(3);
+
+    const reset = screen.getByRole("button", { name: /reset weights/i });
+    expect(reset).toBeDisabled();
+
+    const comp = screen.getByRole("slider", { name: /compensation/i });
+    fireEvent.change(comp, { target: { value: "0" } });
+    expect(comp).toHaveValue("0");
+    expect(reset).toBeEnabled();
+  });
+
+  it("lists all six engines", () => {
+    renderWithTheme(<Home />);
+    for (const name of [
+      "Job Fit",
+      "Offer Intelligence",
+      "Offer Score",
+      "Career Health",
+      "Follow-up Priority",
+      "Interview Reflection",
+    ]) {
+      expect(screen.getByText(name)).toBeInTheDocument();
+    }
   });
 
   it("does not show invented social proof", () => {
     renderWithTheme(<Home />);
-    expect(screen.queryByText(/trusted by students/i)).toBeNull();
+    expect(screen.queryByText(/trusted by/i)).toBeNull();
+    expect(screen.queryByText(/most popular/i)).toBeNull();
     expect(screen.queryByText(/maya chen/i)).toBeNull();
   });
 
-  it("renders sections in top-to-bottom order: hero, features, how-it-works, pricing preview, explainability, closing CTA, footer", () => {
+  it("renders sections in top-to-bottom order: hero, what-if, engines, tracker, pricing preview, closing CTA, footer", () => {
     const { container } = renderWithTheme(<Home />);
 
-    const hero = screen.getByRole("heading", { level: 1 });
-    const features = screen.getByRole("heading", {
-      name: /everything your search needs/i,
-    });
-    const howItWorks = screen.getByRole("heading", { name: /^how it works$/i });
-    const pricingPreview = screen.getByRole("heading", {
-      name: /start free, upgrade when it counts/i,
-    });
-    const explainability = screen.getByRole("heading", {
-      name: /every score shows its work/i,
-    });
-    const closingCta = screen.getByRole("heading", {
-      name: /make your next career move with confidence/i,
-    });
-    const footer = container.querySelector("footer");
-
     expectInDocumentOrder([
-      hero,
-      features,
-      howItWorks,
-      pricingPreview,
-      explainability,
-      closingCta,
-      footer as HTMLElement,
+      screen.getByRole("heading", { level: 1 }),
+      screen.getByRole("heading", { name: /watch the ranking answer/i }),
+      screen.getByRole("heading", { name: /six engines/i }),
+      screen.getByRole("heading", { name: /the tracker you need/i }),
+      screen.getByRole("heading", { name: /free until your search outgrows it/i }),
+      screen.getByRole("heading", { name: /your next decision deserves reasons/i }),
+      container.querySelector("footer") as HTMLElement,
     ]);
   });
 });
@@ -144,7 +135,7 @@ describe("Landing page structure (Req 5.1, 5.2)", () => {
 describe("Landing page icons (Req 5.4, 5.5)", () => {
   it("renders icons as SVG elements", () => {
     const { container } = renderWithTheme(<Home />);
-    // Icons throughout the page are SVG (feature cards, step cards, CTAs, etc.).
+    // Icons on the page (CTA arrows, plan checkmarks) are SVG.
     expect(container.querySelectorAll("svg").length).toBeGreaterThan(0);
   });
 
@@ -175,16 +166,13 @@ describe("Landing page navigation targets (Req 5.3, 5.6)", () => {
     expect(pushMock).toHaveBeenCalledWith("/sign-up");
   });
 
-  it('"See pricing" navigates to the pricing page', async () => {
+  it('"Try the live demo" navigates to the demo', async () => {
     const user = userEvent.setup();
     renderWithTheme(<Home />);
 
-    const seePricing = screen.getAllByRole("button", {
-      name: /^see pricing$/i,
-    })[0];
-    await user.click(seePricing);
+    await user.click(screen.getByRole("button", { name: /try the live demo/i }));
 
-    expect(pushMock).toHaveBeenCalledWith("/pricing");
+    expect(pushMock).toHaveBeenCalledWith("/demo");
   });
 
   it("the pricing preview CTA navigates to the pricing page", async () => {
@@ -226,7 +214,7 @@ describe("Landing page navigation failure (Req 5.7)", () => {
 
     // Landing content is still present (we did not navigate away).
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
-      /command center/i
+      /every score shows its work/i
     );
   });
 });

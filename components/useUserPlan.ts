@@ -22,7 +22,10 @@ export function useUserPlan() {
         }
         let active = true;
         fetch("/api/user/plan")
-            .then((res) => res.json())
+            .then((res) => {
+                if (!res.ok) throw new Error(String(res.status));
+                return res.json() as Promise<PlanData>;
+            })
             .then((d) => {
                 if (active) setData(d);
             })

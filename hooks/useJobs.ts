@@ -34,7 +34,7 @@ export function useJobs() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(input),
         });
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data.error || "Failed to add job");
         setJobs((prev) => [data, ...prev]);
         return data;
@@ -47,7 +47,7 @@ export function useJobs() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(input),
             });
-            const data = await res.json();
+            const data = await res.json().catch(() => ({}));
             if (!res.ok) throw new Error(data.error || "Failed to update job");
             setJobs((prev) => prev.map((j) => (j._id === id ? data : j)));
             return data;

@@ -36,13 +36,16 @@ export interface ChartTheme {
 }
 
 function deriveChartTheme(fallbackTheme: ThemeName): ChartTheme {
-  const textMuted = resolveToken("--text-muted", { fallbackTheme });
+  // The app's visual world lives on <body> (.grid-world remaps the tokens),
+  // so read them there rather than from <html>.
+  const root = typeof document !== "undefined" ? document.body : null;
+  const textMuted = resolveToken("--text-muted", { fallbackTheme, root });
   return {
-    text: resolveToken("--text", { fallbackTheme }),
+    text: resolveToken("--text", { fallbackTheme, root }),
     textMuted,
     grid: withAlpha(textMuted, 0.7),
-    surface: resolveToken("--surface", { fallbackTheme }),
-    accent: getAccentChartColors({ fallbackTheme }),
+    surface: resolveToken("--surface", { fallbackTheme, root }),
+    accent: getAccentChartColors({ fallbackTheme, root }),
   };
 }
 

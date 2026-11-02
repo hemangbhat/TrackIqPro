@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+import { formatDate, formatMoney } from "../lib/format";
 import { Job } from "../types";
 import { Badge } from "./ui/primitives";
 import CompanyLogo from "./CompanyLogo";
@@ -51,13 +52,13 @@ export default function JobCard({ job, onOpen, onEdit, onDelete }: JobCardProps)
                         )}
                         {typeof job.salary === "number" && (
                             <span className="inline-flex items-center gap-1">
-                                <WalletIcon size={13} aria-hidden="true" />${job.salary.toLocaleString()}
+                                <WalletIcon size={13} aria-hidden="true" />{formatMoney(job.salary)}
                             </span>
                         )}
-                        {job.dateApplied && (
+                        {formatDate(job.dateApplied) !== "—" && (
                             <span className="inline-flex items-center gap-1">
                                 <CalendarIcon size={13} aria-hidden="true" />
-                                {new Date(job.dateApplied).toLocaleDateString()}
+                                {formatDate(job.dateApplied)}
                             </span>
                         )}
                     </div>

@@ -15,6 +15,7 @@
 // Requirements: 7.6, 7.7, 7.8, 7.9, 7.10, 7.11
 
 import React from "react";
+import { formatDate, formatMoney } from "../lib/format";
 import JobCard from "./JobCard";
 import CompanyLogo from "./CompanyLogo";
 import { Job } from "../types";
@@ -51,14 +52,11 @@ export interface JobTableProps {
 }
 
 function salaryLabel(job: Job): string {
-    return typeof job.salary === "number" ? `$${job.salary.toLocaleString()}` : "—";
+    return formatMoney(job.salary);
 }
 
 function appliedLabel(job: Job): string {
-    const raw = job.dateApplied ?? job.createdAt;
-    if (!raw) return "—";
-    const d = new Date(raw);
-    return Number.isNaN(d.getTime()) ? "—" : d.toLocaleDateString();
+    return formatDate(job.dateApplied ?? job.createdAt);
 }
 
 export default function JobTable({
@@ -140,10 +138,10 @@ export default function JobTable({
         <div>
             {/* Dense table at >= 768px */}
             <div className="hidden md:block">
-                <div className="glass-panel gradient-border overflow-hidden rounded-2xl shadow-sm">
+                <div className="glass-panel gradient-border overflow-x-auto">
                     <table className="w-full text-left text-sm">
                         <thead>
-                            <tr className="border-b border-[var(--border)] bg-[var(--surface-2)]/40 font-mono-label text-[11px] uppercase text-[var(--text-muted)]">
+                            <tr className="font-bold border-b border-[var(--border)] bg-[var(--surface-2)]/40 text-sm text-[var(--text-muted)]">
                                 <th scope="col" className="px-5 py-3.5 font-medium">
                                     Company &amp; Role
                                 </th>
@@ -171,17 +169,18 @@ export default function JobTable({
                                     className="group border-b border-[var(--border)]/60 transition-colors last:border-b-0 hover:bg-indigo-500/5"
                                 >
                                     <td className="px-5 py-3.5">
-                                        <div className="flex items-center gap-3">
+                                        <div className="flex max-w-[24rem] items-center gap-3">
                                             <CompanyLogo company={job.company} size="sm" />
                                             <div className="min-w-0">
                                                 <button
                                                     type="button"
                                                     onClick={() => onOpen(job._id)}
-                                                    className="block max-w-[22ch] truncate cursor-pointer rounded text-left font-semibold text-[var(--text)] transition-colors hover:text-indigo-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                                                    title={job.title}
+                                                    className="block max-w-full truncate cursor-pointer rounded text-left font-semibold text-[var(--text)] transition-colors hover:text-indigo-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
                                                 >
                                                     {job.title}
                                                 </button>
-                                                <div className="truncate text-xs text-[var(--text-muted)]">
+                                                <div className="truncate text-xs text-[var(--text-muted)]" title={job.company}>
                                                     {job.company}
                                                 </div>
                                             </div>
@@ -192,18 +191,18 @@ export default function JobTable({
                                     </td>
                                     <td className="px-5 py-3.5 text-[var(--text-muted)]">
                                         {job.location ? (
-                                            <span className="inline-flex items-center gap-1.5">
-                                                <MapPinIcon size={14} aria-hidden="true" />
-                                                {job.location}
+                                            <span className="flex max-w-[14rem] items-start gap-1.5" title={job.location}>
+                                                <MapPinIcon size={14} aria-hidden="true" className="mt-0.5 shrink-0" />
+                                                <span className="line-clamp-2">{job.location}</span>
                                             </span>
                                         ) : (
                                             "—"
                                         )}
                                     </td>
-                                    <td className="px-5 py-3.5 text-[var(--text-muted)]">
+                                    <td className="whitespace-nowrap px-5 py-3.5 tabular-nums text-[var(--text-muted)]">
                                         {salaryLabel(job)}
                                     </td>
-                                    <td className="px-5 py-3.5 text-[var(--text-muted)]">
+                                    <td className="whitespace-nowrap px-5 py-3.5 tabular-nums text-[var(--text-muted)]">
                                         {appliedLabel(job)}
                                     </td>
                                     <td className="px-5 py-3.5">

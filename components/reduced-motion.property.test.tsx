@@ -107,7 +107,7 @@ describe("Property 7: reduced motion disables chart animation", () => {
     );
   });
 
-  it("does not force-disable animation when reduced motion is not set", () => {
+  it("charts never animate, with or without reduced motion (data, not decoration)", () => {
     fc.assert(
       fc.property(statusDataArb, timeDataArb, (statusData, timeData) => {
         resetCapture();
@@ -122,13 +122,13 @@ describe("Property 7: reduced motion disables chart animation", () => {
         try {
           expect(captured.doughnut.length).toBeGreaterThan(0);
           expect(captured.line.length).toBeGreaterThan(0);
-          // Animation must NOT be force-disabled (i.e. not `false`); the chart
-          // falls back to Chart.js defaults (resolved here as `undefined`).
+          // Charts are data the user reads, so they render in their final
+          // state for everyone; reduced motion is then trivially satisfied.
           for (const animation of captured.doughnut) {
-            expect(animation).not.toBe(false);
+            expect(animation).toBe(false);
           }
           for (const animation of captured.line) {
-            expect(animation).not.toBe(false);
+            expect(animation).toBe(false);
           }
         } finally {
           cleanup();

@@ -429,3 +429,36 @@ describe("Settings page — reminder email switch", () => {
         expect(screen.getByRole("button", { name: "Try again" })).toBeInTheDocument();
     });
 });
+
+describe("Settings page — billing action follows the plan", () => {
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
+    it("offers a Free user an upgrade that starts checkout, never a portal that can't open", async () => {
+        useUserPlanMock.mockReturnValue({
+            plan: "free",
+            customerId: null,
+            status: "active",
+            trialEnd: null,
+            isPro: false,
+            loading: false,
+        });
+        const fetchFn = vi.fn(async () => ({
+            ok: false,
+            status: 503,
+            json: async () => ({ error: "Upgrades aren't available right now. Please try again later." }),
+        }));
+        vi.spyOn(globalThis, "fetch").mockImplementation(fetchFn as never);
+
+        renderSettings();
+        const billing = document.getElementById("billing")!;
+        expect(within(billing).queryByRole("button", { name: /manage billing/i })).toBeNull();
+
+        await userEvent.click(within(billing).getByRole("button", { name: /upgrade to pro/i }));
+
+        expect(fetchFn).toHaveBeenCalledWith("/api/stripe/checkout", expect.objectContaining({ method: "POST" }));
+        // The server's reason is shown, not a generic failure.
+        expect(await screen.findByText(/upgrades aren't available right now/i)).toBeInTheDocument();
+    });
+});

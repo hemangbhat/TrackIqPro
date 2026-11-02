@@ -104,7 +104,7 @@ function Citations({
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
     return (
         <section className="mt-5">
-            <h3 className="font-mono-label text-[11px] uppercase text-[var(--text-muted)]">{title}</h3>
+            <h3 className="font-bold text-sm text-[var(--text-muted)]">{title}</h3>
             <ul className="mt-2 space-y-3">{children}</ul>
         </section>
     );

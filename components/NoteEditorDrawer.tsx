@@ -117,7 +117,7 @@ export function NoteEditorDrawer({
                 className="space-y-6"
             >
                 <fieldset className="space-y-4">
-                    <legend className="font-mono-label text-[11px] uppercase text-[var(--text-muted)]">
+                    <legend className="font-bold text-sm text-[var(--text-muted)]">
                         Note
                     </legend>
                     <Field label="Title" htmlFor={titleId} error={errors.title}>
@@ -144,7 +144,7 @@ export function NoteEditorDrawer({
                                 <option value="">None</option>
                                 {jobs.map((j) => (
                                     <option key={j._id} value={j._id}>
-                                        {j.title} · {j.company}
+                                        {j.title} at {j.company}
                                     </option>
                                 ))}
                             </Select>

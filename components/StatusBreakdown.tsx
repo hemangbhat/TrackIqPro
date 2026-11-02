@@ -10,7 +10,6 @@ import {
 } from "chart.js";
 import { withAlpha } from "../lib/theme-tokens";
 import { useChartTheme } from "./useChartTheme";
-import { useReducedMotion } from "./useReducedMotion";
 import { summarizeStatusBreakdown } from "./chartSummary";
 
 type StatusBreakdownProps = {
@@ -55,10 +54,6 @@ export default function StatusBreakdown({ data, title, summary }: StatusBreakdow
   // Colors are re-derived from the active theme and update within 500ms of a
   // theme change (Requirement 14.1).
   const theme = useChartTheme();
-  // When reduced motion is requested, the chart renders directly in its final
-  // state with animation disabled for both initial render and updates
-  // (Requirement 14.5).
-  const reducedMotion = useReducedMotion();
   const summaryId = useId();
 
   const summaryText = summary ?? summarizeStatusBreakdown(data);
@@ -81,8 +76,9 @@ export default function StatusBreakdown({ data, title, summary }: StatusBreakdow
   const options = {
     responsive: true,
     maintainAspectRatio: false,
-    // `false` disables animation for the initial render and every data update.
-    animation: reducedMotion ? (false as const) : undefined,
+    // Never animated: this is data being read, and redrawing it from zero on
+      // every visit only delays it. Also covers reduced motion (Requirement 14.5).
+    animation: false as const,
     plugins: {
       legend: {
         position: "bottom" as const,

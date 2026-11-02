@@ -69,7 +69,7 @@ function WeightSlider({
                 <label htmlFor={id} className="text-sm font-medium text-[var(--text)]">
                     {DIMENSION_LABELS[dimension]}
                 </label>
-                <span className="font-mono-label text-[11px] tabular-nums text-[var(--text-muted)]">
+                <span className="font-bold text-sm tabular-nums text-[var(--text-muted)]">
                     {value}
                 </span>
             </div>
@@ -109,7 +109,7 @@ function DimensionBars({ offer }: { offer: IntelligentOffer }) {
                             <span className="truncate text-[11px] text-[var(--text-muted)]">
                                 {DIMENSION_LABELS[d]}
                             </span>
-                            <span className="font-mono-label text-[10px] tabular-nums text-[var(--text-muted)]">
+                            <span className="font-bold text-sm tabular-nums text-[var(--text-muted)]">
                                 {score}
                             </span>
                         </div>
@@ -283,13 +283,7 @@ export function OfferIntelligence({ offers }: { offers: Offer[] }) {
     /* ----------------------------- Header ----------------------------- */
     const header = (
         <div className="flex items-start gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-500 dark:text-indigo-300">
-                <ScaleIcon size={20} />
-            </span>
             <div>
-                <p className="font-mono-label text-[11px] uppercase text-[var(--text-muted)]">
-                    Offer Intelligence
-                </p>
                 <h2 className="font-display text-lg font-semibold tracking-tight text-[var(--text)] sm:text-xl">
                     Six-dimension fit &amp; what-if simulator
                 </h2>
@@ -432,7 +426,7 @@ export function OfferIntelligence({ offers }: { offers: Offer[] }) {
                             <span className="text-indigo-500">
                                 <TrophyIcon size={16} />
                             </span>
-                            <h3 className="font-mono-label text-[11px] uppercase text-indigo-500">
+                            <h3 className="font-bold text-sm text-indigo-500">
                                 Why this offer ranks #1
                             </h3>
                         </div>
@@ -446,7 +440,7 @@ export function OfferIntelligence({ offers }: { offers: Offer[] }) {
                             <span className="text-[var(--text-muted)]">
                                 <TargetIcon size={16} />
                             </span>
-                            <h3 className="font-mono-label text-[11px] uppercase text-[var(--text-muted)]">
+                            <h3 className="font-bold text-sm text-[var(--text-muted)]">
                                 What would change the ranking
                             </h3>
                         </div>

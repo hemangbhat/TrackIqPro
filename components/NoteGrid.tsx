@@ -1,6 +1,6 @@
 "use client";
+import { formatDateTime } from "../lib/format";
 import React from "react";
-import { motion } from "framer-motion";
 import {
     Badge,
     Button,
@@ -18,8 +18,6 @@ import {
     ClockIcon,
 } from "./ui/icons";
 import { Note } from "../types";
-import { useReducedMotion } from "./useReducedMotion";
-import { staggerItemPreset } from "./motion";
 
 interface NoteGridProps {
     /** Notes to render (already filtered by search + round chip). */
@@ -60,7 +58,6 @@ export function NoteGrid({
     onCreate,
     jobName,
 }: NoteGridProps) {
-    const reduced = useReducedMotion();
     if (error) {
         return (
             <ErrorState
@@ -73,7 +70,7 @@ export function NoteGrid({
 
     if (loading) {
         return (
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 [&>*]:min-w-0">
                 {Array.from({ length: 6 }).map((_, i) => (
                     <Skeleton key={i} className="h-44" />
                 ))}
@@ -103,16 +100,12 @@ export function NoteGrid({
     }
 
     return (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {notes.map((note, idx) => {
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 [&>*]:min-w-0">
+            {notes.map((note) => {
                 const linked = jobName?.(note.jobId) ?? null;
-                const motionProps = staggerItemPreset(reduced, idx);
                 return (
-                    <motion.div
+                    <div
                         key={note._id}
-                        initial={motionProps.initial}
-                        animate={motionProps.animate}
-                        transition={motionProps.transition}
                     >
                         <div className="glass-panel gradient-border group relative flex h-full flex-col rounded-2xl p-5 transition-colors hover:border-indigo-400/50">
                             {/* Accent rail echoing the Stitch active-note marker */}
@@ -124,7 +117,8 @@ export function NoteGrid({
                                 <button
                                     type="button"
                                     onClick={() => onOpen(note)}
-                                    className="cursor-pointer rounded text-left font-display text-base font-semibold text-[var(--text)] transition-colors hover:text-indigo-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)]"
+                                    title={note.title}
+                                    className="line-clamp-3 min-w-0 cursor-pointer text-left font-display text-base font-semibold text-[var(--text)] transition-colors [overflow-wrap:anywhere] hover:text-[var(--ultra-text)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ultra-text)]"
                                 >
                                     {note.title}
                                 </button>
@@ -149,24 +143,28 @@ export function NoteGrid({
                             </div>
                             {(note.round || linked) && (
                                 <div className="mt-2.5 flex flex-wrap gap-2">
-                                    {note.round && <Badge tone="violet">{note.round}</Badge>}
+                                    {note.round && (
+                                        <Badge tone="violet" className="max-w-full normal-case">
+                                            <span className="line-clamp-1" title={note.round}>{note.round}</span>
+                                        </Badge>
+                                    )}
                                     {linked && (
-                                        <Badge tone="neutral">
-                                            <LinkIcon size={11} aria-hidden="true" />
-                                            <span className="ml-1">{linked}</span>
+                                        <Badge tone="neutral" className="min-w-0 max-w-full normal-case">
+                                            <LinkIcon size={11} aria-hidden="true" className="shrink-0" />
+                                            <span className="ml-1 truncate" title={linked}>{linked}</span>
                                         </Badge>
                                     )}
                                 </div>
                             )}
-                            <p className="mt-3 line-clamp-4 flex-1 whitespace-pre-wrap text-sm leading-relaxed text-[var(--text-muted)]">
+                            <p className="mt-3 line-clamp-4 flex-1 whitespace-pre-wrap text-sm leading-relaxed text-[var(--text-muted)] [overflow-wrap:anywhere]">
                                 {note.content}
                             </p>
-                            <p className="mt-4 flex items-center gap-1.5 border-t border-[var(--border)]/60 pt-3 font-mono-label text-[11px] uppercase text-[var(--text-muted)]/80">
+                            <p className="font-bold mt-4 flex items-center gap-1.5 border-t border-[var(--border)]/60 pt-3 text-sm text-[var(--text-muted)]/80">
                                 <ClockIcon size={12} aria-hidden="true" />
-                                {new Date(note.updatedAt || note.createdAt).toLocaleString()}
+                                {formatDateTime(note.updatedAt || note.createdAt)}
                             </p>
                         </div>
-                    </motion.div>
+                    </div>
                 );
             })}
         </div>

@@ -91,6 +91,7 @@ export default function JobsToolbar({
                     <Input
                         id={searchId}
                         type="search"
+                        enterKeyHint="search"
                         value={value}
                         onChange={(e) => setValue(e.target.value)}
                         placeholder="Search title, company, or location"
@@ -102,7 +103,7 @@ export default function JobsToolbar({
                 <div className="flex items-center gap-2">
                     <label
                         htmlFor={sortId}
-                        className="flex items-center gap-1.5 font-mono-label text-[11px] uppercase text-[var(--text-muted)]"
+                        className="font-bold flex items-center gap-1.5 text-sm text-[var(--text-muted)]"
                     >
                         <SortIcon size={16} aria-hidden="true" />
                         Sort
@@ -152,7 +153,7 @@ export default function JobsToolbar({
                 </div>
 
                 <p
-                    className="shrink-0 font-mono-label text-[11px] uppercase text-[var(--text-muted)]"
+                    className="font-bold shrink-0 text-sm text-[var(--text-muted)]"
                     aria-live="polite"
                 >
                     {resultCount} {resultCount === 1 ? "result" : "results"}

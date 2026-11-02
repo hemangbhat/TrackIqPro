@@ -4,6 +4,11 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
+  /* Motion tokens. Every UI curve comes from here (and the matching arrays in
+     lib/motion-tokens.ts for framer-motion). */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
   --bg: #f6f7fb;
   --surface: #ffffff;
   --surface-2: #f1f3f9;
@@ -51,11 +56,27 @@
 }
 
 html {
+  overflow-x: clip;
   color-scheme: light dark;
   scroll-behavior: smooth;
+  /* Touch: no grey flash over tapped controls (every control has its own
+     :active state), and no font inflation when a phone turns landscape. */
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
 }
 
 body {
+  overflow-x: clip;
+  /* viewport-fit=cover paints under the notch; keep content out of it in
+     landscape. Top and bottom insets are handled by the fixed elements. */
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
   margin: 0;
   min-height: 100dvh;
   background: var(--bg);
@@ -250,6 +271,408 @@ textarea:focus-visible,
   animation: shimmer 1.4s infinite;
 }
 
+/* ------------------------------------------------------------------------ */
+/* Public pages: the typographic grid world (docs/DESIGN.md, PRODUCT.md).    */
+/* Scoped to .grid-world (MarketingShell) so the dashboard keeps its tokens. */
+/* Paper and ink, one ultramarine field, square corners, 2px rules, and no   */
+/* gradients, glows, blur or shadows. The shared tokens are remapped so the  */
+/* demo's dashboard components pick up its colours; their shapes (rounded    */
+/* cards, icon tiles) still belong to the dashboard until its own redesign.  */
+/* ------------------------------------------------------------------------ */
+.grid-world {
+  --paper: #f7f7f4;
+  --paper-2: #ecece6;
+  --ink: #111111;
+  --ink-muted: #4a4a45;
+  --hair: #cfcfc8;
+  --ultra: #2f3bff;
+  --ultra-text: #2f3bff;
+  --on-ultra: #ffffff;
+  --on-ultra-muted: #dfe1ff;
+  /* Fixed ink for hovers on the ultramarine field, the same in both themes. */
+  --field-ink: #111111;
+  --field-paper: #ffffff;
+
+  --bg: var(--paper);
+  --surface: #ffffff;
+  --surface-2: var(--paper-2);
+  --text: var(--ink);
+  --text-muted: var(--ink-muted);
+  --border: var(--hair);
+  --accent: var(--ultra-text);
+  --accent-strong: var(--ultra);
+  --glass-bg: var(--surface);
+  --glass-border: var(--hair);
+  --hero-glow: transparent;
+
+  --font-grid: var(--font-archivo), "Helvetica Neue", Arial, sans-serif;
+
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-grid);
+  font-feature-settings: "tnum" 0;
+  caret-color: var(--ultra-text);
+}
+
+.dark .grid-world {
+  --paper: #0e0e0e;
+  --paper-2: #1a1a19;
+  --ink: #f2f2ee;
+  --ink-muted: #a9a9a2;
+  --hair: #34342f;
+  --ultra: #3440ff;
+  --ultra-text: #9da3ff;
+  --on-ultra: #ffffff;
+  --on-ultra-muted: #dfe1ff;
+  --surface: #171716;
+}
+
+/*
+ * Remap, system level: the app's components were written against Tailwind's
+ * indigo scale, its radius scale and its shadow utilities. Inside the world
+ * the indigo scale is the ultramarine, every radius token is square, and
+ * decorative shadows are gone (focus rings use --tw-ring-shadow and stay).
+ * Semantic stage colours (blue, violet, emerald, amber, rose) are kept.
+ */
+.grid-world {
+  --color-indigo-50: color-mix(in oklab, var(--ultra) 7%, var(--paper));
+  --color-indigo-100: color-mix(in oklab, var(--ultra) 14%, var(--paper));
+  --color-indigo-200: color-mix(in oklab, var(--ultra) 28%, var(--paper));
+  --color-indigo-300: var(--ultra-text);
+  --color-indigo-400: var(--ultra-text);
+  --color-indigo-500: var(--ultra);
+  --color-indigo-600: var(--ultra);
+  --color-indigo-700: color-mix(in oklab, var(--ultra) 82%, var(--field-ink));
+  --color-indigo-800: color-mix(in oklab, var(--ultra) 66%, var(--field-ink));
+  --color-indigo-900: color-mix(in oklab, var(--ultra) 50%, var(--field-ink));
+  --color-indigo-950: color-mix(in oklab, var(--ultra) 34%, var(--field-ink));
+  --radius-xs: 0;
+  --radius-sm: 0;
+  --radius-md: 0;
+  --radius-lg: 0;
+  --radius-xl: 0;
+  --radius-2xl: 0;
+  --radius-3xl: 0;
+  --radius-4xl: 0;
+}
+.grid-world .rounded {
+  border-radius: 0;
+}
+.grid-world [class*="shadow"] {
+  --tw-shadow: 0 0 #0000 !important;
+}
+/* Display and label faces are the world's one face; labels are sentence case. */
+.grid-world .font-display {
+  font-family: var(--font-grid);
+  letter-spacing: -0.02em;
+}
+.grid-world .font-mono-label {
+  font-family: var(--font-grid);
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+}
+/* Panels are ruled sections, not floating boxes (Rule-Not-Box). */
+.grid-world .glass-panel,
+.grid-world .surface {
+  background: transparent;
+  border: 0;
+  border-top: 2px solid var(--ink);
+}
+/* Everything Tailwind rounds fully is square in this world: chips, pills,
+   segmented controls and their frames, progress tracks, switches, markers.
+   Only spinners keep their circle, since a square spinner reads as a glitch. */
+.grid-world .rounded-full:not(.animate-spin) {
+  border-radius: 0;
+}
+/* Small coloured text on tinted chips: in light mode the stock 600 shades sit
+   near 3:1 on their own tint, so they step down to the 800/700 shades. */
+.grid-world {
+  --color-amber-600: var(--color-amber-800);
+  --color-emerald-600: var(--color-emerald-700);
+  --color-rose-600: var(--color-rose-700);
+}
+.dark .grid-world {
+  --color-amber-600: oklch(66.6% 0.179 58.318);
+  --color-emerald-600: oklch(59.6% 0.145 163.225);
+  --color-rose-600: oklch(58.6% 0.253 17.585);
+}
+/* The old call-to-action band becomes the ultramarine field. */
+.grid-world .cta-gradient {
+  background: var(--ultra);
+  box-shadow: none;
+}
+/* Ruled panels sit flush with their rule (Swiss alignment, no card inset). */
+.grid-world .glass-panel {
+  padding-left: 0;
+  padding-right: 0;
+}
+.grid-world .surface-2 {
+  background: var(--paper-2);
+  border: 0;
+}
+
+/* The film grain belongs to the dashboard's world, not this one. */
+body:has(.grid-world)::before {
+  display: none;
+}
+
+.grid-world ::selection {
+  background: var(--ultra);
+  color: var(--on-ultra);
+}
+
+.grid-world :focus-visible {
+  outline: 2px solid var(--ultra-text);
+  outline-offset: 3px;
+}
+
+.grid-world a {
+  text-underline-offset: 0.2em;
+  text-decoration-thickness: 2px;
+}
+
+.grid-world *::-webkit-scrollbar-thumb {
+  background: var(--hair);
+  border-radius: 0;
+}
+
+/* Glass and glow helpers flatten to plain paper inside the world. */
+.grid-world .glass-panel {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.grid-world .gradient-border::after,
+.grid-world .accent-orb {
+  display: none;
+}
+.grid-world .hero-gradient {
+  background: none;
+}
+
+.gw-display {
+  font-family: var(--font-grid);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 0.9;
+}
+
+.gw-wide {
+  font-stretch: 112%;
+}
+
+.gw-num {
+  font-family: var(--font-grid);
+  font-variant-numeric: tabular-nums lining-nums;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+}
+
+/* Small data labels inside diagrams and tables (never above a heading):
+   the body face a step smaller, sentence case, untracked. */
+.gw-label {
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.gw-rule {
+  border-color: var(--ink);
+  border-width: 0;
+  border-top-width: 2px;
+  border-style: solid;
+}
+
+/* Losses: an outlined, hatched bar, so sign never depends on colour alone. */
+.gw-hatch {
+  border: 2px solid currentColor;
+  background-image: repeating-linear-gradient(
+    -45deg,
+    currentColor 0 1.5px,
+    transparent 1.5px 7px
+  );
+}
+
+/* Buttons and link-buttons: square, 2px, flat. */
+.gw-btn {
+  display: inline-flex;
+  min-height: 3rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  border: 2px solid transparent;
+  padding: 0.75rem 1.4rem;
+  font-family: var(--font-grid);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.1;
+  cursor: pointer;
+  transition:
+    background-color 160ms var(--ease-out),
+    color 160ms var(--ease-out),
+    border-color 160ms var(--ease-out),
+    transform 160ms var(--ease-out);
+}
+/* Press feedback: the button confirms it heard the click. */
+.gw-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+.gw-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+.gw-btn-icon {
+  width: 2.75rem;
+  min-height: 2.75rem;
+  padding: 0;
+}
+.gw-btn-sm {
+  min-height: 2.75rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.9375rem;
+}
+.gw-btn-primary {
+  background: var(--ultra);
+  border-color: var(--ultra);
+  color: var(--on-ultra);
+}
+.gw-btn-secondary {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+/* On the ultramarine field. */
+.gw-btn-inverse {
+  background: var(--on-ultra);
+  border-color: var(--on-ultra);
+  color: var(--field-ink);
+}
+.gw-btn-outline-inverse {
+  border-color: var(--on-ultra);
+  color: var(--on-ultra);
+}
+
+.gw-link {
+  font-weight: 700;
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: var(--ultra-text);
+}
+
+/* Hover swaps only where hover is real, so taps on phones never stick. */
+@media (hover: hover) and (pointer: fine) {
+  .gw-btn-primary:hover:not(:disabled) {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--paper);
+  }
+  .gw-btn-secondary:hover:not(:disabled) {
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .gw-btn-inverse:hover:not(:disabled) {
+    background: var(--field-ink);
+    border-color: var(--field-ink);
+    color: var(--field-paper);
+  }
+  .gw-btn-outline-inverse:hover:not(:disabled) {
+    background: var(--on-ultra);
+    color: var(--field-ink);
+  }
+  .gw-link:hover {
+    color: var(--ultra-text);
+  }
+}
+
+/* Range inputs for the what-if simulator: a 2px ink track and a square thumb. */
+.gw-range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 2.75rem;
+  background: transparent;
+  cursor: pointer;
+}
+.gw-range::-webkit-slider-runnable-track {
+  height: 2px;
+  background: var(--ink);
+}
+.gw-range::-moz-range-track {
+  height: 2px;
+  background: var(--ink);
+}
+.gw-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  margin-top: -8px;
+  border: 0;
+  background: var(--ink);
+}
+.gw-range::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border: 0;
+  border-radius: 0;
+  background: var(--ink);
+}
+.gw-range:focus-visible::-webkit-slider-thumb,
+.gw-range:active::-webkit-slider-thumb {
+  background: var(--ultra);
+}
+.gw-range:focus-visible::-moz-range-thumb,
+.gw-range:active::-moz-range-thumb {
+  background: var(--ultra);
+}
+
+/* The hero waterfall draws itself once, from the baseline. */
+@keyframes gw-rise {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+@keyframes gw-grow-x {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+.gw-rise {
+  transform-origin: bottom;
+  animation: gw-rise 900ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.gw-drop {
+  transform-origin: top;
+  animation: gw-rise 900ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+/* Numerals that count up once on entry (ScoreWaterfall's <Tick>). Without
+   @property support the final value shows immediately. */
+@property --gw-n {
+  syntax: "<integer>";
+  initial-value: 0;
+  inherits: false;
+}
+@keyframes gw-tick {
+  from {
+    --gw-n: 0;
+  }
+}
+.gw-tick {
+  counter-reset: gw-n var(--gw-n);
+  animation: gw-tick 900ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.gw-tick::after {
+  content: attr(data-prefix) counter(gw-n);
+}
+
+.gw-grow-x {
+  transform-origin: left;
+  animation: gw-grow-x 900ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .skeleton::after {
     animation: none;
@@ -270,5 +693,55 @@ textarea:focus-visible,
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* ---- Touch platform layer ------------------------------------------------
+   Controls react immediately (no double-tap-zoom wait) and long-pressing one
+   doesn't select its label or open the link callout. Content text stays
+   selectable: this is scoped to controls only. */
+button,
+[role="button"],
+[role="switch"],
+[role="tab"],
+.gw-btn {
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+a {
+  touch-action: manipulation;
+}
+/* iOS zooms into any field under 16px and never zooms back out. Fields keep
+   their desktop size where there is a mouse. */
+@media (pointer: coarse) {
+  input,
+  textarea,
+  select {
+    font-size: max(16px, 1em);
+  }
+}
+/* Scrolling to the end of a drawer or dialog must not drag the page behind it. */
+[role="dialog"],
+[role="dialog"] .overflow-y-auto {
+  overscroll-behavior: contain;
+}
+
+/* Press feedback for every other button (icon buttons, steppers, chips): the
+   same 0.97 the primary Button uses. In the base layer so a component's own
+   transition utilities still win; uses the individual scale property so it
+   composes with any transform the element already has. */
+@layer base {
+  .grid-world button:not(:disabled) {
+    transition: scale 120ms var(--ease-out);
+  }
+  .grid-world button:not(:disabled):active {
+    scale: 0.97;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .grid-world button:not(:disabled):active {
+    scale: none;
   }
 }

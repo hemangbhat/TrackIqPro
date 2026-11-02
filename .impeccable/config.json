@@ -1,0 +1,44 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/challenger-vu.html"
+        ],
+        "createdAt": "2026-11-01T10:09:06.767Z",
+        "reason": "agent: unchosen decision-round skeleton sketch, never shipped"
+      },
+      {
+        "rule": "oversized-h1",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/challenger-vu.html"
+        ],
+        "createdAt": "2026-11-01T10:09:06.945Z",
+        "reason": "agent: unchosen decision-round skeleton sketch, never shipped"
+      },
+      {
+        "rule": "overused-font",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/canon.html"
+        ],
+        "createdAt": "2026-11-01T10:09:07.108Z",
+        "reason": "agent: canon-card skeleton sketch from the decision round, never shipped"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/model-pick.html"
+        ],
+        "createdAt": "2026-11-01T11:13:35.339Z",
+        "reason": "agent: unchosen decision-round sketch (Earnings Statement), never shipped"
+      }
+    ]
+  }
+}

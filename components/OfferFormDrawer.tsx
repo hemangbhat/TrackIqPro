@@ -94,7 +94,7 @@ export function OfferFormDrawer({
         >
             <form id="offer-form" onSubmit={handleSubmit} className="space-y-6">
                 <fieldset className="space-y-4">
-                    <legend className="font-mono-label text-[11px] uppercase text-[var(--text-muted)]">
+                    <legend className="font-bold text-sm text-[var(--text-muted)]">
                         Role
                     </legend>
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -117,7 +117,7 @@ export function OfferFormDrawer({
                     </div>
                 </fieldset>
                 <fieldset className="space-y-4">
-                    <legend className="font-mono-label text-[11px] uppercase text-[var(--text-muted)]">
+                    <legend className="font-bold text-sm text-[var(--text-muted)]">
                         Compensation
                     </legend>
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -125,6 +125,7 @@ export function OfferFormDrawer({
                         <Input
                             id="offer-base"
                             type="number"
+                            inputMode="numeric"
                             min={0}
                             required
                             value={form.salaryBase}
@@ -135,6 +136,7 @@ export function OfferFormDrawer({
                         <Input
                             id="offer-bonus"
                             type="number"
+                            inputMode="numeric"
                             min={0}
                             value={form.bonus}
                             onChange={(e) => setForm((f) => ({ ...f, bonus: e.target.value }))}
@@ -146,6 +148,7 @@ export function OfferFormDrawer({
                         <Input
                             id="offer-equity"
                             type="number"
+                            inputMode="numeric"
                             min={0}
                             value={form.equity}
                             onChange={(e) => setForm((f) => ({ ...f, equity: e.target.value }))}
@@ -155,6 +158,7 @@ export function OfferFormDrawer({
                         <Input
                             id="offer-signing"
                             type="number"
+                            inputMode="numeric"
                             min={0}
                             value={form.signingBonus}
                             onChange={(e) => setForm((f) => ({ ...f, signingBonus: e.target.value }))}
@@ -163,7 +167,7 @@ export function OfferFormDrawer({
                 </div>
                 </fieldset>
                 <fieldset className="space-y-4">
-                    <legend className="font-mono-label text-[11px] uppercase text-[var(--text-muted)]">
+                    <legend className="font-bold text-sm text-[var(--text-muted)]">
                         Signals
                     </legend>
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

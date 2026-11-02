@@ -123,6 +123,8 @@ describe("Notes delete mutation (Req 11.9, 11.10)", () => {
     renderPage();
 
     await user.click(screen.getByRole("button", { name: /delete note/i }));
+    expect(deleteNote).not.toHaveBeenCalled();
+    await user.click(await screen.findByRole("button", { name: /^delete$/i }));
 
     expect(deleteNote).toHaveBeenCalledWith("n1");
     expect(await screen.findByText(/note deleted/i)).toBeInTheDocument();
@@ -134,6 +136,8 @@ describe("Notes delete mutation (Req 11.9, 11.10)", () => {
     renderPage();
 
     await user.click(screen.getByRole("button", { name: /delete note/i }));
+    expect(deleteNote).not.toHaveBeenCalled();
+    await user.click(await screen.findByRole("button", { name: /^delete$/i }));
 
     expect(await screen.findByText(/could not delete/i)).toBeInTheDocument();
   });

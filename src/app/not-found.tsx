@@ -4,31 +4,30 @@ import MarketingShell from "../../components/MarketingShell";
 export default function NotFound() {
     return (
         <MarketingShell>
-            <section className="mx-auto flex max-w-xl flex-col items-start px-6 py-28">
-                <span className="font-display tabular text-8xl font-bold tracking-tighter text-[var(--border)]">
-                    404
-                </span>
-                <h1 className="font-display mt-4 text-3xl font-bold tracking-tight text-[var(--text)]">
-                    This page isn&apos;t in your pipeline
-                </h1>
-                <p className="mt-3 text-[var(--text-muted)]">
-                    The link may be outdated, or the page was moved. Head back to where you were
-                    going.
-                </p>
-                <div className="mt-8 flex flex-wrap gap-3">
-                    <Link
-                        href="/dashboard"
-                        className="inline-flex min-h-11 items-center rounded-lg bg-indigo-600 px-5 text-sm font-semibold text-white transition-colors duration-200 hover:bg-indigo-500"
-                    >
-                        Go to dashboard
-                    </Link>
-                    <Link
-                        href="/"
-                        className="inline-flex min-h-11 items-center rounded-lg border border-[var(--border)] px-5 text-sm font-semibold text-[var(--text)] transition-colors duration-200 hover:bg-[var(--surface-2)]"
-                    >
-                        Back to home
-                    </Link>
+            <section className="mx-auto grid w-full max-w-[90rem] gap-10 px-4 pb-28 pt-10 sm:px-8 sm:pt-12 lg:grid-cols-12 lg:gap-6 lg:px-12">
+                <div className="lg:col-span-7">
+                    <h1 className="gw-display max-w-[13ch] text-[clamp(2.75rem,6vw,6rem)]">
+                        This page isn&apos;t in your pipeline
+                    </h1>
+                    <p className="mt-8 max-w-[34rem] text-lg leading-relaxed text-[var(--ink-muted)]">
+                        The link may be outdated, or the page was moved. Head back to where you were
+                        going.
+                    </p>
+                    <div className="mt-10 flex flex-wrap gap-3">
+                        <Link href="/dashboard" className="gw-btn gw-btn-primary">
+                            Go to dashboard
+                        </Link>
+                        <Link href="/" className="gw-btn gw-btn-secondary">
+                            Back to home
+                        </Link>
+                    </div>
                 </div>
+                <p
+                    aria-hidden
+                    className="gw-num gw-wide self-end text-[clamp(7rem,18vw,17rem)] leading-[0.78] text-[var(--ultra-text)] lg:col-span-5 lg:text-right"
+                >
+                    404
+                </p>
             </section>
         </MarketingShell>
     );

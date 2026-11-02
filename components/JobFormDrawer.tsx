@@ -296,7 +296,7 @@ export default function JobFormDrawer({
             }
         >
             <form id={formId} onSubmit={handleSubmit} className="space-y-4" noValidate>
-                <p className="font-mono-label text-[11px] uppercase text-[var(--text-muted)]">
+                <p className="font-bold text-sm text-[var(--text-muted)]">
                     {mode === "create" ? "New application" : "Update application"}
                 </p>
 
@@ -353,7 +353,7 @@ export default function JobFormDrawer({
                         }}
                         value={form.location}
                         onChange={(e) => setField("location", e.target.value)}
-                        placeholder="Remote · San Francisco, CA"
+                        placeholder="Remote, or San Francisco, CA"
                     />
                 </Field>
 

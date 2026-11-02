@@ -1,8 +1,6 @@
 "use client";
 import React from "react";
 import Link from "next/link";
-import { Button } from "./ui/primitives";
-import { SparklesIcon, ArrowRightIcon } from "./ui/icons";
 
 type UpsellCardProps = {
     title?: string;
@@ -32,27 +30,20 @@ export default function UpsellCard({
     return (
         <div
             className={[
-                "rounded-2xl border border-indigo-500/30 bg-indigo-500/5 shadow-sm",
+                "bg-[var(--ultra)] text-[var(--on-ultra)]",
                 inline ? "p-4" : "p-6",
                 inline
                     ? "flex flex-wrap items-center justify-between gap-4"
-                    : "flex flex-col gap-4",
+                    : "flex flex-col gap-5",
                 className || "",
             ].join(" ")}
         >
-            <div className="flex items-start gap-3">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-500/15 text-indigo-500">
-                    <SparklesIcon size={18} />
-                </span>
-                <div className="min-w-0">
-                    <h3 className="text-base font-semibold text-[var(--text)]">{title}</h3>
-                    <p className="mt-1 text-sm text-[var(--text-muted)]">{description}</p>
-                </div>
+            <div className="min-w-0">
+                <h3 className="text-xl font-extrabold tracking-[-0.02em]">{title}</h3>
+                <p className="mt-1.5 text-[0.9375rem] leading-relaxed text-[var(--on-ultra-muted)]">{description}</p>
             </div>
-            <Link href={ctaHref} className={inline ? "" : "self-start"}>
-                <Button>
-                    {ctaLabel} <ArrowRightIcon size={16} />
-                </Button>
+            <Link href={ctaHref} className={`gw-btn gw-btn-inverse gw-btn-sm ${inline ? "" : "self-start"}`}>
+                {ctaLabel}
             </Link>
         </div>
     );

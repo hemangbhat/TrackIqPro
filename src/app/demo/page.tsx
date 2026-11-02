@@ -14,14 +14,10 @@ import { OfferIntelligence } from "../../../components/intelligence/OfferIntelli
 import PrepPanel from "../../../components/PrepPanel";
 import { Button } from "../../../components/ui/primitives";
 import {
-    SparklesIcon,
-    ArrowRightIcon,
     BriefcaseIcon,
     TargetIcon,
     TrophyIcon,
     ActivityIcon,
-    TrendingUpIcon,
-    ScaleIcon,
 } from "../../../components/ui/icons";
 
 import {
@@ -42,35 +38,17 @@ import {
 
 /* ----------------------------- Section header ---------------------------- */
 
-function SectionHeading({
-    eyebrow,
-    title,
-    description,
-    icon,
-}: {
-    eyebrow: string;
-    title: string;
-    description?: string;
-    icon: React.ReactNode;
-}) {
+function SectionHeading({ title, description }: { title: string; description?: string }) {
     return (
-        <div className="flex items-start gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-500 dark:text-indigo-300">
-                {icon}
-            </span>
-            <div>
-                <p className="font-mono-label text-[11px] uppercase text-[var(--text-muted)]">
-                    {eyebrow}
+        <div>
+            <h2 className="text-[clamp(1.75rem,3vw,2.5rem)] font-extrabold leading-tight tracking-[-0.03em] text-[var(--ink)]">
+                {title}
+            </h2>
+            {description && (
+                <p className="mt-2 max-w-2xl text-[0.9375rem] leading-relaxed text-[var(--ink-muted)]">
+                    {description}
                 </p>
-                <h2 className="font-display text-xl font-semibold tracking-tight text-[var(--text)] sm:text-2xl">
-                    {title}
-                </h2>
-                {description && (
-                    <p className="mt-1 max-w-2xl text-sm text-[var(--text-muted)]">
-                        {description}
-                    </p>
-                )}
-            </div>
+            )}
         </div>
     );
 }
@@ -119,48 +97,31 @@ export default function DemoPage() {
 
     return (
         <MarketingShell>
-            <div className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+            <div className="mx-auto w-full max-w-[90rem] px-4 pb-16 pt-10 sm:px-8 sm:pt-12 lg:px-12">
                 {/* ------------------------- Demo banner ------------------------- */}
                 <div
                     role="region"
                     aria-label="Demo mode banner"
-                    className="hero-gradient gradient-border relative overflow-hidden rounded-3xl border border-indigo-500/30 p-6 shadow-2xl sm:p-8"
+                    className="grid gap-8 border-b-2 border-[var(--ink)] pb-10 lg:grid-cols-12 lg:gap-6"
                 >
-                    <div
-                        aria-hidden
-                        className="accent-orb pointer-events-none absolute right-0 top-[-30%] h-[300px] w-[420px]"
-                    />
-                    <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-                        <div className="max-w-2xl">
-                            <span className="font-mono-label inline-flex items-center gap-2 rounded-full border border-indigo-500/30 bg-indigo-500/5 px-4 py-1.5 text-xs uppercase text-indigo-500 dark:text-indigo-300">
-                                <SparklesIcon size={14} /> Live demo
-                            </span>
-                            <h1 className="font-display mt-4 text-3xl font-bold tracking-tight text-[var(--text)] sm:text-4xl">
-                                You&rsquo;re exploring TrackIQ with sample data
-                            </h1>
-                            <p className="mt-3 text-[var(--text-muted)]">
-                                Everything below is powered by the same engines and components
-                                that ship in the product — career health, job fit, follow-up
-                                intelligence, analytics, and the interactive offer comparison.
-                                No account needed.
-                            </p>
-                        </div>
-                        <div className="flex shrink-0 flex-col gap-3 sm:flex-row lg:flex-col">
-                            <Link href="/sign-up">
-                                <Button size="md" className="w-full px-6 py-3 text-base">
-                                    Create your free account <ArrowRightIcon size={18} />
-                                </Button>
-                            </Link>
-                            <Link href="/">
-                                <Button
-                                    variant="secondary"
-                                    size="md"
-                                    className="w-full px-6 py-3 text-base"
-                                >
-                                    Back to home
-                                </Button>
-                            </Link>
-                        </div>
+                    <div className="lg:col-span-8">
+                        <h1 className="gw-display max-w-[18ch] text-[clamp(2.5rem,5vw,4.75rem)]">
+                            You&rsquo;re exploring TrackIQ with sample data
+                        </h1>
+                        <p className="mt-6 max-w-[40rem] text-lg leading-relaxed text-[var(--ink-muted)]">
+                            Everything below is powered by the same engines and components
+                            that ship in the product — career health, job fit, follow-up
+                            intelligence, analytics, and the interactive offer comparison.
+                            No account needed.
+                        </p>
+                    </div>
+                    <div className="flex flex-col gap-3 sm:flex-row lg:col-span-4 lg:flex-col lg:self-end">
+                        <Link href="/sign-up" className="gw-btn gw-btn-primary">
+                            Create your free account
+                        </Link>
+                        <Link href="/" className="gw-btn gw-btn-secondary">
+                            Back to home
+                        </Link>
                     </div>
                 </div>
 
@@ -191,10 +152,8 @@ export default function DemoPage() {
                 {/* ----------------------- Top Opportunities --------------------- */}
                 <section aria-label="Top opportunities" className="mt-12">
                     <SectionHeading
-                        eyebrow="Job Fit"
                         title="Top opportunities"
                         description="Each active application scored against your skills, target role, and seniority — with a transparent breakdown of what helped and what held it back."
-                        icon={<TargetIcon size={20} />}
                     />
                     <div className="mt-6">
                         <JobFitList jobs={demoJobs} profile={DEMO_PROFILE} />
@@ -204,10 +163,8 @@ export default function DemoPage() {
                 {/* ---------------------------- Analytics ------------------------ */}
                 <section aria-label="Analytics" className="mt-12">
                     <SectionHeading
-                        eyebrow="Analytics"
                         title="Your pipeline at a glance"
                         description="Application trends and stage breakdown, derived live from your tracked roles."
-                        icon={<TrendingUpIcon size={20} />}
                     />
                     <div className="mt-6 grid gap-6 lg:grid-cols-5">
                         <div className="surface glass-panel gradient-border rounded-2xl p-6 lg:col-span-3">
@@ -215,7 +172,7 @@ export default function DemoPage() {
                                 <h3 className="font-display text-base font-semibold text-[var(--text)]">
                                     Applications over time
                                 </h3>
-                                <span className="font-mono-label text-[10px] uppercase text-[var(--text-muted)]">
+                                <span className="font-bold text-sm text-[var(--text-muted)]">
                                     Last 8 weeks
                                 </span>
                             </div>
@@ -233,10 +190,8 @@ export default function DemoPage() {
                 {/* ----------------------- Offer Intelligence -------------------- */}
                 <section aria-label="Offer intelligence" className="mt-12">
                     <SectionHeading
-                        eyebrow="Decision engine"
                         title="Offer Intelligence"
                         description="Weigh competing offers across six dimensions and run live what-if scenarios — the ranking responds instantly with the reasoning behind every result."
-                        icon={<ScaleIcon size={20} />}
                     />
                     <div className="mt-6">
                         <OfferIntelligence offers={demoOffers} />
@@ -251,10 +206,8 @@ export default function DemoPage() {
                 {/* ------------------------ Interview prep ------------------------ */}
                 <section aria-label="Interview prep" className="mt-12">
                     <SectionHeading
-                        eyebrow="AI copilot"
                         title="Interview prep from your own notes"
                         description="Likely questions, weak spots, and a study plan, each traced back to the notes and job descriptions it came from."
-                        icon={<SparklesIcon size={20} />}
                     />
                     <div className="mt-6">
                         <PrepPanel sample={DEMO_PREP_SAMPLE} />
@@ -264,10 +217,6 @@ export default function DemoPage() {
                 {/* ----------------------- Closing CTA --------------------------- */}
                 <section className="mt-14">
                     <div className="cta-gradient relative overflow-hidden rounded-3xl border border-indigo-500/30 p-10 text-center shadow-2xl sm:p-14">
-                        <div
-                            aria-hidden
-                            className="accent-orb pointer-events-none absolute left-1/2 top-0 h-[260px] w-[480px] -translate-x-1/2"
-                        />
                         <div className="relative">
                             <h2 className="font-display text-2xl font-bold tracking-tight text-white sm:text-3xl">
                                 Ready to track your own search?
@@ -282,7 +231,7 @@ export default function DemoPage() {
                                         size="md"
                                         className="bg-white px-6 py-3 text-base text-indigo-700 hover:bg-indigo-50"
                                     >
-                                        Create your free account <ArrowRightIcon size={18} />
+                                        Create your free account
                                     </Button>
                                 </Link>
                                 <Link href="/">

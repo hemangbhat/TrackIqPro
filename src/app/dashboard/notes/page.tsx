@@ -8,6 +8,7 @@ import { PlusIcon } from "../../../../components/ui/icons";
 import { NotesToolbar } from "../../../../components/NotesToolbar";
 import { NoteGrid } from "../../../../components/NoteGrid";
 import { NoteEditorDrawer } from "../../../../components/NoteEditorDrawer";
+import { ConfirmDelete } from "../../../../components/ui/ConfirmDelete";
 import { Note } from "../../../../types";
 
 export default function NotesPage() {
@@ -29,7 +30,7 @@ export default function NotesPage() {
         (jobId?: string | null) => {
             if (!jobId) return null;
             const job = jobs.find((j) => j._id === jobId);
-            return job ? `${job.title} · ${job.company}` : null;
+            return job ? `${job.title} at ${job.company}` : null;
         },
         [jobs]
     );
@@ -92,8 +93,12 @@ export default function NotesPage() {
         [editing, updateNote, createNote, toast]
     );
 
+    // The grid asks first; the delete itself runs from the confirm dialog.
+    const [pendingDelete, setPendingDelete] = useState<Note | null>(null);
+
     const handleDelete = useCallback(
         async (id: string) => {
+            setPendingDelete(null);
             try {
                 await deleteNote(id);
                 toast.success("Note deleted");
@@ -106,16 +111,9 @@ export default function NotesPage() {
 
     return (
         <div className="relative mx-auto max-w-5xl space-y-6 p-4 sm:p-6 lg:p-8">
-            <div
-                aria-hidden="true"
-                className="accent-orb pointer-events-none absolute -top-24 right-0 h-64 w-64"
-            />
             <div className="relative flex flex-wrap items-end justify-between gap-4">
                 <div>
-                    <p className="font-mono-label text-[11px] uppercase text-[var(--text-muted)]">
-                        Interview prep
-                    </p>
-                    <h1 className="font-display text-3xl font-bold tracking-tight text-[var(--text)]">
+                    <h1 className="gw-display text-[clamp(2.25rem,4vw,3.5rem)] text-[var(--ink)]">
                         Interview notes
                     </h1>
                     <p className="mt-1 text-sm text-[var(--text-muted)]">
@@ -143,7 +141,7 @@ export default function NotesPage() {
                 onRetry={() => fetchNotes()}
                 hasNotes={notes.length > 0}
                 onOpen={openEdit}
-                onDelete={handleDelete}
+                onDelete={(id) => setPendingDelete(notes.find((n) => n._id === id) ?? null)}
                 onCreate={openCreate}
                 jobName={jobName}
             />
@@ -159,6 +157,13 @@ export default function NotesPage() {
                 }}
                 onSubmit={handleSubmit}
                 submitting={submitting}
+            />
+
+            <ConfirmDelete
+                title="Delete note?"
+                target={pendingDelete ? `the note "${pendingDelete.title}"` : null}
+                onCancel={() => setPendingDelete(null)}
+                onConfirm={() => (pendingDelete ? handleDelete(pendingDelete._id) : undefined)}
             />
         </div>
     );

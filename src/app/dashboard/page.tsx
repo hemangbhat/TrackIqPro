@@ -71,16 +71,11 @@ export default function DashboardHome() {
 
     return (
         <div className="relative mx-auto max-w-7xl space-y-6 p-4 sm:p-6 lg:p-8">
-            {/* Soft brand glow behind the header for premium depth. */}
-            <div className="hero-gradient pointer-events-none absolute inset-x-0 -top-8 h-48" />
 
             <div className="relative flex flex-wrap items-end justify-between gap-4">
                 <div>
-                    <span className="font-mono-label text-[11px] uppercase text-[var(--text-muted)]">
-                        Dashboard
-                    </span>
                     <div className="mt-1 flex items-center gap-3">
-                        <h1 className="font-display text-2xl font-semibold tracking-tight text-[var(--text)] sm:text-3xl">
+                        <h1 className="gw-display text-[clamp(2.25rem,4vw,3.5rem)] text-[var(--ink)]">
                             Good morning
                         </h1>
                         {/* Plan badge reflecting Free or Pro (Requirement 6.7). */}
@@ -214,7 +209,7 @@ export default function DashboardHome() {
                                     />
                                     <div className="min-w-0">
                                         <div className="flex items-center gap-2">
-                                            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-500">
+                                            <span className="flex h-7 w-7 items-center justify-center text-[var(--ink-muted)]">
                                                 <ActivityIcon size={15} />
                                             </span>
                                             <h2 className="font-display text-base font-semibold text-[var(--text)]">
@@ -234,7 +229,7 @@ export default function DashboardHome() {
 
                                 <Card className="glass-panel gradient-border p-6">
                                     <div className="mb-4 flex items-center gap-2">
-                                        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-500">
+                                        <span className="flex h-8 w-8 items-center justify-center text-[var(--ink-muted)]">
                                             <FlameIcon size={16} />
                                         </span>
                                         <h2 className="font-display text-base font-semibold text-[var(--text)]">
@@ -256,7 +251,7 @@ export default function DashboardHome() {
                                                     >
                                                         <div className="min-w-0">
                                                             <span className="truncate text-sm font-semibold text-[var(--text)]">
-                                                                {p.title} · {p.company}
+                                                                {p.title} at {p.company}
                                                             </span>
                                                             <p className="mt-0.5 truncate text-xs text-[var(--text-muted)]">
                                                                 {p.action}
@@ -306,7 +301,7 @@ export default function DashboardHome() {
                                 </Card>
                                 <Card className="glass-panel gradient-border p-6">
                                     <div className="mb-4 flex items-center gap-2">
-                                        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-500">
+                                        <span className="flex h-8 w-8 items-center justify-center text-[var(--ink-muted)]">
                                             <SparklesIcon size={16} />
                                         </span>
                                         <h2 className="font-display text-base font-semibold text-[var(--text)]">
@@ -328,7 +323,7 @@ export default function DashboardHome() {
                                                     <div className="min-w-0">
                                                         <div className="flex items-center gap-2">
                                                             <span className="truncate text-sm font-semibold text-[var(--text)]">
-                                                                {s.title} · {s.company}
+                                                                {s.title} at {s.company}
                                                             </span>
                                                             <Badge
                                                                 tone={

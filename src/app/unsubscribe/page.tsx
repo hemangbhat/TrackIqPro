@@ -26,7 +26,7 @@ export default async function UnsubscribePage({ searchParams }: { searchParams: 
         body = (
             <p>
                 You won&apos;t get follow-up reminder emails any more. You can turn them back on any time in{" "}
-                <Link href="/dashboard/settings#privacy" prefetch={false} className="font-semibold text-indigo-600 dark:text-indigo-300">
+                <Link href="/dashboard/settings#privacy" prefetch={false} className="gw-link">
                     Settings
                 </Link>
                 .
@@ -40,7 +40,7 @@ export default async function UnsubscribePage({ searchParams }: { searchParams: 
                 <form method="post" action={`/api/email/unsubscribe?u=${encodeURIComponent(u!)}&t=${encodeURIComponent(t!)}`}>
                     <button
                         type="submit"
-                        className="mt-6 inline-flex items-center rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                        className="gw-btn gw-btn-primary mt-8"
                     >
                         Unsubscribe from reminders
                     </button>
@@ -53,7 +53,7 @@ export default async function UnsubscribePage({ searchParams }: { searchParams: 
             <p>
                 The unsubscribe link is incomplete or has been changed. Use the link from your most recent
                 email, or turn reminders off in{" "}
-                <Link href="/dashboard/settings#privacy" prefetch={false} className="font-semibold text-indigo-600 dark:text-indigo-300">
+                <Link href="/dashboard/settings#privacy" prefetch={false} className="gw-link">
                     Settings
                 </Link>
                 .
@@ -63,10 +63,11 @@ export default async function UnsubscribePage({ searchParams }: { searchParams: 
 
     return (
         <MarketingShell>
-            <article className="mx-auto max-w-xl px-6 py-20">
-                <p className="text-sm font-semibold text-indigo-600 dark:text-indigo-300">Email preferences</p>
-                <h1 className="font-display mt-2 text-3xl font-bold tracking-tight text-[var(--text)]">{title}</h1>
-                <div className="mt-4 leading-relaxed text-[var(--text-muted)]">{body}</div>
+            <article className="mx-auto w-full max-w-[90rem] px-4 pb-28 pt-10 sm:px-8 sm:pt-12 lg:px-12">
+                <h1 className="gw-display max-w-[14ch] text-[clamp(2.75rem,6vw,6rem)]">{title}</h1>
+                <div className="mt-8 max-w-[36rem] border-t-2 border-[var(--ink)] pt-6 text-lg leading-relaxed text-[var(--ink-muted)]">
+                    {body}
+                </div>
             </article>
         </MarketingShell>
     );

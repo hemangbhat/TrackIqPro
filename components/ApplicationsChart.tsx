@@ -15,7 +15,6 @@ import {
 } from "chart.js";
 import { withAlpha } from "../lib/theme-tokens";
 import { useChartTheme } from "./useChartTheme";
-import { useReducedMotion } from "./useReducedMotion";
 import { summarizeApplicationsOverTime } from "./chartSummary";
 
 ChartJS.register(
@@ -48,10 +47,6 @@ export default function ApplicationsChart({ data, title, summary }: Applications
     // (Requirements 14.1, 2.5). Light-theme tokens are used as a fallback.
     const theme = useChartTheme();
     const accent = theme.accent;
-    // When reduced motion is requested, the chart renders directly in its final
-    // state with animation disabled for both initial render and updates
-    // (Requirement 14.5).
-    const reducedMotion = useReducedMotion();
     const summaryId = useId();
 
     const summaryText = summary ?? summarizeApplicationsOverTime(data);
@@ -68,7 +63,7 @@ export default function ApplicationsChart({ data, title, summary }: Applications
                 borderColor: accent.line,
                 backgroundColor: accent.fill,
                 fill: true,
-                tension: 0.4,
+                tension: 0,
                 pointRadius: 3,
                 pointStyle: "circle" as const,
                 pointBackgroundColor: accent.point,
@@ -80,8 +75,9 @@ export default function ApplicationsChart({ data, title, summary }: Applications
     const options = {
         responsive: true,
         maintainAspectRatio: false,
-        // `false` disables animation for the initial render and every data update.
-        animation: reducedMotion ? (false as const) : undefined,
+        // Never animated: this is data being read, and redrawing it from zero on
+        // every visit only delays it. Also covers reduced motion (Requirement 14.5).
+        animation: false as const,
         plugins: {
             legend: {
                 // Show the series label so the series is identified without color.

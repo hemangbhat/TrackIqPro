@@ -1,20 +1,16 @@
 "use client";
 import React from "react";
+import { companyInitial } from "../lib/format";
 
 /**
- * Presentation-only company avatar: a rounded tile showing the company's first
- * initial over a soft indigo wash. Purely decorative — derives its content from
- * the `company` string and never fetches or mutates data.
+ * Presentation-only company tile: an ink square with the company's first
+ * letter. Purely decorative, derived from the `company` string.
  */
-function initial(company: string): string {
-    const trimmed = (company || "").trim();
-    return trimmed ? trimmed.charAt(0).toUpperCase() : "?";
-}
 
 const sizeMap: Record<string, string> = {
-    sm: "h-9 w-9 text-sm rounded-lg",
-    md: "h-11 w-11 text-base rounded-xl",
-    lg: "h-14 w-14 text-xl rounded-2xl",
+    sm: "h-9 w-9 text-sm",
+    md: "h-11 w-11 text-base",
+    lg: "h-14 w-14 text-xl",
 };
 
 export default function CompanyLogo({
@@ -31,12 +27,12 @@ export default function CompanyLogo({
             aria-hidden="true"
             className={[
                 "inline-flex shrink-0 items-center justify-center font-display font-semibold",
-                "bg-gradient-to-br from-indigo-500/20 to-indigo-500/5 text-indigo-600 ring-1 ring-inset ring-indigo-500/20 dark:text-indigo-300",
+                "bg-[var(--ink)] text-[var(--paper)]",
                 sizeMap[size],
                 className || "",
             ].join(" ")}
         >
-            {initial(company)}
+            {companyInitial(company)}
         </span>
     );
 }

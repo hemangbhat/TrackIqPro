@@ -27,7 +27,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         // never trusted from the client.
         const { customerId } = await getUserPlan(userId);
         if (!customerId) {
-            return res.status(400).json({ error: "No billing account found" });
+            // Free users never paid, so there is nothing to manage yet.
+            return res.status(400).json({ error: "There's no subscription to manage yet. Upgrade to Pro first." });
         }
 
         const session = await stripe.billingPortal.sessions.create({
@@ -37,7 +38,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         return res.status(200).json({ url: session.url });
     } catch (error) {
+        if (isPortalNotConfigured(error)) {
+            // Fixed in the Stripe dashboard, not in code: Settings > Billing >
+            // Customer portal > Save (separately for test and live mode).
+            console.error("Stripe customer portal is not configured. Save it at https://dashboard.stripe.com/settings/billing/portal");
+            return res.status(503).json({ error: "Billing management isn't available right now. Please try again later." });
+        }
         console.error("Error creating billing portal session:", error);
-        return res.status(500).json({ error: "Failed to open billing portal" });
+        return res.status(500).json({ error: "The billing portal couldn't open. Please try again in a minute." });
     }
+}
+
+function isPortalNotConfigured(error: unknown): boolean {
+    const e = error as { type?: string; message?: string } | null;
+    return e?.type === "StripeInvalidRequestError" && /configuration/i.test(e.message ?? "");
 }

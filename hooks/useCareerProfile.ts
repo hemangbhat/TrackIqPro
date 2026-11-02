@@ -48,7 +48,7 @@ export function useCareerProfile() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(input),
             });
-            const data = await res.json();
+            const data = await res.json().catch(() => ({}));
             if (!res.ok) throw new Error(data.error || "Failed to save career profile");
             const next: CareerProfileData = {
                 skills: Array.isArray(data.skills) ? data.skills : [],

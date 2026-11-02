@@ -1,42 +1,41 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useUser, useClerk } from "@clerk/nextjs";
 import { useTheme } from "next-themes";
 import { useUserPlan } from "../../../../components/useUserPlan";
-import UpgradePrompt from "../../../../components/UpgradePrompt";
 import { useToast } from "../../../../components/ui/Toast";
 import { Card, Badge, Skeleton, Button } from "../../../../components/ui/primitives";
+import { Switch } from "../../../../components/ui/Switch";
 import {
     DownloadIcon,
     CreditCardIcon,
     SunIcon,
     MoonIcon,
-    LockIcon,
     UserIcon,
     PaletteIcon,
     ShieldIcon,
-    AlertTriangleIcon,
     SparklesIcon,
 } from "../../../../components/ui/icons";
 import { FREE_JOB_LIMIT } from "../../../../lib/plans";
 import { gateExport } from "../../../../lib/plan-gate";
 import { useAiStatus } from "../../../../hooks/useAiStatus";
+import { requestBillingUrl } from "../../../../lib/billing-client";
 
 /**
- * Section wrapper giving every settings block a consistent icon-led heading +
- * anchor. Rendered as a premium glass-panel card with a hairline gradient
- * border. The `<section id aria-labelledby>` structure is preserved exactly so
- * the six settings anchors stay intact (Req 13.1).
+ * Section wrapper: an ink-ruled block with its heading and an optional action
+ * on the right. The `<section id aria-labelledby>` structure is preserved
+ * exactly so the six settings anchors stay intact (Req 13.1).
  */
 function Section({
     id,
-    icon,
     title,
     description,
     action,
     children,
 }: {
     id: string;
+    /** Kept for callers; the grid world draws no icon tiles. */
     icon: React.ReactNode;
     title: string;
     description?: string;
@@ -44,30 +43,18 @@ function Section({
     children: React.ReactNode;
 }) {
     return (
-        <Card className="glass-panel gradient-border p-6 sm:p-7">
+        <Card className="pb-2 pt-5">
             <section id={id} aria-labelledby={`${id}-heading`}>
                 <div className="flex items-start justify-between gap-4">
-                    <div className="flex items-start gap-4">
-                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-500 dark:text-indigo-300">
-                            {icon}
-                        </span>
-                        <div>
-                            <h2
-                                id={`${id}-heading`}
-                                className="font-display text-lg font-semibold tracking-tight text-[var(--text)]"
-                            >
-                                {title}
-                            </h2>
-                            {description && (
-                                <p className="mt-1 text-sm text-[var(--text-muted)]">
-                                    {description}
-                                </p>
-                            )}
-                        </div>
+                    <div className="min-w-0">
+                        <h2 id={`${id}-heading`} className="text-xl font-extrabold tracking-[-0.01em] text-[var(--ink)]">
+                            {title}
+                        </h2>
+                        {description && <p className="mt-1 text-sm text-[var(--text-muted)]">{description}</p>}
                     </div>
                     {action && <div className="shrink-0">{action}</div>}
                 </div>
-                <div className="mt-5 sm:pl-14">{children}</div>
+                <div className="mt-5">{children}</div>
             </section>
         </Card>
     );
@@ -93,11 +80,7 @@ function ThemeSelector() {
     ];
 
     return (
-        <div
-            role="group"
-            aria-label="Theme"
-            className="inline-flex gap-1 rounded-full border border-[var(--border)] bg-[var(--surface-2)] p-1"
-        >
+        <div role="group" aria-label="Theme" className="inline-flex border-2 border-[var(--ink)]">
             {options.map((opt) => {
                 const selected = current === opt.value;
                 return (
@@ -107,10 +90,10 @@ function ThemeSelector() {
                         aria-pressed={selected}
                         onClick={() => setTheme(opt.value)}
                         className={
-                            "inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full px-5 py-2 text-sm font-medium transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 " +
+                            "inline-flex min-h-11 cursor-pointer items-center gap-2 px-5 text-sm font-bold transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-[-5px] focus-visible:outline-current [&+&]:border-l-2 [&+&]:border-[var(--ink)] " +
                             (selected
-                                ? "bg-indigo-600 text-white shadow-sm"
-                                : "text-[var(--text-muted)] hover:text-[var(--text)]")
+                                ? "bg-[var(--ultra)] text-[var(--on-ultra)]"
+                                : "bg-[var(--paper)] text-[var(--ink-muted)] [@media(hover:hover)_and_(pointer:fine)]:hover:text-[var(--ink)]")
                         }
                         suppressHydrationWarning
                     >
@@ -172,33 +155,19 @@ function AiPrepToggle() {
 
     return (
         <Section {...AI_PREP_SECTION}>
-            <div className="flex items-center justify-between gap-4 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3">
-                <span id="ai-prep-label" className="text-sm font-medium text-[var(--text)]">
+            <div className="flex items-center justify-between gap-4 border-y border-[var(--hair)] py-3">
+                <span id="ai-prep-label" className="text-sm font-bold text-[var(--ink)]">
                     AI interview prep
                 </span>
-                <button
-                    type="button"
-                    role="switch"
-                    aria-checked={status.enabled}
+                <Switch
+                    checked={status.enabled}
                     aria-labelledby="ai-prep-label"
                     disabled={busy}
-                    onClick={() => {
+                    onChange={() => {
                         if (status.enabled) setConfirmingOff(true);
                         else turnOn();
                     }}
-                    className={
-                        "relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 disabled:opacity-60 " +
-                        (status.enabled ? "bg-indigo-600" : "bg-slate-400/60")
-                    }
-                >
-                    <span
-                        aria-hidden
-                        className={
-                            "inline-block h-5 w-5 rounded-full bg-white shadow transition-transform " +
-                            (status.enabled ? "translate-x-6" : "translate-x-1")
-                        }
-                    />
-                </button>
+                />
             </div>
 
             {!status.enabled && (
@@ -209,8 +178,8 @@ function AiPrepToggle() {
             )}
 
             {confirmingOff && (
-                <div className="mt-3 flex flex-wrap items-center gap-3 rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3">
-                    <p className="text-sm text-amber-700 dark:text-amber-300">
+                <div className="mt-3 flex flex-wrap items-center gap-3 border-l-[6px] border-amber-600 bg-[var(--paper-2)] px-4 py-3">
+                    <p className="text-sm font-medium text-[var(--ink)]">
                         This deletes your indexed notes from the AI service.
                     </p>
                     <div className="flex gap-2">
@@ -292,10 +261,10 @@ function RemindersToggle() {
     }
 
     return (
-        <div className="mb-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3">
+        <div className="border-y border-[var(--hair)] py-3">
             <div className="flex items-center justify-between gap-4">
                 <div>
-                    <span id="reminders-label" className="text-sm font-medium text-[var(--text)]">
+                    <span id="reminders-label" className="text-sm font-bold text-[var(--ink)]">
                         Follow-up reminder emails
                     </span>
                     <p className="mt-0.5 text-xs text-[var(--text-muted)]">
@@ -303,26 +272,12 @@ function RemindersToggle() {
                     </p>
                 </div>
                 {enabled !== null && (
-                    <button
-                        type="button"
-                        role="switch"
-                        aria-checked={enabled}
+                    <Switch
+                        checked={enabled}
                         aria-labelledby="reminders-label"
                         disabled={busy}
-                        onClick={() => void toggle()}
-                        className={
-                            "relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 disabled:opacity-60 " +
-                            (enabled ? "bg-indigo-600" : "bg-slate-400/60")
-                        }
-                    >
-                        <span
-                            aria-hidden
-                            className={
-                                "inline-block h-5 w-5 rounded-full bg-white shadow transition-transform " +
-                                (enabled ? "translate-x-6" : "translate-x-1")
-                            }
-                        />
-                    </button>
+                        onChange={() => void toggle()}
+                    />
                 )}
             </div>
             {failed && (
@@ -342,17 +297,12 @@ function RemindersToggle() {
 export default function SettingsPage() {
     const { user } = useUser();
     const { signOut } = useClerk();
-    const { plan, status, isPro, loading } = useUserPlan();
+    const { plan, customerId, status, isPro, loading } = useUserPlan();
     const toast = useToast();
     const [exporting, setExporting] = useState(false);
     const [billingLoading, setBillingLoading] = useState(false);
-    const billingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-    useEffect(() => {
-        return () => {
-            if (billingTimerRef.current) clearTimeout(billingTimerRef.current);
-        };
-    }, []);
+    // Only someone who has paid has a Stripe customer, and so a portal to open.
+    const canManageBilling = Boolean(customerId);
 
     // Advisory Plan_Gate: export is Pro-only (Req 13.7).
     const exportGate = gateExport(plan);
@@ -394,52 +344,33 @@ export default function SettingsPage() {
     }
 
     /**
-     * Open the Stripe billing portal using the existing flow. If the portal
-     * does not open within 5 seconds, show an error and keep the user on
-     * settings with no plan change (Req 13.6).
+     * Hand off to Stripe: the billing portal for paying customers (5 s budget,
+     * Req 13.6), checkout for Free users. On any failure the user stays on
+     * settings with no plan change and sees why.
      */
-    async function handleManageBilling() {
+    async function handleBilling() {
         setBillingLoading(true);
-        const timeout = new Promise<never>((_, reject) => {
-            billingTimerRef.current = setTimeout(
-                () => reject(new Error("billing-timeout")),
-                5000
-            );
-        });
-        try {
-            const res = (await Promise.race([
-                fetch("/api/stripe/portal", { method: "POST" }),
-                timeout,
-            ])) as Response;
-            const data = await res.json();
-            if (res.ok && data.url) {
-                // Portal opened: hand off to Stripe.
-                window.location.href = data.url;
-            } else {
-                throw new Error(data.error || "billing-unavailable");
-            }
-        } catch {
-            // Timeout or failure: stay on settings, no plan change (Req 13.6).
-            toast.error("Billing portal is unavailable. Please try again.");
-        } finally {
-            if (billingTimerRef.current) {
-                clearTimeout(billingTimerRef.current);
-                billingTimerRef.current = null;
-            }
-            setBillingLoading(false);
+        const result = canManageBilling
+            ? await requestBillingUrl("/api/stripe/portal", 5000)
+            : await requestBillingUrl("/api/stripe/checkout", 30_000);
+        if (result.ok) {
+            window.location.href = result.url;
+            return;
         }
+        toast.error(
+            result.message ??
+                (canManageBilling
+                    ? "Billing portal is unavailable. Please try again."
+                    : "Could not start checkout. Please try again.")
+        );
+        setBillingLoading(false);
     }
 
     return (
         <div className="relative mx-auto max-w-3xl space-y-6 p-4 sm:p-6 lg:p-8">
-            {/* Soft brand glow behind the header for premium depth. */}
-            <div className="hero-gradient pointer-events-none absolute inset-x-0 -top-8 h-48" />
 
             <div className="relative">
-                <span className="font-mono-label text-[11px] uppercase text-[var(--text-muted)]">
-                    Account
-                </span>
-                <h1 className="mt-1 font-display text-2xl font-semibold tracking-tight text-[var(--text)] sm:text-3xl">
+                <h1 className="gw-display text-[clamp(2.25rem,4vw,3.5rem)] text-[var(--ink)] mt-1">
                     Settings
                 </h1>
                 <p className="mt-1 text-sm text-[var(--text-muted)]">
@@ -454,17 +385,15 @@ export default function SettingsPage() {
                 title="Profile"
                 description="Your account details are managed through your sign-in provider."
             >
-                <dl className="space-y-3 text-sm">
-                    <div className="flex items-center justify-between gap-4 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3">
+                <dl className="border-t border-[var(--hair)] text-sm">
+                    <div className="grid gap-1 border-b border-[var(--hair)] py-3 sm:grid-cols-[8rem_minmax(0,1fr)] sm:gap-4">
                         <dt className="text-[var(--text-muted)]">Name</dt>
-                        <dd className="font-medium text-[var(--text)]">
-                            {user?.fullName || "—"}
-                        </dd>
+                        <dd className="min-w-0 break-words font-bold text-[var(--ink)]">{user?.fullName || "Not set"}</dd>
                     </div>
-                    <div className="flex items-center justify-between gap-4 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3">
+                    <div className="grid gap-1 border-b border-[var(--hair)] py-3 sm:grid-cols-[8rem_minmax(0,1fr)] sm:gap-4">
                         <dt className="text-[var(--text-muted)]">Email</dt>
-                        <dd className="font-medium text-[var(--text)]">
-                            {user?.primaryEmailAddress?.emailAddress || "—"}
+                        <dd className="min-w-0 break-all font-bold text-[var(--ink)]">
+                            {user?.primaryEmailAddress?.emailAddress || "Not set"}
                         </dd>
                     </div>
                 </dl>
@@ -507,21 +436,27 @@ export default function SettingsPage() {
                         </p>
 
                         {status === "past_due" && (
-                            <div className="mt-4 rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-600 dark:text-amber-300">
-                                Your last payment failed. Update your card to keep
-                                Pro access.
+                            <div
+                                role="alert"
+                                className="mt-4 border-l-[6px] border-amber-600 bg-[var(--paper-2)] px-4 py-3 text-sm font-medium text-[var(--ink)]"
+                            >
+                                Your last payment failed. Update your card to keep Pro access.
                             </div>
                         )}
 
-                        <div className="mt-5">
-                            <Button
-                                variant="secondary"
-                                onClick={handleManageBilling}
-                                loading={billingLoading}
-                            >
-                                <CreditCardIcon size={16} /> Manage billing
-                            </Button>
-                        </div>
+                        {(canManageBilling || !isPro) && (
+                            <div className="mt-5">
+                                {canManageBilling ? (
+                                    <Button variant="secondary" onClick={handleBilling} loading={billingLoading}>
+                                        <CreditCardIcon size={16} /> Manage billing
+                                    </Button>
+                                ) : (
+                                    <Button onClick={handleBilling} loading={billingLoading}>
+                                        <SparklesIcon size={16} /> Upgrade to Pro, $9/month
+                                    </Button>
+                                )}
+                            </div>
+                        )}
                     </>
                 )}
             </Section>
@@ -544,11 +479,8 @@ export default function SettingsPage() {
                         <DownloadIcon size={16} /> Export my data
                     </Button>
                 ) : (
-                    <UpgradePrompt
-                        variant="card"
-                        message={exportGate.message ?? ""}
-                        ctaLabel="Upgrade to Pro"
-                    />
+                    // The upgrade action lives in Billing, just above.
+                    <p className="text-sm text-[var(--text-muted)]">{exportGate.message}</p>
                 )}
             </Section>
 
@@ -563,50 +495,40 @@ export default function SettingsPage() {
                 description="How your data is handled."
             >
                 <RemindersToggle />
-                <ul className="space-y-3 text-sm text-[var(--text-muted)]">
-                    <li className="flex items-start gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3">
-                        <LockIcon size={16} className="mt-0.5 shrink-0 text-indigo-500 dark:text-indigo-300" />
-                        <span>
-                            Your applications, offers, and notes are private to
-                            your account and never shared.
-                        </span>
+                <ul className="text-sm text-[var(--text-muted)]">
+                    <li className="border-b border-[var(--hair)] py-3">
+                        Your applications, offers, and notes are private to your account and never shared.
                     </li>
-                    <li className="flex items-start gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3">
-                        <LockIcon size={16} className="mt-0.5 shrink-0 text-indigo-500 dark:text-indigo-300" />
-                        <span>
-                            Interview notes are stored privately and only visible
-                            to you.
-                        </span>
+                    <li className="border-b border-[var(--hair)] py-3">
+                        Interview notes are stored privately and only visible to you.
+                    </li>
+                    <li className="py-3">
+                        <Link href="/privacy" className="font-bold text-[var(--ultra-text)] underline underline-offset-4">
+                            Read the privacy policy
+                        </Link>
                     </li>
                 </ul>
             </Section>
 
             {/* 6. Danger zone */}
-            <Card className="gradient-border border border-rose-500/30 bg-rose-500/5 p-6 sm:p-7">
-                <section id="danger-zone" aria-labelledby="danger-zone-heading">
-                    <div className="flex items-start gap-4">
-                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400">
-                            <AlertTriangleIcon size={20} />
-                        </span>
-                        <div>
-                            <h2
-                                id="danger-zone-heading"
-                                className="font-display text-lg font-semibold tracking-tight text-rose-600 dark:text-rose-400"
-                            >
-                                Danger zone
-                            </h2>
-                            <p className="mt-1 text-sm text-[var(--text-muted)]">
-                                Sign out of your account on this device.
-                            </p>
-                        </div>
-                    </div>
-                    <div className="mt-5 sm:pl-14">
-                        <Button variant="danger" onClick={() => signOut()}>
-                            Sign out
-                        </Button>
-                    </div>
-                </section>
-            </Card>
+            <section
+                id="danger-zone"
+                aria-labelledby="danger-zone-heading"
+                className="border-t-2 border-rose-700 pb-2 pt-5 dark:border-rose-500"
+            >
+                <h2
+                    id="danger-zone-heading"
+                    className="text-xl font-extrabold tracking-[-0.01em] text-rose-700 dark:text-rose-400"
+                >
+                    Danger zone
+                </h2>
+                <p className="mt-1 text-sm text-[var(--text-muted)]">Sign out of your account on this device.</p>
+                <div className="mt-5">
+                    <Button variant="danger" onClick={() => signOut({ redirectUrl: "/" })}>
+                        Sign out
+                    </Button>
+                </div>
+            </section>
         </div>
     );
 }

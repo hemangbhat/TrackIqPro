@@ -12,7 +12,6 @@ import {
     NotesIcon,
     ScaleIcon,
     SettingsIcon,
-    TrendingUpIcon,
     MenuIcon,
     PlusIcon,
     SearchIcon,
@@ -29,6 +28,9 @@ const navLinks = [
     { href: "/dashboard/settings", label: "Settings", icon: SettingsIcon },
 ];
 
+const toggleClass =
+    "inline-flex h-11 w-11 cursor-pointer items-center justify-center text-[var(--ink-muted)] transition-colors duration-150 hover:text-[var(--ink)]";
+
 function isActive(pathname: string, href: string, exact?: boolean) {
     if (exact) return pathname === href;
     return pathname === href || pathname.startsWith(href + "/");
@@ -43,7 +45,7 @@ function NavList({ onNavigate }: { onNavigate?: () => void }) {
         .sort((a, b) => b.href.length - a.href.length)[0]?.href;
 
     return (
-        <nav className="flex flex-col gap-1">
+        <nav aria-label="Dashboard" className="flex flex-col border-t-2 border-[var(--ink)]">
             {navLinks.map(({ href, label, icon: Icon }) => {
                 const active = href === activeHref;
                 return (
@@ -52,13 +54,13 @@ function NavList({ onNavigate }: { onNavigate?: () => void }) {
                         href={href}
                         onClick={onNavigate}
                         aria-current={active ? "page" : undefined}
-                        className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+                        className={`flex min-h-11 items-center gap-3 border-b border-[var(--hair)] px-3 text-[0.9375rem] font-semibold transition-colors duration-150 ${
                             active
-                                ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/20"
-                                : "text-[var(--text-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--text)]"
+                                ? "bg-[var(--ultra)] text-[var(--on-ultra)]"
+                                : "text-[var(--ink-muted)] hover:bg-[var(--paper-2)] hover:text-[var(--ink)]"
                         }`}
                     >
-                        <Icon size={18} />
+                        <Icon size={18} aria-hidden />
                         {label}
                     </Link>
                 );
@@ -67,65 +69,39 @@ function NavList({ onNavigate }: { onNavigate?: () => void }) {
     );
 }
 
-function BrandMark() {
-    return (
-        <div className="flex items-center justify-between gap-2 px-2">
-            <Link
-                href="/dashboard"
-                className="flex items-center gap-2.5 font-semibold text-[var(--text)]"
-            >
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-sm shadow-indigo-600/30">
-                    <TrendingUpIcon size={18} />
-                </span>
-                <span className="font-display text-lg tracking-tight">TrackIQ</span>
-            </Link>
-            <span className="font-mono-label rounded-full border border-indigo-500/30 bg-indigo-500/10 px-2 py-0.5 text-[10px] uppercase text-indigo-500">
-                Pro
-            </span>
-        </div>
-    );
-}
-
-function AddJobButton({ onNavigate }: { onNavigate?: () => void }) {
-    return (
-        <Link
-            href="/dashboard/jobs?new=1"
-            onClick={onNavigate}
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm shadow-indigo-600/20 transition-colors hover:bg-indigo-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)]"
-        >
-            <PlusIcon size={18} />
-            Add job
-        </Link>
-    );
-}
-
 /**
- * Sidebar body shared by the desktop rail and the mobile drawer: brand mark,
- * a prominent "Add job" CTA, the primary nav, and a bottom section with the
- * PlanBadge and a Help link.
+ * Sidebar body shared by the desktop rail and the mobile drawer: the wordmark,
+ * the "Add job" action, the primary nav, and a foot with Privacy and the plan.
  */
 function SidebarBody({ onNavigate }: { onNavigate?: () => void }) {
     return (
         <>
-            <div className="mb-6">
-                <BrandMark />
-            </div>
-            <div className="mb-6 px-1">
-                <AddJobButton onNavigate={onNavigate} />
-            </div>
+            <Link
+                href="/dashboard"
+                onClick={onNavigate}
+                className="gw-display gw-wide mb-6 block px-1 text-[1.5rem] leading-none text-[var(--ink)]"
+            >
+                TrackIQ
+            </Link>
+            <Link
+                href="/dashboard/jobs?new=1"
+                onClick={onNavigate}
+                className="gw-btn gw-btn-primary mb-6 w-full"
+            >
+                <PlusIcon size={18} aria-hidden />
+                Add job
+            </Link>
             <NavList onNavigate={onNavigate} />
-            <div className="mt-auto space-y-3 border-t border-[var(--border)] px-1 pt-4">
+            <div className="mt-auto flex items-center justify-between gap-3 border-t-2 border-[var(--ink)] pt-3">
                 <Link
                     href="/privacy"
                     onClick={onNavigate}
-                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-2)] hover:text-[var(--text)]"
+                    className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-[var(--ink-muted)] transition-colors duration-150 hover:text-[var(--ink)]"
                 >
-                    <ShieldIcon size={18} />
+                    <ShieldIcon size={16} aria-hidden />
                     Privacy &amp; data
                 </Link>
-                <div className="px-3">
-                    <PlanBadge />
-                </div>
+                <PlanBadge />
             </div>
         </>
     );
@@ -134,21 +110,18 @@ function SidebarBody({ onNavigate }: { onNavigate?: () => void }) {
 function SearchBox() {
     const [query, setQuery] = useState("");
     return (
-        <form
-            role="search"
-            onSubmit={(e) => e.preventDefault()}
-            className="relative hidden sm:block"
-        >
-            <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-[var(--text-muted)]">
-                <SearchIcon size={16} />
+        <form role="search" onSubmit={(e) => e.preventDefault()} className="relative hidden sm:block">
+            <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-[var(--ink-muted)]">
+                <SearchIcon size={16} aria-hidden />
             </span>
             <input
                 type="search"
+                enterKeyHint="search"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 aria-label="Search applications"
-                placeholder="Search applications, notes, offers..."
-                className="min-h-11 w-48 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] pl-9 pr-3 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-muted)]/70 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent md:w-72"
+                placeholder="Search applications, notes, offers"
+                className="min-h-11 w-48 border border-[var(--hair)] bg-[var(--surface)] py-2 pl-9 pr-3 text-sm text-[var(--ink)] placeholder:text-[var(--ink-muted)] transition-colors duration-150 focus:border-[var(--ultra-text)] focus:outline-none md:w-72"
             />
         </form>
     );
@@ -158,19 +131,19 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     const [mobileOpen, setMobileOpen] = useState(false);
 
     return (
-        <div className="flex min-h-dvh">
+        <div className="grid-world flex min-h-dvh">
             <a
                 href="#main"
-                className="sr-only rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white focus:not-sr-only focus:fixed focus:left-4 focus:top-3 focus:z-50"
+                className="sr-only bg-[var(--ultra)] px-4 py-2 text-sm font-bold text-[var(--on-ultra)] focus:not-sr-only focus:fixed focus:left-4 focus:top-3 focus:z-50"
             >
                 Skip to content
             </a>
             {/* Desktop sidebar (>= 1024px) */}
-            <aside className="glass-panel fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-[var(--border)] p-4 lg:flex">
+            <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r-2 border-[var(--ink)] bg-[var(--paper)] p-4 lg:flex">
                 <SidebarBody />
             </aside>
 
-            {/* Mobile slide-in drawer (< 1024px) — focus trap, Escape, scroll lock */}
+            {/* Mobile slide-in drawer (< 1024px): focus trap, Escape, scroll lock */}
             <Drawer
                 open={mobileOpen}
                 onClose={() => setMobileOpen(false)}
@@ -184,19 +157,19 @@ export default function DashboardShell({ children }: { children: React.ReactNode
             </Drawer>
 
             {/* Main column */}
-            <div className="flex min-h-dvh flex-1 flex-col lg:pl-64">
-                <header className="glass-panel sticky top-0 z-20 flex h-16 items-center justify-between gap-3 border-b border-[var(--border)] px-4 sm:px-6">
+            <div className="flex min-h-dvh min-w-0 flex-1 flex-col lg:pl-64">
+                <header className="sticky top-0 z-20 flex h-16 items-center justify-between gap-3 border-b-2 border-[var(--ink)] bg-[var(--paper)] px-4 sm:px-6">
                     <div className="flex items-center gap-3">
-                        {/* Drawer-trigger: keyboard + pointer operable, hidden on lg+ */}
+                        {/* Drawer trigger: keyboard and pointer operable, hidden on lg+ */}
                         <button
                             type="button"
                             onClick={() => setMobileOpen(true)}
                             aria-label="Open navigation menu"
                             aria-expanded={mobileOpen}
                             aria-haspopup="dialog"
-                            className="flex h-11 w-11 items-center justify-center rounded-lg text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-2)] hover:text-[var(--text)] focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 cursor-pointer lg:hidden"
+                            className="flex h-11 w-11 cursor-pointer items-center justify-center text-[var(--ink)] transition-colors duration-150 hover:bg-[var(--paper-2)] lg:hidden"
                         >
-                            <MenuIcon size={22} />
+                            <MenuIcon size={22} aria-hidden />
                         </button>
                         <SearchBox />
                     </div>
@@ -206,11 +179,11 @@ export default function DashboardShell({ children }: { children: React.ReactNode
                         <Link
                             href="/dashboard/jobs?new=1"
                             aria-label="Quick add job"
-                            className="inline-flex h-11 w-11 items-center justify-center rounded-lg bg-indigo-600 text-white transition-colors hover:bg-indigo-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)] cursor-pointer"
+                            className="gw-btn gw-btn-primary gw-btn-icon"
                         >
-                            <PlusIcon size={20} />
+                            <PlusIcon size={20} aria-hidden />
                         </Link>
-                        <ThemeToggle />
+                        <ThemeToggle className={toggleClass} />
                         <UserButton afterSignOutUrl="/" />
                     </div>
                 </header>

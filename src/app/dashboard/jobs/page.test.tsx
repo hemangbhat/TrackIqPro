@@ -103,6 +103,9 @@ describe("Jobs page delete mutation failure (Req 7.11)", () => {
         await user.click(
             tableWrapper.getByRole("button", { name: /delete frontend engineer/i })
         );
+        // Nothing is deleted until the confirm dialog's Delete is pressed.
+        expect(deleteJob).not.toHaveBeenCalled();
+        await user.click(await screen.findByRole("button", { name: /^delete$/i }));
 
         // useJobs delete mutation was invoked with the job id.
         expect(deleteJob).toHaveBeenCalledWith("j1");
@@ -125,6 +128,9 @@ describe("Jobs page delete mutation failure (Req 7.11)", () => {
         await user.click(
             tableWrapper.getByRole("button", { name: /delete frontend engineer/i })
         );
+        // Nothing is deleted until the confirm dialog's Delete is pressed.
+        expect(deleteJob).not.toHaveBeenCalled();
+        await user.click(await screen.findByRole("button", { name: /^delete$/i }));
 
         expect(deleteJob).toHaveBeenCalledWith("j1");
         expect(await screen.findByText(/application removed/i)).toBeInTheDocument();

@@ -116,7 +116,7 @@ export default function JobDetailsPage() {
                 {breadcrumb}
                 <Skeleton className="h-28 rounded-2xl" />
                 <Skeleton className="h-32 rounded-2xl" />
-                <div className="grid gap-6 lg:grid-cols-2">
+                <div className="grid gap-6 lg:grid-cols-2 [&>*]:min-w-0">
                     <Skeleton className="h-64 rounded-2xl" />
                     <Skeleton className="h-64 rounded-2xl" />
                 </div>
@@ -180,7 +180,7 @@ export default function JobDetailsPage() {
                 disabled={updatingStage}
             />
 
-            <div className="grid gap-6 lg:grid-cols-2">
+            <div className="grid gap-6 lg:grid-cols-2 [&>*]:min-w-0">
                 <MetadataPanel job={job} />
                 <NotesPanel jobId={job._id} />
                 <PrepPanel jobId={job._id} />

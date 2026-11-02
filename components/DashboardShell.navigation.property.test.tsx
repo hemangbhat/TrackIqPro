@@ -137,8 +137,8 @@ describe("Property 6: Navigation correctness", () => {
 
                     if (expected) {
                         expect(activeLinks[0].getAttribute("href")).toBe(expected);
-                        // Active item uses the indigo-filled treatment (Req 1.9).
-                        expect(activeLinks[0].className).toContain("bg-indigo-600");
+                        // Active item takes the ultramarine field (Req 1.9).
+                        expect(activeLinks[0].className).toContain("bg-[var(--ultra)]");
                     }
                 } finally {
                     unmount();

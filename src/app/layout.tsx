@@ -1,7 +1,7 @@
 import React from "react";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
-import { Inter, Geist, JetBrains_Mono } from "next/font/google";
+import { Inter, Geist, JetBrains_Mono, Archivo } from "next/font/google";
 import "./globals.css";
 import { Providers } from "../../components/Providers";
 
@@ -32,8 +32,33 @@ const jetbrainsMono = JetBrains_Mono({
     display: "swap",
 });
 
+// Public pages' grotesk (the typographic grid world). Variable, with the width
+// axis so display lines can be set wide.
+const archivo = Archivo({
+    subsets: ["latin"],
+    axes: ["wdth"],
+    variable: "--font-archivo",
+    display: "swap",
+});
+
 const description =
     "Track applications, keep private interview notes, and compare offers with explainable scoring engines. Every score shows its work.";
+
+// Edge-to-edge under the notch (content is padded back with safe-area insets in
+// globals.css), the keyboard resizes the layout on Android, and the browser
+// chrome matches the paper of each scheme. ThemeColorSync follows the in-app
+// toggle when it overrides the OS setting.
+export const viewport: Viewport = {
+    width: "device-width",
+    initialScale: 1,
+    viewportFit: "cover",
+    interactiveWidget: "resizes-content",
+    themeColor: [
+        { media: "(prefers-color-scheme: light)", color: "#f7f7f4" },
+        { media: "(prefers-color-scheme: dark)", color: "#0e0e0e" },
+    ],
+    colorScheme: "light dark",
+};
 
 export const metadata: Metadata = {
     title: { default: "TrackIQ — Job Search Command Center", template: "%s · TrackIQ" },
@@ -45,7 +70,7 @@ export const metadata: Metadata = {
         title: "TrackIQ — Job Search Command Center",
         description,
     },
-    twitter: { card: "summary", title: "TrackIQ — Job Search Command Center", description },
+    twitter: { card: "summary_large_image", title: "TrackIQ — Job Search Command Center", description },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -59,9 +84,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <html
                 lang="en"
                 suppressHydrationWarning
-                className={`${inter.variable} ${geist.variable} ${jetbrainsMono.variable}`}
+                className={`${inter.variable} ${geist.variable} ${jetbrainsMono.variable} ${archivo.variable}`}
             >
-                <body className="grain min-h-dvh antialiased">
+                <body className="grid-world min-h-dvh antialiased">
                     <Providers>{children}</Providers>
                 </body>
             </html>

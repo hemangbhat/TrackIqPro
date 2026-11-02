@@ -210,3 +210,16 @@ describe("PricingPage Stripe CTA flows", () => {
         expect(screen.queryByText("Current plan")).not.toBeInTheDocument();
     });
 });
+
+describe("PricingPage for signed-out visitors", () => {
+    it("never offers billing management without an account", () => {
+        clerkState.isSignedIn = false;
+        planState.plan = null;
+        planState.loading = false;
+
+        renderPage();
+
+        expect(screen.getByRole("button", { name: /upgrade to pro/i })).toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: /manage billing/i })).toBeNull();
+    });
+});

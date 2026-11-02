@@ -4,7 +4,7 @@ import type { Seniority } from "../../lib/career-fit";
 import type { CareerProfileData } from "../../hooks/useCareerProfile";
 import { useToast } from "../ui/Toast";
 import { Card, Button, Field, Input, Select } from "../ui/primitives";
-import { UserIcon, XIcon, SparklesIcon } from "../ui/icons";
+import { XIcon, SparklesIcon } from "../ui/icons";
 
 const SENIORITY_OPTIONS: { value: Seniority; label: string }[] = [
     { value: "intern", label: "Intern" },
@@ -118,9 +118,6 @@ export function CareerProfileEditor({
     return (
         <Card className="glass-panel gradient-border flex h-full flex-col p-6 sm:p-7">
             <div className="flex items-center gap-3">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-500 dark:text-indigo-300">
-                    <UserIcon size={20} />
-                </span>
                 <div>
                     <h2 className="font-display text-lg font-semibold tracking-tight text-[var(--text)]">
                         Career Profile

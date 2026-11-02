@@ -3,7 +3,7 @@ import React from "react";
 import Link from "next/link";
 import type { PriorityItem, Impact } from "../../lib/follow-up-intelligence";
 import { Card, Badge, EmptyState } from "../ui/primitives";
-import { FlameIcon, ArrowRightIcon, CheckIcon } from "../ui/icons";
+import { ArrowRightIcon, CheckIcon } from "../ui/icons";
 
 const IMPACT_TONE: Record<Impact, string> = {
     high: "bg-rose-500/15 text-rose-600 dark:text-rose-300",
@@ -13,20 +13,20 @@ const IMPACT_TONE: Record<Impact, string> = {
 
 function QueueRow({ item, linkToJob }: { item: PriorityItem; linkToJob: boolean }) {
     return (
-        <li className="rounded-xl border border-[var(--border)] bg-[var(--surface-2)] p-4 transition-colors hover:border-indigo-500/40">
+        <li className="border-b border-[var(--hair)] py-4 first:pt-0 last:border-b-0">
             <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                     <p className="truncate text-sm font-semibold text-[var(--text)]">
                         {item.title}
                     </p>
                     <p className="truncate text-xs text-[var(--text-muted)]">
-                        {item.company} · <Badge tone={item.stage}>{item.stage}</Badge>
+                        {item.company} <Badge tone={item.stage} className="ml-1.5">{item.stage}</Badge>
                     </p>
                 </div>
                 <span
-                    className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold capitalize ${IMPACT_TONE[item.impact]}`}
+                    className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ${IMPACT_TONE[item.impact]}`}
                 >
-                    {item.impact} · {item.value}
+                    {item.impact} ({item.value})
                 </span>
             </div>
 
@@ -61,9 +61,6 @@ export function PriorityQueue({ items, linkToJobs = true }: { items: PriorityIte
     return (
         <Card className="glass-panel gradient-border flex h-full flex-col p-6 sm:p-7">
             <div className="flex items-center gap-3">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-500 dark:text-indigo-300">
-                    <FlameIcon size={20} />
-                </span>
                 <div>
                     <h2 className="font-display text-lg font-semibold tracking-tight text-[var(--text)]">
                         Priority Queue

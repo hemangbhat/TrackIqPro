@@ -109,14 +109,14 @@ export function computeCareerHealth(jobs: Job[]): CareerHealthResult {
             label: "Response rate",
             score: Math.round(responseRate * 100),
             weight: WEIGHTS.response,
-            detail: `${responded} of ${total} applications advanced past "applied".`,
+            detail: `${responded} of ${total} application${total === 1 ? "" : "s"} advanced past "applied".`,
         },
         {
             key: "interviewConversion",
             label: "Interview conversion",
             score: Math.round(interviewConv * 100),
             weight: WEIGHTS.interviewConversion,
-            detail: `${reachedInterview} of ${total} applications reached an interview.`,
+            detail: `${reachedInterview} of ${total} application${total === 1 ? "" : "s"} reached an interview.`,
         },
         {
             key: "offerConversion",
@@ -126,7 +126,7 @@ export function computeCareerHealth(jobs: Job[]): CareerHealthResult {
             detail:
                 reachedInterview === 0
                     ? "No interviews yet to convert into offers."
-                    : `${offers} of ${reachedInterview} interviews became offers.`,
+                    : `${offers} of ${reachedInterview} interview${reachedInterview === 1 ? "" : "s"} became offers.`,
         },
         {
             key: "momentum",

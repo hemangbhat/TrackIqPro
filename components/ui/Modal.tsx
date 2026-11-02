@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { EASE_OUT } from "../../lib/motion-tokens";
 import { XIcon } from "./icons";
 
 export function Modal({
@@ -28,11 +29,11 @@ export function Modal({
                 <motion.div
                     className="fixed inset-0 z-50 flex items-center justify-center p-4"
                     initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
+                    animate={{ opacity: 1, transition: { duration: 0.2, ease: EASE_OUT } }}
+                    exit={{ opacity: 0, transition: { duration: 0.15, ease: EASE_OUT } }}
                 >
                     <div
-                        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                        className="absolute inset-0 bg-black/60"
                         onClick={onClose}
                         aria-hidden="true"
                     />
@@ -40,14 +41,13 @@ export function Modal({
                         role="dialog"
                         aria-modal="true"
                         aria-label={title}
-                        className="surface relative z-10 max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl shadow-2xl"
-                        initial={{ scale: 0.96, y: 12 }}
-                        animate={{ scale: 1, y: 0 }}
-                        exit={{ scale: 0.96, y: 12 }}
-                        transition={{ duration: 0.18 }}
+                        className="relative z-10 max-h-[90dvh] w-full max-w-lg overflow-y-auto border-2 border-[var(--ink)] bg-[var(--paper)]"
+                        initial={{ transform: "translateY(8px) scale(0.97)" }}
+                        animate={{ transform: "translateY(0px) scale(1)", transition: { duration: 0.2, ease: EASE_OUT } }}
+                        exit={{ transform: "translateY(8px) scale(0.97)", transition: { duration: 0.15, ease: EASE_OUT } }}
                     >
-                        <div className="flex items-center justify-between border-b border-[var(--border)] px-6 py-4">
-                            <h2 className="text-lg font-semibold text-[var(--text)]">{title}</h2>
+                        <div className="flex items-center justify-between border-b-2 border-[var(--ink)] px-6 py-4">
+                            <h2 className="text-xl font-extrabold tracking-[-0.02em] text-[var(--ink)]">{title}</h2>
                             <button
                                 onClick={onClose}
                                 aria-label="Close dialog"

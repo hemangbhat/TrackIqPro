@@ -1,6 +1,7 @@
 "use client";
 import React, { useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { EASE_DRAWER, EASE_OUT } from "../../lib/motion-tokens";
 import { XIcon } from "./icons";
 
 type DrawerSide = "left" | "right";
@@ -133,11 +134,11 @@ export function Drawer({
                 <motion.div
                     className="fixed inset-0 z-50"
                     initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
+                    animate={{ opacity: 1, transition: { duration: 0.3, ease: EASE_OUT } }}
+                    exit={{ opacity: 0, transition: { duration: 0.2, ease: EASE_OUT } }}
                 >
                     <div
-                        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                        className="absolute inset-0 bg-black/60"
                         onClick={onClose}
                         aria-hidden="true"
                     />
@@ -147,14 +148,13 @@ export function Drawer({
                         aria-modal="true"
                         aria-label={title}
                         tabIndex={-1}
-                        className={`surface absolute top-0 ${sidePosition} z-10 flex h-full w-full ${width} flex-col shadow-2xl outline-none`}
-                        initial={{ x: offscreen }}
-                        animate={{ x: 0 }}
-                        exit={{ x: offscreen }}
-                        transition={{ duration: 0.25, ease: "easeInOut" }}
+                        className={`absolute top-0 ${sidePosition} z-10 flex h-full w-full ${width} flex-col border-[var(--ink)] bg-[var(--paper)] outline-none ${side === "left" ? "border-r-2" : "border-l-2"}`}
+                        initial={{ transform: `translateX(${offscreen})` }}
+                        animate={{ transform: "translateX(0%)", transition: { duration: 0.3, ease: EASE_DRAWER } }}
+                        exit={{ transform: `translateX(${offscreen})`, transition: { duration: 0.2, ease: EASE_OUT } }}
                     >
-                        <div className="flex items-center justify-between border-b border-[var(--border)] px-6 py-4">
-                            <h2 className="text-lg font-semibold text-[var(--text)]">{title}</h2>
+                        <div className="flex items-center justify-between border-b-2 border-[var(--ink)] px-6 py-4">
+                            <h2 className="text-xl font-extrabold tracking-[-0.02em] text-[var(--ink)]">{title}</h2>
                             <button
                                 onClick={onClose}
                                 aria-label="Close dialog"
@@ -163,9 +163,9 @@ export function Drawer({
                                 <XIcon size={20} />
                             </button>
                         </div>
-                        <div className="flex-1 overflow-y-auto px-6 py-5">{children}</div>
+                        <div className="flex-1 overflow-y-auto px-6 py-5 pb-[max(1.25rem,env(safe-area-inset-bottom,0px))]">{children}</div>
                         {footer && (
-                            <div className="flex justify-end gap-3 border-t border-[var(--border)] px-6 py-4">
+                            <div className="flex justify-end gap-3 border-t border-[var(--border)] px-6 pb-[max(1rem,env(safe-area-inset-bottom,0px))] pt-4">
                                 {footer}
                             </div>
                         )}

@@ -59,3 +59,10 @@ __pycache__/
 
 # claude code: shared skills are committed, personal settings are not
 .claude/settings.local.json
+
+# design tooling output (screenshots, logs, one-off capture scripts)
+/.hallmark/
+/.impeccable/review/
+/.impeccable/mocks/
+/.impeccable/*.log
+/.impeccable/*.mjs

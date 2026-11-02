@@ -32,7 +32,7 @@ function ChipGroup({
     if (insights.length === 0) return null;
     return (
         <div>
-            <h4 className="font-mono-label mb-2 text-[11px] uppercase text-[var(--text-muted)]">
+            <h4 className="font-bold mb-2 text-sm text-[var(--text-muted)]">
                 {title}
             </h4>
             <div className="flex flex-wrap gap-1.5">
@@ -44,7 +44,7 @@ function ChipGroup({
                     >
                         {ins.text}
                         {ins.count > 1 && (
-                            <span className="font-mono-label text-[10px] opacity-70">×{ins.count}</span>
+                            <span className="font-bold text-sm opacity-70">×{ins.count}</span>
                         )}
                     </span>
                 ))}
@@ -138,9 +138,6 @@ export function ReflectionPanel({ reflection }: { reflection: ReflectionResult }
         <Card className="glass-panel gradient-border flex h-full flex-col p-6 sm:p-7">
             <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-500 dark:text-indigo-300">
-                        <BrainIcon size={20} />
-                    </span>
                     <div>
                         <h2 className="font-display text-lg font-semibold tracking-tight text-[var(--text)]">
                             Interview Reflection
@@ -171,7 +168,7 @@ export function ReflectionPanel({ reflection }: { reflection: ReflectionResult }
 
                     {reflection.confidenceTrend.length >= 2 && (
                         <div>
-                            <h4 className="font-mono-label mt-5 text-[11px] uppercase text-[var(--text-muted)]">
+                            <h4 className="font-bold mt-5 text-sm text-[var(--text-muted)]">
                                 Confidence trend
                             </h4>
                             <ConfidenceSparkline points={reflection.confidenceTrend} />

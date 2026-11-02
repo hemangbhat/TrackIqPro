@@ -2,6 +2,7 @@
 import React, { useMemo } from "react";
 import Link from "next/link";
 import { Job } from "../types";
+import { formatMoney } from "../lib/format";
 import { useOffers } from "../hooks/useOffers";
 import { Badge, Card, EmptyState, ErrorState, Skeleton } from "./ui/primitives";
 import { ScaleIcon, ArrowRightIcon } from "./ui/icons";
@@ -71,7 +72,7 @@ export default function RelatedOffers({ job }: RelatedOffersProps) {
                                 </p>
                             </div>
                             <span className="shrink-0 text-sm font-medium text-[var(--text)]">
-                                ${offer.salaryBase.toLocaleString()}
+                                {formatMoney(offer.salaryBase)}
                             </span>
                         </li>
                     ))}

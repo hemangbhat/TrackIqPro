@@ -68,6 +68,7 @@ export function NotesToolbar({
                     </span>
                     <Input
                         type="search"
+                        enterKeyHint="search"
                         aria-label="Search notes"
                         placeholder="Search your notes by title or content"
                         value={value}
@@ -77,7 +78,7 @@ export function NotesToolbar({
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3 border-t border-[var(--border)]/60 pt-3">
-                    <span className="flex items-center gap-1.5 font-mono-label text-[11px] uppercase text-[var(--text-muted)]">
+                    <span className="font-bold flex items-center gap-1.5 text-sm text-[var(--text-muted)]">
                         <FilterIcon size={14} aria-hidden="true" />
                         Round
                     </span>
@@ -107,7 +108,7 @@ export function NotesToolbar({
                         ))}
                     </div>
                     <span
-                        className="ml-auto font-mono-label text-[11px] uppercase text-[var(--text-muted)]"
+                        className="font-bold ml-auto text-sm text-[var(--text-muted)]"
                         aria-live="polite"
                     >
                         {resultCount} {resultCount === 1 ? "note" : "notes"}

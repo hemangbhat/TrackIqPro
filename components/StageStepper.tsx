@@ -34,7 +34,7 @@ export default function StageStepper({ current, onChange, disabled }: StageStepp
                     </span>
                     Stage
                 </h2>
-                <span className="rounded-full border border-indigo-500/20 bg-indigo-500/10 px-3 py-1 font-mono-label text-[11px] uppercase text-indigo-600 dark:text-indigo-300">
+                <span className="font-bold rounded-full border border-indigo-500/20 bg-indigo-500/10 px-3 py-1 text-sm text-indigo-600 dark:text-indigo-300">
                     {current}
                 </span>
             </div>
@@ -48,13 +48,13 @@ export default function StageStepper({ current, onChange, disabled }: StageStepp
                         <li key={stage} className="flex flex-1 flex-col items-center">
                             <div className="flex w-full items-center">
                                 {idx > 0 && (
-                                    <div
-                                        className={`h-0.5 flex-1 ${
-                                            currentIndex >= 0 && idx <= currentIndex
-                                                ? "bg-indigo-500"
-                                                : "bg-[var(--border)]"
-                                        }`}
-                                    />
+                                    <div className="h-0.5 flex-1 bg-[var(--hair)]" aria-hidden>
+                                        <div
+                                            className={`h-full origin-left bg-[var(--ultra)] transition-transform duration-300 ease-[var(--ease-in-out)] motion-reduce:transition-none ${
+                                                currentIndex >= 0 && idx <= currentIndex ? "scale-x-100" : "scale-x-0"
+                                            }`}
+                                        />
+                                    </div>
                                 )}
                                 <button
                                     type="button"
@@ -73,13 +73,13 @@ export default function StageStepper({ current, onChange, disabled }: StageStepp
                                     {reached && !isCurrent ? <CheckIcon size={16} /> : idx + 1}
                                 </button>
                                 {idx < PIPELINE.length - 1 && (
-                                    <div
-                                        className={`h-0.5 flex-1 ${
-                                            currentIndex >= 0 && idx < currentIndex
-                                                ? "bg-indigo-500"
-                                                : "bg-[var(--border)]"
-                                        }`}
-                                    />
+                                    <div className="h-0.5 flex-1 bg-[var(--hair)]" aria-hidden>
+                                        <div
+                                            className={`h-full origin-left bg-[var(--ultra)] transition-transform duration-300 ease-[var(--ease-in-out)] motion-reduce:transition-none ${
+                                                currentIndex >= 0 && idx < currentIndex ? "scale-x-100" : "scale-x-0"
+                                            }`}
+                                        />
+                                    </div>
                                 )}
                             </div>
                             <span

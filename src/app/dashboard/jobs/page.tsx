@@ -9,6 +9,7 @@ import { useToast } from "../../../../components/ui/Toast";
 import JobsToolbar from "../../../../components/JobsToolbar";
 import JobTable from "../../../../components/JobTable";
 import JobFormDrawer from "../../../../components/JobFormDrawer";
+import { ConfirmDelete } from "../../../../components/ui/ConfirmDelete";
 import { Button, EmptyState } from "../../../../components/ui/primitives";
 import { BriefcaseIcon, PlusIcon, SearchIcon } from "../../../../components/ui/icons";
 import { Job } from "../../../../types";
@@ -80,7 +81,11 @@ export default function JobsPage() {
         router.push(`/dashboard/jobs/${id}`);
     }
 
+    // The table asks first; the delete itself runs from the confirm dialog.
+    const [pendingDelete, setPendingDelete] = useState<Job | null>(null);
+
     async function handleDelete(id: string) {
+        setPendingDelete(null);
         try {
             await deleteJob(id);
             toast.success("Application removed");
@@ -120,13 +125,12 @@ export default function JobsPage() {
         <div className="mx-auto max-w-6xl space-y-6 p-4 sm:p-6 lg:p-8">
             {/* Premium hero header with brand glow + eyebrow label. */}
             <div className="relative overflow-hidden rounded-2xl">
-                <div className="hero-gradient pointer-events-none absolute inset-0" aria-hidden="true" />
                 <div className="relative flex flex-wrap items-end justify-between gap-4 p-1 sm:p-2">
                     <div className="min-w-0">
-                        <p className="font-mono-label text-[11px] uppercase text-indigo-500">
+                        <p className="font-bold text-sm text-indigo-500">
                             Pipeline
                         </p>
-                        <h1 className="font-display mt-1 text-3xl font-bold tracking-tight text-[var(--text)]">
+                        <h1 className="gw-display text-[clamp(2.25rem,4vw,3.5rem)] text-[var(--ink)] mt-1">
                             Job Applications
                         </h1>
                         <p className="mt-1.5 text-sm text-[var(--text-muted)]">
@@ -157,7 +161,7 @@ export default function JobsPage() {
                 onRetry={fetchJobs}
                 onOpen={handleOpen}
                 onEdit={openEdit}
-                onDelete={handleDelete}
+                onDelete={(id) => setPendingDelete(jobs.find((j) => j._id === id) ?? null)}
                 onAdd={openCreate}
                 emptyState={tableEmptyState}
             />
@@ -171,6 +175,13 @@ export default function JobsPage() {
                 onClose={closeDrawer}
                 onSubmit={handleSubmit}
                 planGate={planGate}
+            />
+
+            <ConfirmDelete
+                title="Delete application?"
+                target={pendingDelete ? `${pendingDelete.title} at ${pendingDelete.company}` : null}
+                onCancel={() => setPendingDelete(null)}
+                onConfirm={() => (pendingDelete ? handleDelete(pendingDelete._id) : undefined)}
             />
         </div>
     );

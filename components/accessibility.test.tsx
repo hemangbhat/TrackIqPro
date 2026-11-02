@@ -246,11 +246,11 @@ describe("axe — no accessibility violations (Req 15.1, 15.2, 15.5)", () => {
 // (2) Focus-ring visibility — interactive controls carry the focus treatment
 // ---------------------------------------------------------------------------
 describe("focus-ring visibility (Req 15.2)", () => {
-    it("Button renders the indigo focus-visible ring classes", () => {
+    it("Button renders a 2px ultramarine focus-visible outline", () => {
         renderWithTheme(<Button>Save</Button>);
         const btn = screen.getByRole("button", { name: "Save" });
-        expect(btn.className).toContain("focus-visible:ring-2");
-        expect(btn.className).toContain("focus-visible:ring-indigo-500");
+        expect(btn.className).toContain("focus-visible:outline-2");
+        expect(btn.className).toContain("focus-visible:outline-[var(--ultra-text)]");
     });
 
     it("form inputs render a visible focus ring", () => {
@@ -260,8 +260,8 @@ describe("focus-ring visibility (Req 15.2)", () => {
             </Field>
         );
         const input = screen.getByLabelText("Name");
-        expect(input.className).toContain("focus:ring-2");
-        expect(input.className).toContain("focus:ring-indigo-500");
+        expect(input.className).toContain("focus:outline-2");
+        expect(input.className).toContain("focus:outline-[var(--ultra-text)]");
     });
 
     it("JobTable row action controls carry a focus-visible ring", () => {

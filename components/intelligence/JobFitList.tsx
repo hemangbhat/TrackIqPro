@@ -76,8 +76,8 @@ function JobFitCard({ job, profile }: { job: Job; profile: CareerProfileData }) 
             <div className="flex items-start gap-4">
                 <ScoreRing value={fit.score} size={84} strokeWidth={8} sublabel="fit" />
                 <div className="min-w-0 flex-1">
-                    <div className="flex items-start justify-between gap-2">
-                        <h3 className="font-display text-base font-semibold tracking-tight text-[var(--text)]">
+                    <div className="flex flex-wrap items-start justify-between gap-2">
+                        <h3 className="min-w-0 font-display text-base font-semibold tracking-tight text-[var(--text)] [overflow-wrap:anywhere]">
                             {job.title}
                         </h3>
                         <span
@@ -86,7 +86,7 @@ function JobFitCard({ job, profile }: { job: Job; profile: CareerProfileData }) 
                             {fit.confidence} confidence
                         </span>
                     </div>
-                    <p className="text-sm text-[var(--text-muted)]">{job.company}</p>
+                    <p className="text-sm text-[var(--text-muted)] [overflow-wrap:anywhere]">{job.company}</p>
                     <p className="mt-2 text-sm text-[var(--text)]">{fit.summary}</p>
                 </div>
             </div>
@@ -94,7 +94,7 @@ function JobFitCard({ job, profile }: { job: Job; profile: CareerProfileData }) 
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
                 {fit.strongMatches.length > 0 && (
                     <div>
-                        <h4 className="font-mono-label mb-2 text-[11px] uppercase text-emerald-600 dark:text-emerald-300">
+                        <h4 className="font-bold mb-2 text-sm text-emerald-600 dark:text-emerald-300">
                             Strong matches
                         </h4>
                         <Chips items={fit.strongMatches} tone="emerald" />
@@ -102,7 +102,7 @@ function JobFitCard({ job, profile }: { job: Job; profile: CareerProfileData }) 
                 )}
                 {fit.missingSkills.length > 0 && (
                     <div>
-                        <h4 className="font-mono-label mb-2 text-[11px] uppercase text-amber-600 dark:text-amber-300">
+                        <h4 className="font-bold mb-2 text-sm text-amber-600 dark:text-amber-300">
                             Missing skills
                         </h4>
                         <Chips items={fit.missingSkills} tone="amber" />
@@ -113,7 +113,7 @@ function JobFitCard({ job, profile }: { job: Job; profile: CareerProfileData }) 
             {/* Explainability is mandatory — always render both reason columns. */}
             <div className="mt-5 grid gap-4 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] p-4 sm:grid-cols-2">
                 <div>
-                    <h4 className="font-mono-label mb-2 text-[11px] uppercase text-emerald-600 dark:text-emerald-300">
+                    <h4 className="font-bold mb-2 text-sm text-emerald-600 dark:text-emerald-300">
                         What helped
                     </h4>
                     {fit.whatHelped.length > 0 ? (
@@ -123,7 +123,7 @@ function JobFitCard({ job, profile }: { job: Job; profile: CareerProfileData }) 
                     )}
                 </div>
                 <div>
-                    <h4 className="font-mono-label mb-2 text-[11px] uppercase text-rose-600 dark:text-rose-300">
+                    <h4 className="font-bold mb-2 text-sm text-rose-600 dark:text-rose-300">
                         What reduced
                     </h4>
                     {fit.whatReduced.length > 0 ? (
@@ -140,11 +140,11 @@ function JobFitCard({ job, profile }: { job: Job; profile: CareerProfileData }) 
                         <BookOpenIcon size={16} />
                     </span>
                     <div>
-                        <h4 className="font-mono-label text-[11px] uppercase text-[var(--text-muted)]">
+                        <h4 className="font-bold text-sm text-[var(--text-muted)]">
                             Suggested learning
                         </h4>
                         <p className="mt-0.5 text-sm text-[var(--text)]">
-                            {fit.suggestedLearning.join(" · ")}
+                            {fit.suggestedLearning.join(", ")}
                         </p>
                     </div>
                 </div>

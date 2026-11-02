@@ -1,0 +1,151 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-01T12:00:00Z",
+  "title": "Design System: TrackIQ",
+  "extensions": {
+    "colorMeta": {
+      "ultramarine": { "role": "primary", "displayName": "Field Ultramarine", "canonical": "#2f3bff", "tonalRamp": ["oklch(15% 0.07 268)", "oklch(25% 0.13 268)", "oklch(35% 0.19 268)", "oklch(45% 0.25 268)", "oklch(55% 0.22 268)", "oklch(68% 0.15 268)", "oklch(82% 0.08 268)", "oklch(95% 0.02 268)"] },
+      "ultramarine-dark": { "role": "primary", "displayName": "Field Ultramarine (dark theme)", "canonical": "#3440ff" },
+      "ultramarine-text-dark": { "role": "primary", "displayName": "Ultramarine Text (dark theme)", "canonical": "#9da3ff" },
+      "on-ultramarine": { "role": "neutral", "displayName": "On Field White", "canonical": "#ffffff" },
+      "on-ultramarine-muted": { "role": "primary", "displayName": "Field Mist", "canonical": "#dfe1ff" },
+      "paper": { "role": "neutral", "displayName": "Cool Paper", "canonical": "#f7f7f4", "tonalRamp": ["oklch(15% 0.004 105)", "oklch(25% 0.004 105)", "oklch(37% 0.005 105)", "oklch(50% 0.006 105)", "oklch(63% 0.006 105)", "oklch(76% 0.006 105)", "oklch(87% 0.006 105)", "oklch(97.5% 0.004 105)"] },
+      "paper-2": { "role": "neutral", "displayName": "Paper Shade", "canonical": "#ecece6" },
+      "surface": { "role": "neutral", "displayName": "Sheet White", "canonical": "#ffffff" },
+      "ink": { "role": "neutral", "displayName": "Press Ink", "canonical": "#111111" },
+      "ink-muted": { "role": "neutral", "displayName": "Muted Ink", "canonical": "#4a4a45" },
+      "hairline": { "role": "neutral", "displayName": "Hairline", "canonical": "#cfcfc8" },
+      "paper-dark": { "role": "neutral", "displayName": "Cool Paper (dark theme)", "canonical": "#0e0e0e" },
+      "paper-2-dark": { "role": "neutral", "displayName": "Paper Shade (dark theme)", "canonical": "#1a1a19" },
+      "surface-dark": { "role": "neutral", "displayName": "Sheet (dark theme)", "canonical": "#171716" },
+      "ink-dark": { "role": "neutral", "displayName": "Press Ink (dark theme)", "canonical": "#f2f2ee" },
+      "ink-muted-dark": { "role": "neutral", "displayName": "Muted Ink (dark theme)", "canonical": "#a9a9a2" },
+      "hairline-dark": { "role": "neutral", "displayName": "Hairline (dark theme)", "canonical": "#34342f" }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "One h1 per page; flush-left, measure capped in ch." },
+      "headline": { "displayName": "Headline", "purpose": "Section h2s." },
+      "numeral": { "displayName": "Numeral", "purpose": "Scores, totals, prices, ranks, counts; tabular lining, 112% width." },
+      "title": { "displayName": "Title", "purpose": "Plan names, engine names, privacy section heads, h3s." },
+      "body": { "displayName": "Body", "purpose": "Ledes and reading text, 30-40rem measure." },
+      "body-ui": { "displayName": "Body UI", "purpose": "Nav, form labels, diagram column labels, footer links." },
+      "label": { "displayName": "Label", "purpose": "Small data labels in diagrams and tables; sentence case, untracked, never a kicker." }
+    },
+    "shadows": [],
+    "motion": [
+      { "name": "ease-control", "value": "160ms cubic-bezier(0.23, 1, 0.32, 1)", "purpose": "Button background, colour, border and press transitions." },
+      { "name": "press-scale", "value": "transform: scale(0.97)", "purpose": "Active, enabled buttons." },
+      { "name": "entry-draw", "value": "900ms cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "One-time scaleY / scaleX bar growth and numeral ticks; 110ms stagger per column." },
+      { "name": "rank-spring", "value": "spring stiffness 380, damping 38, mass 0.9", "purpose": "What-if row re-order (framer-motion layout)." },
+      { "name": "bar-rescale", "value": "300ms cubic-bezier(0.23, 1, 0.32, 1) on transform, background-color", "purpose": "What-if score bars re-scaling." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "xl", "value": "1280px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The ultramarine call to action; square, 2px, flat.",
+      "html": "<button class=\"ds-btn ds-btn-primary\">Get started free</button>",
+      "css": ".ds-btn { display: inline-flex; min-height: 3rem; align-items: center; justify-content: center; gap: 0.6rem; border: 2px solid transparent; border-radius: 0; padding: 0.75rem 1.4rem; font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-size: 1rem; font-weight: 700; line-height: 1.1; cursor: pointer; transition: background-color 160ms cubic-bezier(0.23,1,0.32,1), color 160ms cubic-bezier(0.23,1,0.32,1), border-color 160ms cubic-bezier(0.23,1,0.32,1), transform 160ms cubic-bezier(0.23,1,0.32,1); } .ds-btn:active:not(:disabled) { transform: scale(0.97); } .ds-btn:focus-visible { outline: 2px solid #2f3bff; outline-offset: 3px; } .ds-btn-primary { background: #2f3bff; border-color: #2f3bff; color: #ffffff; } @media (hover: hover) and (pointer: fine) { .ds-btn-primary:hover:not(:disabled) { background: #111111; border-color: #111111; color: #f7f7f4; } }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "2px ink outline on paper; the companion action.",
+      "html": "<button class=\"ds-btn2\">Open the live demo</button>",
+      "css": ".ds-btn2 { display: inline-flex; min-height: 3rem; align-items: center; justify-content: center; border: 2px solid #111111; border-radius: 0; background: transparent; color: #111111; padding: 0.75rem 1.4rem; font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-size: 1rem; font-weight: 700; line-height: 1.1; cursor: pointer; transition: background-color 160ms cubic-bezier(0.23,1,0.32,1), color 160ms cubic-bezier(0.23,1,0.32,1), transform 160ms cubic-bezier(0.23,1,0.32,1); } .ds-btn2:active:not(:disabled) { transform: scale(0.97); } .ds-btn2:focus-visible { outline: 2px solid #2f3bff; outline-offset: 3px; } @media (hover: hover) and (pointer: fine) { .ds-btn2:hover:not(:disabled) { background: #111111; color: #f7f7f4; } }"
+    },
+    {
+      "name": "Inverse Buttons on the Field",
+      "kind": "button",
+      "refersTo": "button-inverse",
+      "description": "Inverse and outline-inverse pair used on the ultramarine CTA band and Pro column.",
+      "html": "<div class=\"ds-field-band\"><button class=\"ds-btn-inv\">Get started free</button><button class=\"ds-btn-oinv\">Try the live demo</button></div>",
+      "css": ".ds-field-band { display: flex; gap: 0.75rem; flex-wrap: wrap; background: #2f3bff; padding: 2rem; } .ds-btn-inv, .ds-btn-oinv { min-height: 3rem; border: 2px solid #ffffff; border-radius: 0; padding: 0.75rem 1.4rem; font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-size: 1rem; font-weight: 700; cursor: pointer; transition: background-color 160ms cubic-bezier(0.23,1,0.32,1), color 160ms cubic-bezier(0.23,1,0.32,1), border-color 160ms cubic-bezier(0.23,1,0.32,1), transform 160ms cubic-bezier(0.23,1,0.32,1); } .ds-btn-inv { background: #ffffff; color: #111111; } .ds-btn-oinv { background: transparent; color: #ffffff; } .ds-btn-inv:active, .ds-btn-oinv:active { transform: scale(0.97); } .ds-btn-inv:focus-visible, .ds-btn-oinv:focus-visible { outline: 2px solid #ffffff; outline-offset: 3px; } @media (hover: hover) and (pointer: fine) { .ds-btn-inv:hover { background: #111111; border-color: #111111; color: #ffffff; } .ds-btn-oinv:hover { background: #ffffff; color: #111111; } }"
+    },
+    {
+      "name": "Navigation Bar",
+      "kind": "nav",
+      "refersTo": "nav",
+      "description": "Sticky 64px paper bar with a 2px ink bottom rule, wide wordmark, underline states.",
+      "html": "<header class=\"ds-nav\"><span class=\"ds-nav-mark\">TrackIQ</span><nav class=\"ds-nav-links\"><a href=\"#\" aria-current=\"page\">How scoring works</a><a href=\"#\">Engines</a><a href=\"#\">Pricing</a><a href=\"#\">Demo</a></nav><a class=\"ds-nav-cta\" href=\"#\">Get started</a></header>",
+      "css": ".ds-nav { display: flex; align-items: center; gap: 2.5rem; height: 4rem; padding: 0 1.5rem; background: #f7f7f4; border-bottom: 2px solid #111111; font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; } .ds-nav-mark { font-size: 1.375rem; font-weight: 800; letter-spacing: -0.04em; font-stretch: 112%; color: #111111; } .ds-nav-links { display: flex; gap: 1.75rem; flex: 1; } .ds-nav-links a { font-size: 0.9375rem; font-weight: 600; color: #4a4a45; text-decoration: none; text-decoration-thickness: 2px; text-underline-offset: 0.35em; transition: color 150ms; } .ds-nav-links a[aria-current] { color: #111111; text-decoration: underline; text-decoration-color: #2f3bff; } .ds-nav-links a:focus-visible, .ds-nav-cta:focus-visible { outline: 2px solid #2f3bff; outline-offset: 3px; } .ds-nav-cta { min-height: 2.75rem; display: inline-flex; align-items: center; padding: 0.5rem 1rem; background: #2f3bff; color: #fff; font-weight: 700; font-size: 0.9375rem; text-decoration: none; border: 2px solid #2f3bff; } @media (hover: hover) and (pointer: fine) { .ds-nav-links a:hover { color: #111111; text-decoration: underline; } .ds-nav-cta:hover { background: #111111; border-color: #111111; } }"
+    },
+    {
+      "name": "Range Weight",
+      "kind": "input",
+      "refersTo": "range",
+      "description": "What-if weight slider: 2px ink track, 18px square thumb, tabular output.",
+      "html": "<div class=\"ds-range-row\"><label for=\"ds-w\">Base salary</label><output>25</output></div><input id=\"ds-w\" class=\"ds-range\" type=\"range\" min=\"0\" max=\"50\" step=\"5\" value=\"25\">",
+      "css": ".ds-range-row { display: flex; justify-content: space-between; align-items: baseline; font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; color: #111111; } .ds-range-row label { font-size: 0.9375rem; font-weight: 600; } .ds-range-row output { font-size: 1.125rem; font-weight: 800; letter-spacing: -0.04em; font-variant-numeric: tabular-nums lining-nums; } .ds-range { -webkit-appearance: none; appearance: none; width: 100%; height: 2.75rem; background: transparent; cursor: pointer; } .ds-range::-webkit-slider-runnable-track { height: 2px; background: #111111; } .ds-range::-moz-range-track { height: 2px; background: #111111; } .ds-range::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; margin-top: -8px; border: 0; background: #111111; } .ds-range::-moz-range-thumb { width: 18px; height: 18px; border: 0; border-radius: 0; background: #111111; } .ds-range:focus-visible { outline: none; } .ds-range:focus-visible::-webkit-slider-thumb, .ds-range:active::-webkit-slider-thumb { background: #2f3bff; } .ds-range:focus-visible::-moz-range-thumb, .ds-range:active::-moz-range-thumb { background: #2f3bff; }"
+    },
+    {
+      "name": "Total Field",
+      "kind": "card",
+      "refersTo": "total-field",
+      "description": "The ultramarine field that ends the score waterfall: label, display numeral, summary.",
+      "html": "<div class=\"ds-total\"><span class=\"ds-total-label\">Score out of 100</span><span class=\"ds-total-num\">82</span><span class=\"ds-total-sum\">Strong match on skills and seniority.</span></div>",
+      "css": ".ds-total { display: flex; flex-direction: column; justify-content: space-between; gap: 1.5rem; width: 18rem; min-height: 16rem; padding: 1.75rem; background: #2f3bff; color: #ffffff; font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; } .ds-total-label { font-size: 0.875rem; font-weight: 700; color: #dfe1ff; } .ds-total-num { font-size: 8rem; font-weight: 800; letter-spacing: -0.04em; line-height: 0.78; font-stretch: 112%; font-variant-numeric: tabular-nums lining-nums; } .ds-total-sum { font-size: 0.875rem; line-height: 1.375; color: #dfe1ff; }"
+    },
+    {
+      "name": "Gain and Loss Bars",
+      "kind": "custom",
+      "refersTo": "waterfall-bar",
+      "description": "Solid ink gain bar and outlined, hatched loss bar with signed tabular numerals.",
+      "html": "<div class=\"ds-bars\"><div class=\"ds-bar-col\"><span class=\"ds-bar-num\">+24</span><span class=\"ds-bar ds-gain\"></span></div><div class=\"ds-bar-col\"><span class=\"ds-bar-num\">−8</span><span class=\"ds-bar ds-loss\"></span></div></div>",
+      "css": ".ds-bars { display: flex; gap: 1.5rem; align-items: flex-end; border-bottom: 2px solid #111111; padding-top: 1rem; font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; color: #111111; } .ds-bar-col { display: flex; flex-direction: column; width: 5rem; } .ds-bar-num { font-size: 2rem; font-weight: 800; letter-spacing: -0.04em; line-height: 1; margin-bottom: 0.375rem; font-variant-numeric: tabular-nums lining-nums; } .ds-bar { display: block; } .ds-gain { height: 6rem; background: #111111; } .ds-loss { height: 2.5rem; border: 2px solid currentColor; background-image: repeating-linear-gradient(-45deg, currentColor 0 1.5px, transparent 1.5px 7px); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Score Sheet",
+    "overview": "TrackIQ never puts a number on screen without its reasons, so the public pages are set as Swiss information design. The mechanism itself is the image: a real job-fit score is drawn as a waterfall of signed contributions on the grid, and it ends in an ultramarine field that holds the total. Paper and ink carry the page. One committed ultramarine shows up as whole fields (the total column, the closing call-to-action band, the Pro column), never as small accents scattered around.\n\nType does the work that decoration does elsewhere. One heavy grotesk (Archivo, with a variable width axis) is set flush-left and tight, at poster sizes for headlines and numerals. Structure comes from 2px ink rules and a 12-column grid. Corners are square. There are no gradient fills, glows, blur, glass or shadows. Depth is never simulated: sections are separated by rules, and when emphasis is needed a section inverts (ink band or ultramarine field).\n\nMotion is used once, on entry, and only where it explains something. Bars grow from the baseline, numerals count up, and ranked rows in the what-if simulator re-order on a damped spring. Nothing floats, loops or parallaxes.",
+    "keyCharacteristics": [
+      "Paper (#f7f7f4) and ink (#111111), with one ultramarine (#2f3bff) used as a field.",
+      "Archivo at weight 800 with -0.04em tracking for display and numerals. Numerals sit at 112% width.",
+      "2px ink rules as the primary structural device; 1px hairlines between list rows.",
+      "Square corners everywhere (0px radius).",
+      "Gains drawn as solid ink bars and losses as outlined, hatched bars, so a value's sign never depends on colour alone.",
+      "Light and dark themes. Dark inverts paper and ink but keeps the ultramarine field."
+    ],
+    "rules": [
+      { "name": "The One Field Rule", "body": "Ultramarine is applied as an area (a column, a band, a cell run), not as decoration. If it covers less than a full grid cell, it has to be carrying state (focus, the moved rank, the active link underline).", "section": "colors" },
+      { "name": "The Remap Rule", "body": "Inside `.grid-world`, the shared tokens (`--bg`, `--surface`, `--text`, `--accent`, `--border`, `--glass-*`, `--hero-glow`) are remapped to paper, ink and ultramarine. Glass and glow helpers are flattened (no backdrop-filter, no gradient hairline, no orb, no hero gradient). Reused dashboard components therefore pick up the grid world's colours, but they keep their own shapes until the dashboard redesign.", "section": "colors" },
+      { "name": "The One Face Rule", "body": "Every role on the public pages uses Archivo. No mono, no second display face, no system display fallback by choice.", "section": "typography" },
+      { "name": "The Plain Label Rule", "body": "Labels are sentence case and untracked. No uppercase with letter-spacing, no mono labels, and no small label stacked above a headline.", "section": "typography" },
+      { "name": "The Tabular Numeral Rule", "body": "Every figure that can be compared uses tabular lining numerals at weight 800, so columns of numbers align.", "section": "typography" },
+      { "name": "The Rule-Not-Box Rule", "body": "Group content with a 2px rule above it, not by enclosing it. The only fully bordered container is the two-up pricing plan grid (2px ink).", "section": "layout" },
+      { "name": "The Flat Sheet Rule", "body": "If a surface needs to stand out, invert it or fill it. Never lift it. The hatch is drawn with a repeating linear gradient, but it is a pattern rather than a gradient fill, and it is a native device of this world.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do wrap every public surface in `MarketingShell` so it inherits `.grid-world` tokens, focus, selection and the flattened helpers.",
+      "Do set headlines in Archivo 800 at -0.04em and 0.9 line-height, flush-left, with the measure capped in ch.",
+      "Do use ultramarine (#2f3bff) as a whole field: a total, a CTA band, a plan column.",
+      "Do separate sections and group content with 2px ink rules, and divide rows with 1px hairlines.",
+      "Do draw losses as outlined, hatched bars and gains as solid ink, so sign never depends on colour.",
+      "Do keep labels sentence case and untracked, in the body face (0.875rem, 700).",
+      "Do give buttons press feedback with scale(0.97), and wrap every hover in `(hover: hover) and (pointer: fine)`.",
+      "Do animate only transform and opacity, once on entry, and honour reduced motion.",
+      "Do send one `role=\"status\"` announcement per meaningful change (the what-if re-rank), not one per input step.",
+      "Do compute every number shown on a public page with the real engine on demo data."
+    ],
+    "donts": [
+      "Don't use gradient fills, glass, backdrop blur, glows, orbs or box-shadows in the grid world. The hatch pattern is the only exception.",
+      "Don't round corners. Radius is 0px.",
+      "Don't set labels in uppercase with letter-spacing, in mono, or as a kicker or eyebrow above a heading.",
+      "Don't build meta strings joined with middle dots. Write a sentence or use separate elements.",
+      "Don't add arrow or chevron icons to CTAs.",
+      "Don't wrap cards in cards or put icons on coloured tiles.",
+      "Don't introduce a second typeface on public pages (no Geist, Inter or JetBrains Mono).",
+      "Don't spend ultramarine on small decorative accents. When it is smaller than a field, it means state.",
+      "Don't animate width, height or position, and don't loop or float anything."
+    ]
+  }
+}

@@ -37,7 +37,7 @@ export function useNotes() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(input),
         });
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data.error || "Failed to create note");
         setNotes((prev) => [data, ...prev]);
         return data;
@@ -50,7 +50,7 @@ export function useNotes() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(input),
             });
-            const data = await res.json();
+            const data = await res.json().catch(() => ({}));
             if (!res.ok) throw new Error(data.error || "Failed to update note");
             setNotes((prev) => prev.map((n) => (n._id === id ? data : n)));
             return data;
