@@ -81,7 +81,7 @@ Use **Problem → Solution → Architecture → Hardest part → Result**.
    full-stack roles: billing correctness under out-of-order webhooks (§12.11)
    or explainable normalized scoring (§7.1). Tell it as a story with a
    decision and a trade-off.
-5. **Result (15s).** Built to deploy on Vercel, with the AI service on Render (say "deployed" only for what is live and you can show);
+5. **Result (15s).** Live on Vercel, with the AI service live on Render (have a job with notes ready and click Prep in the demo);
    about 430 app tests, 66 Python tests and Playwright browser tests; CI green
    on `main`; a security audit with fixes; error monitoring. Quote eval
    numbers (§20.7) once you have run them. Only say "it's live" for parts that
