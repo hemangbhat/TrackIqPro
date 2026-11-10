@@ -133,7 +133,18 @@ class UserStore:
         listed = [item.id for page in pages for item in page.vectors]
         ids = list(dict.fromkeys([*extra_ids, *listed]))
         for batch in _batches(ids):
-            self._index.delete(ids=batch, namespace=self._namespace)
+            try:
+                self._index.delete(ids=batch, namespace=self._namespace)
+            except Exception as exc:
+                # A namespace that has never held a vector doesn't exist yet, and
+                # Pinecone answers 404: there is nothing to delete, so that's success.
+                if _is_not_found(exc):
+                    return
+                raise
+
+
+def _is_not_found(exc: Exception) -> bool:
+    return type(exc).__name__ == "NotFoundError" or getattr(exc, "status", None) == 404
 
 
 @lru_cache

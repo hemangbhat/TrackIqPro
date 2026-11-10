@@ -167,4 +167,19 @@ Metrics:
 - **groundedness**: share of output items an LLM judge says are supported by the text they cite.
 - **insufficient correct**: share of cases where the service said "not enough data" exactly when expected. Notes from other jobs are always retrieved, so this measures whether the model declines when the retrieved notes do not support prep.
 
-No results recorded yet — run `python -m evals.run` with API keys set.
+### Retrieval experiment (chunk size × k)
+
+`python -m evals.sweep` re-indexes the fixtures at several chunk sizes (each in
+its own `eval-sweep-<size>` namespace, keeping the production overlap ratio) and
+measures recall@k and hit rate for each k with the production two-pass
+`retrieve()`. It uses embeddings only, so a full sweep costs well under a cent, and it
+deletes its vectors afterwards. Results go to `evals/results/sweep-<timestamp>.json`.
+
+    python -m evals.sweep                                  # 400,800,1200 × k 3,6,10
+    python -m evals.sweep --chunk-sizes 300,800 --ks 6
+
+Use it to justify `CHUNK_SIZE` and `k` with data: if a different setting wins,
+change it, re-run `evals.run` for groundedness, and record both runs below.
+
+No results recorded yet. Run `python -m evals.sweep`, then `python -m evals.run`,
+with API keys set.

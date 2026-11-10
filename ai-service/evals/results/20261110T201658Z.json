@@ -1,0 +1,331 @@
+{
+  "timestamp": "20261110T201658Z",
+  "k": 6,
+  "chunk_size": 800,
+  "chunk_overlap": 100,
+  "chat_model": "gpt-4o-mini",
+  "averages": {
+    "recall": 0.7352941176470589,
+    "hitRate": 0.9411764705882353,
+    "citationValidity": 1.0,
+    "groundedness": 0.7540632570044334,
+    "insufficientCorrect": 1.0
+  },
+  "cases": [
+    {
+      "id": "northwind-caching",
+      "recall": 1.0,
+      "hit": true,
+      "citationValidity": 1.0,
+      "groundedness": 0.7692307692307693,
+      "insufficientCorrect": true,
+      "retrievedSourceIds": [
+        "job_northwind",
+        "note_nw_sysdesign",
+        "note_nw_postgres",
+        "note_nw_debrief",
+        "note_nw_phone",
+        "note_free_cache",
+        "note_bw_pairing",
+        "note_lumen_cache",
+        "note_orb_sysdesign",
+        "note_ke_infra",
+        "note_bw_takehome"
+      ]
+    },
+    {
+      "id": "northwind-behavioral",
+      "recall": 0.0,
+      "hit": false,
+      "citationValidity": 1.0,
+      "groundedness": 0.4444444444444444,
+      "insufficientCorrect": true,
+      "retrievedSourceIds": [
+        "job_northwind",
+        "note_nw_sysdesign",
+        "note_nw_phone",
+        "note_nw_debrief",
+        "note_nw_postgres",
+        "note_ke_phone",
+        "note_mer_feedback",
+        "note_bw_pairing",
+        "note_mer_panel",
+        "note_lumen_phone"
+      ]
+    },
+    {
+      "id": "northwind-postgres",
+      "recall": 1.0,
+      "hit": true,
+      "citationValidity": 1.0,
+      "groundedness": 0.7272727272727273,
+      "insufficientCorrect": true,
+      "retrievedSourceIds": [
+        "job_northwind",
+        "note_nw_postgres",
+        "note_nw_sysdesign",
+        "note_nw_debrief",
+        "note_nw_phone",
+        "note_mer_sql",
+        "note_bw_takehome"
+      ]
+    },
+    {
+      "id": "northwind-general",
+      "recall": 1.0,
+      "hit": true,
+      "citationValidity": 1.0,
+      "groundedness": 1.0,
+      "insufficientCorrect": true,
+      "retrievedSourceIds": [
+        "job_northwind",
+        "note_nw_sysdesign",
+        "note_nw_postgres",
+        "note_nw_phone",
+        "note_nw_debrief"
+      ]
+    },
+    {
+      "id": "lumen-api",
+      "recall": 1.0,
+      "hit": true,
+      "citationValidity": 1.0,
+      "groundedness": 0.9230769230769231,
+      "insufficientCorrect": true,
+      "retrievedSourceIds": [
+        "job_lumen",
+        "note_lumen_api",
+        "note_lumen_cache",
+        "note_lumen_phone",
+        "note_lumen_behavioral"
+      ]
+    },
+    {
+      "id": "lumen-mentoring",
+      "recall": 0.5,
+      "hit": true,
+      "citationValidity": 1.0,
+      "groundedness": 0.6,
+      "insufficientCorrect": true,
+      "retrievedSourceIds": [
+        "job_lumen",
+        "note_lumen_behavioral",
+        "note_lumen_phone",
+        "note_lumen_api",
+        "note_lumen_cache",
+        "note_bw_pairing",
+        "note_bw_culture"
+      ]
+    },
+    {
+      "id": "lumen-search-perf",
+      "recall": 0.5,
+      "hit": true,
+      "citationValidity": 1.0,
+      "groundedness": 0.8,
+      "insufficientCorrect": true,
+      "retrievedSourceIds": [
+        "job_lumen",
+        "note_lumen_cache",
+        "note_lumen_api",
+        "note_lumen_phone",
+        "note_lumen_behavioral",
+        "note_bw_pairing",
+        "note_nw_sysdesign",
+        "note_ke_infra"
+      ]
+    },
+    {
+      "id": "orbital-sysdesign",
+      "recall": 0.5,
+      "hit": true,
+      "citationValidity": 1.0,
+      "groundedness": 0.7272727272727273,
+      "insufficientCorrect": true,
+      "retrievedSourceIds": [
+        "job_orbital",
+        "note_orb_sysdesign",
+        "note_orb_arch",
+        "note_orb_coding",
+        "note_orb_leadership",
+        "note_lumen_api",
+        "note_nw_sysdesign",
+        "note_ke_phone"
+      ]
+    },
+    {
+      "id": "orbital-leadership",
+      "recall": 0.5,
+      "hit": true,
+      "citationValidity": 1.0,
+      "groundedness": 0.8888888888888888,
+      "insufficientCorrect": true,
+      "retrievedSourceIds": [
+        "job_orbital",
+        "note_orb_leadership",
+        "note_orb_arch",
+        "note_orb_coding",
+        "note_orb_sysdesign",
+        "note_ke_phone",
+        "note_mer_feedback",
+        "note_nw_behavioral",
+        "note_lumen_behavioral",
+        "note_nw_phone",
+        "note_bw_culture"
+      ]
+    },
+    {
+      "id": "orbital-coding",
+      "recall": 1.0,
+      "hit": true,
+      "citationValidity": 1.0,
+      "groundedness": 0.8,
+      "insufficientCorrect": true,
+      "retrievedSourceIds": [
+        "job_orbital",
+        "note_orb_coding",
+        "note_orb_arch",
+        "note_orb_leadership",
+        "note_orb_sysdesign",
+        "note_ke_phone"
+      ]
+    },
+    {
+      "id": "brightwave-perf",
+      "recall": 1.0,
+      "hit": true,
+      "citationValidity": 1.0,
+      "groundedness": 1.0,
+      "insufficientCorrect": true,
+      "retrievedSourceIds": [
+        "job_brightwave",
+        "note_bw_takehome",
+        "note_bw_pairing",
+        "note_bw_culture"
+      ]
+    },
+    {
+      "id": "brightwave-caching",
+      "recall": 0.5,
+      "hit": true,
+      "citationValidity": 1.0,
+      "groundedness": 0.6666666666666666,
+      "insufficientCorrect": true,
+      "retrievedSourceIds": [
+        "job_brightwave",
+        "note_bw_pairing",
+        "note_bw_takehome",
+        "note_bw_culture",
+        "note_nw_sysdesign",
+        "note_ke_infra"
+      ]
+    },
+    {
+      "id": "brightwave-feedback",
+      "recall": 0.5,
+      "hit": true,
+      "citationValidity": 1.0,
+      "groundedness": 0.5833333333333334,
+      "insufficientCorrect": true,
+      "retrievedSourceIds": [
+        "job_brightwave",
+        "note_bw_culture",
+        "note_bw_takehome",
+        "note_bw_pairing",
+        "note_mer_panel"
+      ]
+    },
+    {
+      "id": "kestrel-cdn",
+      "recall": 1.0,
+      "hit": true,
+      "citationValidity": 1.0,
+      "groundedness": 0.6666666666666666,
+      "insufficientCorrect": true,
+      "retrievedSourceIds": [
+        "job_kestrel",
+        "note_ke_infra",
+        "note_ke_phone",
+        "note_ke_incident",
+        "note_orb_sysdesign",
+        "note_nw_sysdesign",
+        "note_bw_pairing",
+        "note_free_cache"
+      ]
+    },
+    {
+      "id": "kestrel-incident",
+      "recall": 0.5,
+      "hit": true,
+      "citationValidity": 1.0,
+      "groundedness": 0.6666666666666666,
+      "insufficientCorrect": true,
+      "retrievedSourceIds": [
+        "job_kestrel",
+        "note_ke_incident",
+        "note_ke_phone",
+        "note_ke_infra",
+        "note_orb_leadership",
+        "note_mer_panel",
+        "note_nw_phone",
+        "note_lumen_behavioral"
+      ]
+    },
+    {
+      "id": "meridian-stakeholders",
+      "recall": 1.0,
+      "hit": true,
+      "citationValidity": 1.0,
+      "groundedness": 0.6666666666666666,
+      "insufficientCorrect": true,
+      "retrievedSourceIds": [
+        "job_meridian",
+        "note_mer_panel",
+        "note_mer_feedback",
+        "note_mer_sql"
+      ]
+    },
+    {
+      "id": "meridian-sql",
+      "recall": 1.0,
+      "hit": true,
+      "citationValidity": 1.0,
+      "groundedness": 0.8888888888888888,
+      "insufficientCorrect": true,
+      "retrievedSourceIds": [
+        "job_meridian",
+        "note_mer_sql",
+        "note_mer_panel",
+        "note_mer_feedback",
+        "note_nw_postgres"
+      ]
+    },
+    {
+      "id": "tessellate-finetuning",
+      "recall": null,
+      "hit": null,
+      "citationValidity": 1.0,
+      "groundedness": null,
+      "insufficientCorrect": true,
+      "retrievedSourceIds": []
+    },
+    {
+      "id": "fernhill-swift",
+      "recall": null,
+      "hit": null,
+      "citationValidity": 1.0,
+      "groundedness": null,
+      "insufficientCorrect": true,
+      "retrievedSourceIds": []
+    },
+    {
+      "id": "tessellate-kubernetes",
+      "recall": null,
+      "hit": null,
+      "citationValidity": 1.0,
+      "groundedness": null,
+      "insufficientCorrect": true,
+      "retrievedSourceIds": []
+    }
+  ]
+}

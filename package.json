@@ -11,7 +11,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "load-test": "node scripts/load-test.mjs"
+    "load-test": "node scripts/load-test.mjs",
+    "usage-report": "node scripts/usage-report.mjs"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.28.1",

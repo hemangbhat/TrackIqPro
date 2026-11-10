@@ -25,6 +25,13 @@ If the sources do not contain enough to prepare the candidate, set insufficientD
 and return empty lists."""
 
 
+# Cosine-similarity floor for notes from OTHER jobs (text-embedding-3-small).
+# Chosen from the eval's score distribution: relevant cross-job notes scored
+# 0.396-0.474, and every chunk in the "not enough data" cases scored <= 0.395.
+# Model-specific: re-measure it if the embedding model changes.
+MIN_OTHER_NOTE_SCORE = 0.40
+
+
 def retrieve(store: UserStore, req: PrepRequest, k: int = 6) -> list[RetrievedChunk]:
     """Two passes: everything about this job, then the user's notes from OTHER jobs
     (past interview experience carries over). Pass-1 chunks come first."""
@@ -33,6 +40,9 @@ def retrieve(store: UserStore, req: PrepRequest, k: int = 6) -> list[RetrievedCh
     other_notes = store.query(
         text, k, {"$and": [{"jobId": {"$ne": req.jobId}}, {"sourceType": {"$eq": "note"}}]}
     )
+    # Pass 2 always returns k notes, however unrelated, and the model would use
+    # them. Keep only reasonably similar ones (see MIN_OTHER_NOTE_SCORE).
+    other_notes = [c for c in other_notes if c.score >= MIN_OTHER_NOTE_SCORE]
     seen: set[str] = set()
     chunks = []
     for chunk in this_job + other_notes:

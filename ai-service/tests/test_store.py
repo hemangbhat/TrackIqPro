@@ -185,6 +185,21 @@ class LaggingListIndex(FakeIndex):
         return iter(())
 
 
+def test_first_upsert_into_a_new_namespace_succeeds():
+    # Pinecone returns 404 "Namespace not found" when deleting from a namespace
+    # that has never held a vector; the pre-upsert cleanup must treat that as empty.
+    class NotFoundError(Exception):
+        status = 404
+
+    index = FakeIndex()
+
+    def delete(ids, namespace=""):
+        raise NotFoundError("Namespace not found")
+
+    index.delete = delete
+    assert store_for(index, "u1").upsert_sources([make_source("fresh note")]) == 1
+
+
 def test_delete_sources_does_not_depend_on_list():
     # An index call that raced an opt-out is undone by deleting its sources;
     # that delete must land even before the new vectors are listable.

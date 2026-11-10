@@ -42,6 +42,26 @@ def store(index):
     return UserStore(index, FakeEmbeddings(), "u1")
 
 
+def test_unrelated_notes_from_other_jobs_are_dropped(store, index):
+    # Pass 2 must not hand the model weakly related notes from other jobs: with
+    # nothing about this job and nothing similar elsewhere, the answer is
+    # "not enough data", without calling the model.
+    store.upsert_sources([source("note", "n2", "j2")])
+    original_query = index.query
+
+    def low_scores(**kwargs):
+        result = original_query(**kwargs)
+        for m in result["matches"]:
+            m["score"] = 0.2
+        return result
+
+    index.query = low_scores
+    chat = FakeChat(make_llm_prep())
+    assert retrieve(store, make_req()) == []
+    assert run_prep(store, chat, make_req()).insufficientData is True
+    assert chat.calls == 0
+
+
 def test_retrieve_runs_two_passes_with_expected_filters(store, index):
     store.upsert_sources(
         [

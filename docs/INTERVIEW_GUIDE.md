@@ -29,6 +29,7 @@ up and rehearse before the interview).
 17. [Numbers to have ready](#17-numbers-to-have-ready)
 18. [Things to avoid saying](#18-things-to-avoid-saying)
 19. [One-page cheat sheet](#19-one-page-cheat-sheet)
+20. [AI Interview Prep Copilot — deep dive](#20-ai-interview-prep-copilot--deep-dive)
 
 ---
 
@@ -41,15 +42,23 @@ up and rehearse before the interview).
 > shows its work, so you can see *why* an offer ranks first and what would
 > change it.
 >
+> On top of that there's an opt-in AI interview prep copilot: a separate
+> Python service that does retrieval-augmented generation over *your own* job
+> descriptions and notes, with every suggestion cited and an eval suite that
+> measures retrieval recall and groundedness.
+>
 > It's Next.js 15 and TypeScript on MongoDB, with Clerk auth, Stripe
 > subscriptions where plans change only through verified webhooks, Upstash
-> rate limiting, Resend email, and a Vercel cron for reminder digests. It has
-> 260 tests including property-based tests, and CI runs lint, typecheck,
-> tests, and a production build on every push."
+> rate limiting, Resend email, and a Vercel cron for reminder digests; the AI
+> service is FastAPI, LangChain, OpenAI and Pinecone. It has about 430 app
+> tests, 66 Python tests and Playwright browser tests, and CI runs lint,
+> typecheck, tests, security audits and a production build on every push."
 
 Then stop and let them pick a thread. The pitch plants hooks (explainable
-engines, webhook-only upgrades, property tests) that lead to your strongest
-deep dives.
+engines, cited RAG with evals, webhook-only upgrades, property tests) that
+lead to your strongest deep dives. For an AI-engineer role, lead with the
+copilot (§20) and keep the engines as the "I don't use AI where math is
+better" point.
 
 ---
 
@@ -67,12 +76,16 @@ Use **Problem → Solution → Architecture → Hardest part → Result**.
    models. Every route is wrapped in `withAuth`, so identity comes from the
    Clerk session, never the request. Engines are pure TypeScript in `lib/`,
    shared by the dashboard, the public demo, and the landing page.
-4. **Hardest part (40s).** Billing correctness (§12.1) or explainable
-   normalized scoring (§7.1). Tell it as a story with a decision and a
-   trade-off.
-5. **Result (15s).** Built to deploy on Vercel (cron in `vercel.json`); 260
-   tests; CI green on `main`; production hardening (rate limiting, signed
-   webhooks, cron with dedupe). Only say "it's live" once your deployment is.
+4. **Hardest part (40s).** For AI roles: keeping RAG answers honest and
+   private (§20: citation guard, per-user retrieval, consent races). For
+   full-stack roles: billing correctness under out-of-order webhooks (§12.11)
+   or explainable normalized scoring (§7.1). Tell it as a story with a
+   decision and a trade-off.
+5. **Result (15s).** Built to deploy on Vercel, with the AI service on Render (say "deployed" only for what is live and you can show);
+   about 430 app tests, 66 Python tests and Playwright browser tests; CI green
+   on `main`; a security audit with fixes; error monitoring. Quote eval
+   numbers (§20.7) once you have run them. Only say "it's live" for parts that
+   are.
 
 ---
 
@@ -96,10 +109,13 @@ domain logic.
 market; the candidate is underserved and makes the higher-stakes personal
 decision.
 
-**Why "explainable" instead of AI?** A score you can't question is a score you
-can't trust when the decision is your career. Deterministic engines are
-auditable, testable with properties, free to run, and private — nothing is
-sent to a third-party model.
+**Why "explainable" engines *and* an AI copilot?** A score you can't question
+is a score you can't trust when the decision is your career, so ranking and
+scoring are deterministic: auditable, property-tested, free to run, private.
+Language is where a model genuinely helps: turning a job description and
+months of messy interview notes into likely questions and a study plan. So
+AI is used only there, only after the user opts in, and every output item
+must cite one of the user's own sources or it's dropped (§20).
 
 **Why freemium at $9/mo Pro?** Free covers a casual search (10 applications);
 heavy users and people who want their data out (export) pay. It also made
@@ -157,8 +173,14 @@ signal too. Fallback: `/demo` needs no backend.
    └─ /api/cron/follow-up-reminders ← Vercel Cron 08:00 UTC daily,
                                       Bearer CRON_SECRET, Redis SET NX EX dedupe
 
+    ├─ /api/ai/prep|enable|status ──► AI service (FastAPI on Render)
+   │      X-AI-Service-Key (HMAC compare)    LangChain → OpenAI embeddings + chat
+   │      5 preps/day, consent flag          Pinecone (every query filtered by userId)
+   └─ job/note saves ── waitUntil ──► background re-index of what changed
+
  lib/  pure engines: scoring, offer-intelligence, career-fit, career-health,
        follow-up-intelligence, interview-reflection   (no I/O → unit-testable)
+ instrumentation*.ts  Sentry (off unless a DSN is set; bodies/PII scrubbed)
 ```
 
 ### 5.2 Folder structure
@@ -366,39 +388,55 @@ changing callers.
 |--------|-----------|-------|
 | Accessing another user's data (IDOR) | `userId` from session; every query `{ _id, userId }` → 404 if not yours | `lib/api-helpers.ts`, all routes |
 | Spoofed identity | Client never sends a user id; property test fuzzes client identity sources | `data-isolation.property.test.tsx` |
+| Signed-out access to pages | Clerk middleware with `await auth.protect()`; redirect to our own `/sign-in`; E2E-tested | `middleware.ts`, `e2e/` |
 | Fake payment upgrade | Upgrade only via signed webhook; status mapping fails closed | `stripe/webhook.ts`, `lib/plans.ts` |
-| Webhook forgery | Stripe signature on raw body; Svix for Clerk | webhook routes |
-| Mass assignment | Job updates whitelist editable fields; `_id`/`userId` stripped elsewhere | `jobs/[id].ts` |
-| Malformed input | ObjectId check → 400; profile input clamped and enum-checked | `[id]` routes, `career-profile.ts` |
-| Abuse / brute force | Tiered Upstash rate limits per user | `lib/rate-limit.ts` |
+| Out-of-order / replayed Stripe events | Every event re-fetches the subscription from Stripe; plan is bound to one subscription id | `stripe/webhook.ts`, `lib/stripe.ts` |
+| Webhook forgery | Stripe signature on raw body; Svix for Clerk; generic error text | webhook routes |
+| Mass assignment | Allowlist of editable fields on jobs and offers (blocks `$set`, `userId`); `userId` immutable | `jobs/[id].ts`, `offers/[id].ts` |
+| Malformed / oversized input | ObjectId check, length caps on every text field, http(s)-only links, 400 on validation errors | models, `[id]` routes |
+| Free-tier race | Re-count after insert and roll back the extra job | `jobs/index.ts` |
+| Abuse / brute force | Tiered Upstash rate limits per user, including an `ai` tier | `lib/rate-limit.ts` |
+| XSS / clickjacking | CSP allowlist (`default-src 'self'`, Clerk/Stripe only), `frame-ancestors 'none'`, nosniff, HSTS; React escaping, no raw-HTML sinks | `next.config.mjs` |
 | CSV / formula injection | Cells starting `= + - @` prefixed with `'` | `lib/csv.ts` |
-| Secret leakage | Client-safe `lib/plans.ts` split from server `lib/stripe.ts`; error details hidden in production | |
-| Unauthenticated cron | `CRON_SECRET` required; refuses to run if unset | cron route |
-| Billing portal hijack | Customer id read from DB, never the client | `stripe/portal.ts` |
-| Vulnerable dependencies | Next 15.5.28; 0 critical in prod audit; removed `xlsx` | `package.json` |
+| Unauthenticated cron | `CRON_SECRET` compared in constant time; refuses to run if unset | cron route |
+| Billing portal / redirect hijack | Customer id from DB; Stripe redirect URLs from config, never the `Origin` header | `stripe/portal.ts`, `lib/app-url.ts` |
+| Cross-tenant AI retrieval | One choke point (`UserStore`) adds a mandatory `userId` filter to every vector query; vector ids prefixed by user | `ai-service/app/store.py` |
+| LLM inventing facts | Citation guard in code drops any item without a real retrieved source | `ai-service/app/prep.py` |
+| AI spend abuse | 5 preps/day (atomic unique index), 10/min rate limit, token and time caps, request size caps | `lib/ai-usage.ts`, AI service |
+| Data after account deletion | Clerk `user.deleted` cancels Stripe subscriptions and erases every collection and the vectors; retries on failure | `lib/account-deletion.ts` |
+| Leaked secrets | A database password was found in git history → rotated; lesson: rotate first, history cleanup second | — |
+| Test code deployed as routes | Route tests moved out of `pages/`; a test fails if one returns | `test/no-tests-in-pages.test.ts` |
+| Vulnerable dependencies | CI fails on high/critical prod advisories; `pip-audit`; accepted risks documented with review dates | `.github/workflows/ci.yml`, `docs/SECURITY.md` |
+
+A full OWASP-style audit was run against the codebase (the security-audit
+skill in `.claude/skills/`); every lead it found is fixed in git history.
 
 ---
 
 ## 9. Testing and CI
 
-- **260 tests across 36 files** — Vitest, Testing Library, jsdom.
-- **Unit:** every engine, CSV, billing status mapping, ObjectId check, plan gate.
-- **Property-based (fast-check, 38 assertions):** offer scores stay in 0–100,
-  sorted, deterministic, `isBest` = argmax; filters return exactly the
-  matching subset, and sort is a stable permutation; plan gate never enables
-  Pro actions for Free; view-state yields exactly one state; light/dark
-  token parity; reduced motion disables animation; data isolation; nav
-  active-state.
-- **Component and integration:** drawers (focus trap, Escape), job table,
-  offer matrix including the export gate, pages, shell navigation, gated
-  action → pricing flow.
+- **About 430 app tests** (Vitest, Testing Library, jsdom) and **66 Python
+  tests** (pytest, with fake OpenAI/Pinecone clients, so they run offline).
+- **Unit:** every engine, CSV, billing status mapping, plan gate, AI citation
+  handling, unsubscribe tokens, Sentry scrubbing.
+- **Integration against a real in-memory MongoDB** (`mongodb-memory-server`):
+  the atomic prep cap under concurrency, AI routes, account erasure, email
+  preferences, job-stage normalisation.
+- **Property-based (fast-check):** offer scores stay in 0–100, sorted,
+  deterministic; filters return exactly the matching subset; plan gate never
+  enables Pro actions for Free; data isolation; theme parity.
+- **Browser E2E (Playwright, desktop + mobile)** against a production build:
+  public pages render with no CSP violations or script errors, the dashboard
+  redirects when signed out, the API rejects anonymous calls, security headers
+  are present, Clerk sign-in loads, tampered unsubscribe links are refused.
 - **Accessibility:** vitest-axe on key components.
-- **CI** (`.github/workflows/ci.yml`): `npm ci` → lint → typecheck → test →
-  build on every push to main and every PR.
+- **Evals** for the AI pipeline (§20.7) — tests check code, evals check quality.
+- **CI** (`.github/workflows/ci.yml`, read-only token, SHA-pinned actions):
+  lint → typecheck → tests → prod `npm audit` → build; the Python job runs
+  `pip-audit` and pytest; the E2E job runs when Clerk test keys are set.
 - **Why property tests?** Example tests check cases I thought of; properties
   check invariants across hundreds of generated inputs, which is where
   ranking and filtering bugs hide.
-- **Gap:** no browser E2E yet (see §13).
 
 ---
 
@@ -408,19 +446,27 @@ changing callers.
 - Cached Mongo connection per warm lambda; `maxPoolSize: 10`.
 - Indexes lead with `userId`; queries use `.lean()`.
 - Engines run client-side with `useMemo`: no server cost and instant what-if.
-- Removing `xlsx` cut the offers page's first-load JS from 275 kB to 188 kB.
-- Fonts self-hosted via `next/font`; static marketing pages prerendered.
+- Static marketing pages prerendered; fonts self-hosted via `next/font`.
+- **Load test** (`npm run load-test`, autocannon): one local production
+  server, 100 concurrent connections → roughly 360–540 req/s per route, p99
+  under 430 ms, 0 errors in about 25,600 requests. Be exact: that's public
+  pages and the health check on a laptop, not database-heavy traffic.
+- **Reminder cron** handles users 100 at a time (one Clerk lookup and one
+  Resend batch call per 100) instead of two network calls per user.
+- **AI work is off the request path:** saves respond first, and re-indexing
+  runs in the background (`waitUntil`), only for the fields that changed.
+- **Error monitoring:** Sentry on the app and the AI service.
 
 **At 1M users, I'd change:**
 1. **Pagination** on list endpoints (cursor on `{userId, createdAt}`) and
    server-side search, instead of fetching all of a user's jobs.
-2. **Cron → queue:** fan out per-user jobs (e.g. QStash/SQS) with a cursor,
-   instead of one scan capped at 20,000 jobs.
-3. **Cache plan lookups** in Redis (read on every gated request).
-4. **Read replicas / sharding** on `userId` if one Atlas cluster saturates —
-   the access pattern is already perfectly partitioned by user.
-5. **Observability:** structured logs, error tracking, and webhook failure
-   alerts.
+2. **Cron → queue:** fan out per-user work (QStash/SQS) with a cursor instead
+   of one scan capped at 20,000 jobs.
+3. **AI indexing → queue** with retries, instead of best-effort background
+   calls plus a repair script.
+4. **Cache plan lookups** in Redis (read on every gated request).
+5. **Shard on `userId`** if one Atlas cluster saturates — the access pattern
+   is already perfectly partitioned by user.
 
 ---
 
@@ -517,6 +563,66 @@ Use **Situation → Task → Action → Result**. Pick 2–3 that fit the questi
   without them.
 - **R:** Correct behavior across instances without extra infrastructure.
 
+### 12.9 Signed-out visitors could see the dashboard
+- **S:** The first Playwright test I wrote, "the dashboard is not reachable
+  while signed out", failed: the dashboard layout rendered for a stranger.
+- **T:** Find why route protection didn't protect.
+- **A:** `middleware.ts` called `auth.protect()` without `await`. In Clerk v6
+  it returns a promise, so the redirect was thrown into the void and the
+  request continued. Added `await` and pointed the redirect at our own
+  `/sign-in` instead of Clerk's hosted page.
+- **R:** Data was never exposed, because every API route checks auth
+  independently (defence in depth). Lesson: unit tests mocked the middleware
+  away; only a real browser could see it. That's the argument for E2E tests.
+
+### 12.10 Test files were deployed as public endpoints
+- **S:** A production build failed with a cryptic minifier error.
+- **A:** Patched Next's error wrapper to print the real error: it was minifying
+  `pages/api/cron/follow-up-reminders.test.ts`. Next builds *every* file under
+  `pages/` as a route, so seven test files had shipped as endpoints, one of
+  them public (`/api/cron/...` is a public prefix). Moved route tests to
+  `test/api/` at the same folder depth, and added a test that fails if a test
+  file ever appears under `pages/` again.
+- **R:** Smaller attack surface, a clean build, and a guard against regression.
+  Lesson: framework conventions have security consequences.
+
+### 12.11 Stripe events arriving out of order
+- **S:** Stripe doesn't guarantee delivery order and retries for days. A late
+  `checkout.session.completed` arriving after a cancellation would have
+  restored Pro.
+- **A:** Stopped trusting event payloads: every event re-fetches the
+  subscription from Stripe and writes its *current* state; the plan is bound
+  to one subscription id, so events about any other subscription are ignored.
+  Also refused a second checkout for a Pro user.
+- **R:** Webhook handling became idempotent and order-independent.
+
+### 12.12 Turning AI off while an upload was in flight
+- **S:** Opting out clears the consent flag and deletes the user's vectors.
+  But a save made a second earlier could still be uploading, and would land
+  *after* the delete.
+- **A:** `indexWhileOptedIn()` re-reads consent after each index call returns;
+  if consent is gone, it deletes exactly what it just wrote. Disable sets the
+  flag *before* purging, and there is no "restore" on a failed purge.
+- **R:** No path leaves a user's notes in Pinecone after they opt out.
+  Lesson: consent is a distributed-systems problem, not a checkbox.
+
+### 12.13 One filter that silently missed a job
+- **S:** The Applied filter showed 0 results, though a job was clearly
+  "Applied". The badge was also grey instead of blue.
+- **A:** That old record stored `"Applied"` (capital A), saved before the
+  schema enforced the lowercase enum; filters, badges and engines all match
+  exact values. Made the schema lowercase/trim on save, normalised stages on
+  the way out of the API, and wrote a preview-first migration script.
+- **R:** Old data works without a migration, new data can't drift. Lesson:
+  validate at the boundary *and* expect data written before the rule existed.
+
+### 12.14 A cron job that couldn't scale past a few hundred users
+- **S:** The daily digest did one Clerk lookup and one email call per user,
+  sequentially — it would hit the 60-second function limit early.
+- **A:** Batched: one `getUserList` and one Resend batch call per 100 users,
+  dedupe claims in parallel on one Redis client.
+- **R:** ~20 network calls per 1,000 users instead of ~2,000.
+
 ---
 
 ## 13. Limitations — the honest list
@@ -525,22 +631,19 @@ Volunteer these before the interviewer finds them. Each has a fix ready.
 
 | # | Limitation | Impact | Fix |
 |---|-----------|--------|-----|
-| 1 | No browser E2E tests | A broken flow could pass unit tests | Playwright against a seeded test DB in CI |
-| 2 | Free-tier limit is count-then-insert | Two parallel requests could create job #11 | Transaction, or an atomic conditional counter |
-| 3 | Stripe event ordering not tracked | A delayed older event could overwrite a newer status | Store last `event.created` per user and ignore older events |
-| 4 | No pagination; search/filter is client-side | Fine at tens of jobs, slow at thousands | Cursor pagination plus server-side search |
-| 5 | Deleting a job doesn't delete its notes | Orphaned notes keep a dangling `jobId` | Cascade delete or unlink, in a transaction |
-| 6 | `jobId` on a note isn't checked to be yours | Can't leak data (notes are user-scoped), but allows a bad link | Verify job ownership on note create/update |
-| 7 | Staleness uses `updatedAt` | Any edit resets the follow-up clock | Track a separate `lastContactAt` |
-| 8 | Skill lexicon is 40 English terms | Misses niche skills and other phrasing | Expand the lexicon; optional LLM extraction behind the same interface |
-| 9 | Offer scores are relative | Adding an offer changes all scores | By design — explain it; could add absolute benchmarks |
-| 10 | Rate limiting fails open | A Redis outage removes limits | Acceptable trade-off; billing endpoints could fail closed |
-| 11 | Cron scans up to 20,000 active jobs in one run | Doesn't scale | Queue-based fan-out with a cursor |
-| 12 | Data isolation is in application code | One unscoped query = leak | Repository layer that requires `userId` |
-| 13 | Mixed App Router + Pages Router | Two mental models | Migrate API to Route Handlers |
-| 14 | 4 transitive vulnerabilities in Next.js | 0 critical, but not zero | Next 16 upgrade |
-| 15 | No observability stack | Hard to debug production | Sentry + structured logs + webhook alerts |
-| 16 | No data import (CSV/LinkedIn) | Onboarding friction | CSV import with column mapping |
+| 1 | No pagination; search/filter is client-side | Fine at tens of jobs, slow at thousands | Cursor pagination plus server-side search |
+| 2 | Deleting a job doesn't delete its notes | Orphaned notes keep a dangling `jobId` | Cascade delete or unlink |
+| 3 | A note's `jobId` isn't checked to be yours | Can't leak data (notes are user-scoped), but allows a bad link | Verify job ownership on note create/update |
+| 4 | Staleness uses `updatedAt` | Any edit resets the follow-up clock | Track a separate `lastContactAt` |
+| 5 | Skill lexicon is 40 English terms | Misses niche skills | Expand; optional LLM extraction behind the same interface |
+| 6 | Offer scores are relative | Adding an offer changes all scores | By design — explain it |
+| 7 | Rate limiting fails open | A Redis outage removes limits | Trade-off; billing could fail closed |
+| 8 | AI indexing is best-effort in the background | A failed upload leaves the index stale until the repair script runs | A queue with retries |
+| 9 | AI service on a free tier sleeps | First prep after idle waits for a cold start (the app pings `/health` to wake it) | Paid instance |
+| 10 | Eval set is 20 hand-written cases | Small; one author's labels | Grow it from real (consented) failure cases |
+| 11 | Inline scripts allowed by the CSP | Weaker XSS protection than nonces | Nonce-based CSP (costs static rendering) |
+| 12 | Mixed App Router + Pages Router | Two mental models | Migrate API to Route Handlers |
+| 13 | Load test covers pages, not DB-heavy flows | Throughput under real usage unknown | Seeded staging DB + authenticated k6 scenarios |
 
 ---
 
@@ -555,10 +658,10 @@ Volunteer these before the interviewer finds them. Each has a fix ready.
 - Define the data model before the UI — I deleted two early models
   (`Application`, `Company`) that were superseded by `Job` and never wired up.
 
-**Roadmap:** E2E suite → pagination and server search → CSV import →
-calendar/email integration for interview dates → optional LLM-assisted skill
-extraction behind the existing engine interface → team/coach sharing →
-mobile PWA.
+**Roadmap:** run and publish the retrieval experiment (§20.7) → real users
+and usage metrics (`npm run usage-report`) → pagination and server search →
+queue-based AI indexing → CSV import → calendar/email integration →
+team/coach sharing.
 
 ---
 
@@ -598,7 +701,8 @@ mobile PWA.
 - **What status codes do you return?** 400/401/403/404/405/429/500, with
   JSON errors.
 - **How does the free-tier limit work?** Server counts jobs on POST, 403 at
-  10; the client gate mirrors it for UX.
+  10, then re-counts after inserting and rolls back if a concurrent request
+  also got through (§8); the client gate mirrors it for UX.
 - **How does the cron avoid double emails?** Redis `SET NX EX`.
 
 ### Database
@@ -607,7 +711,11 @@ mobile PWA.
 - **What indexes and why?** §5.5. All lead with `userId`.
 - **How do you prevent duplicate plan records?** Unique index on `userId`
   plus upserts.
-- **What happens when you delete a job?** Job only. Notes remain (§13 #5).
+- **What happens when you delete a job?** Job only; notes remain (§13 #2).
+  Its AI vectors are removed in the background.
+- **What happens when a user deletes their account?** Stripe subscriptions
+  are cancelled first, then every collection and the vectors are erased; a
+  failure returns 500 so Clerk retries, and every step is idempotent.
 - **N+1 queries?** None; each view is one query per collection.
 
 ### Auth and security
@@ -624,8 +732,10 @@ mobile PWA.
 ### Billing
 - **When exactly does a user become Pro?** Only on the signed
   `checkout.session.completed` webhook.
-- **Duplicate webhooks?** Idempotent upserts.
-- **Out-of-order webhooks?** Not handled yet (§13 #3).
+- **Duplicate webhooks?** Idempotent: each event re-reads the subscription
+  and writes its current state.
+- **Out-of-order webhooks?** Handled (§12.11): payloads aren't trusted, the
+  current subscription is fetched, and the plan is bound to one subscription id.
 - **Webhook never arrives?** Stripe retries for days. A success-page
   reconciliation via the session id could add safety.
 - **Cancellation or failed payment?** `subscription.updated`/`deleted` →
@@ -666,8 +776,24 @@ mobile PWA.
   roles, and `workspaceId` in every query instead of `userId` — the scoping
   pattern generalizes.
 
+### AI and RAG
+- **Walk me through the RAG pipeline.** §20.2.
+- **How do you stop it hallucinating?** §20.4: the model must cite labelled
+  sources; code drops anything it can't verify. Then measure it (§20.7).
+- **How do you keep one user's notes out of another's answers?** §20.3.
+- **Why a separate Python service?** §20.1.
+- **How do you know it works?** §20.7 — quote your numbers.
+- **How do you control cost?** §20.6.
+- **What about prompt injection in a user's own notes?** The worst case is a
+  user steering their own prep: retrieval is per-user, the model has no tools,
+  output is schema-validated and rendered as text, and citations are checked
+  in code.
+- **Why not fine-tune?** The knowledge is per-user and changes daily;
+  retrieval gives fresh, attributable answers without training anything.
+
 ### Behavioral
-- **Hardest bug?** §12.1 or §12.4.
+- **Hardest bug?** §12.11 (Stripe ordering), §12.12 (consent race), or §12.9
+  (found by E2E).
 - **A trade-off you made?** Fail-open rate limiting; relative scoring;
   client-side engines.
 - **Something you'd do differently?** §14.
@@ -677,12 +803,14 @@ mobile PWA.
   CI gates, and reviewing my own diffs adversarially.
 
 ### Curveballs
-- **Did you use AI tools?** Answer honestly: say which tools, for what, and
-  that you reviewed, tested, and can explain every line — then prove it by
-  walking through a file.
+- **Did you use AI tools?** Yes — and the commits say so. Answer honestly:
+  which tools, for what, and how you checked the output (tests, an
+  independent review pass, a security audit). Then prove understanding by
+  walking through a file they pick. Practise this until any file in §16 is
+  easy; this is the question that decides whether the project helps you.
 - **How long did it take?** Give your real timeline.
-- **Is it deployed? Any users?** Be exact. "It's deployable and CI-gated" is
-  a fine answer; never claim users you don't have.
+- **Is it deployed? Any users?** Be exact, using `npm run usage-report`
+  (totals only). Never claim users you don't have.
 - **What would you cut if you had half the time?** Interview reflection and
   the cron digest; keep tracking, offers, billing, and security.
 
@@ -711,6 +839,15 @@ mobile PWA.
 | Design tokens | `src/app/globals.css`, `lib/theme-tokens.ts` |
 | Route protection | `middleware.ts` |
 | CI | `.github/workflows/ci.yml` |
+| AI routes (cap, consent, refund) | `pages/api/ai/prep.ts`, `pages/api/ai/enable.ts`, `lib/ai-usage.ts` |
+| Background re-index + consent race | `lib/ai-sync.ts` |
+| Per-user vector store | `ai-service/app/store.py` |
+| Retrieval + citation guard | `ai-service/app/prep.py` |
+| Evals and the sweep | `ai-service/evals/run.py`, `ai-service/evals/sweep.py` |
+| Stripe ordering fix | `pages/api/stripe/webhook.ts` |
+| Account erasure | `lib/account-deletion.ts` |
+| Security headers / CSP | `next.config.mjs` |
+| E2E tests | `e2e/public-pages.e2e.ts` |
 
 ---
 
@@ -718,17 +855,16 @@ mobile PWA.
 
 | Fact | Value |
 |------|-------|
-| Tests | 260 across 36 files (38 property assertions, plus a11y) |
+| Tests | ~430 app (Vitest) + 66 Python (pytest) + 8 Playwright tests × desktop/mobile |
 | Engines | 6, all pure functions in `lib/` |
-| API routes | 14 |
-| Rate limits | 120 reads / 40 writes / 8 billing per minute per user |
-| Free tier | 10 applications; export is Pro; Pro $9/mo |
-| Job stages | 7 (applied, screening, interview, offer, accepted, rejected, withdrawn) |
-| Skill lexicon | 40 terms |
-| Offer dimensions | 6 |
-| Health metrics | 5 (25/25/20/15/15%) |
-| Offers page JS | 275 kB → 188 kB after removing `xlsx` |
-| Prod audit | 13 advisories (3 critical) → 4 (0 critical) |
+| API routes | 19 |
+| Rate limits | 120 reads / 40 writes / 8 billing / 10 AI per minute per user |
+| Free tier | 10 applications; export is Pro; Pro $9/mo; 5 AI preps/day for everyone |
+| Load test | 100 concurrent connections, ~360–540 req/s per route, p99 < 430 ms, 0 errors (local) |
+| Eval set | 20 cases over 8 jobs and 25 notes |
+| Retrieval | `text-embedding-3-small` (1536-d), chunks 800/100, k = 6 per pass, two passes |
+| Eval results | **Fill in after `python -m evals.sweep` and `python -m evals.run`** |
+| Users | **Fill in from `npm run usage-report`** |
 
 ---
 
@@ -745,12 +881,129 @@ mobile PWA.
 
 ## 19. One-page cheat sheet
 
-- **Pitch:** tracker + six explainable engines; webhook-only billing; 260 tests.
-- **Motivation:** candidates lack decision support; scores you can audit.
+- **Pitch:** tracker + six explainable engines + opt-in, cited RAG prep
+  copilot with evals; webhook-only billing.
+- **Motivation:** candidates lack decision support; scores you can audit; AI
+  only where language helps.
 - **Architecture:** Next.js UI + API routes → `withAuth` → user-scoped Mongo;
-  pure engines in `lib/` run client-side.
-- **Best stories:** fail-closed billing (§12.1), honest scores (§12.4),
-  normalization (§7.1).
-- **Admit:** no E2E, count-then-insert race, webhook ordering, no pagination.
-- **Close:** "Next week I'd add Playwright E2E, webhook ordering, pagination,
-  and move the API to Route Handlers."
+  pure engines client-side; Python RAG service behind a shared secret.
+- **Best stories:** citation guard + evals (§20), consent race (§12.12),
+  Stripe ordering (§12.11), auth bug found by E2E (§12.9).
+- **Admit:** no pagination, best-effort AI indexing, small eval set, free-tier
+  hosting (§13).
+- **Close:** "Next I'd grow the eval set from real failures, move indexing to
+  a queue, and add pagination."
+
+---
+
+## 20. AI Interview Prep Copilot — deep dive
+
+### 20.1 What it does, and why a separate service
+For one application, it reads that job's description plus the user's own
+interview notes (from this and other jobs) and returns **likely questions,
+weak spots, and a study plan — every item citing the note or description it
+came from.** It runs as a FastAPI service in `ai-service/` because the
+retrieval stack (LangChain, OpenAI, Pinecone) is Python-first, it isolates AI
+latency and memory from the web app, and it can be scaled, deployed and
+evaluated on its own. Next.js calls it server-to-server with a shared secret
+(`X-AI-Service-Key`, compared with `hmac.compare_digest`); the service's API
+docs are disabled because it's internal.
+
+### 20.2 The pipeline
+1. **Index** (on opt-in, and in the background on every save): job
+   description, job notes and interview notes become *sources*; LangChain's
+   `RecursiveCharacterTextSplitter` cuts them into 800-character chunks with
+   100 overlap; OpenAI `text-embedding-3-small` embeds them; Pinecone stores
+   them with metadata (`userId`, `jobId`, `sourceType`, `sourceId`, text).
+   Only the fields that changed are re-embedded.
+2. **Retrieve, two passes:** k = 6 chunks about *this job*, then k = 6 from
+   the user's notes on *other* jobs — past interviews carry over (a system
+   design round at one company predicts the next). Deduplicated, this job first.
+3. **Generate:** chunks are labelled `[S1]…[Sn]`; the chat model (temperature
+   0, structured JSON output, `max_tokens` 4000, 50 s timeout) must cite labels.
+4. **Guard:** code maps labels back to retrieved chunks; unknown labels are
+   dropped, items left without a citation are dropped (§20.4).
+5. **Serve:** the Next.js route also drops citations to jobs that were deleted
+   meanwhile, then the panel renders citations as links to the source.
+
+### 20.3 Multi-tenancy: one user can never retrieve another's notes
+All users share one Pinecone namespace (cheap, simple), so isolation is
+enforced in code at **one choke point**: `UserStore` (`app/store.py`) is
+constructed for a single user and adds a mandatory `userId` filter to every
+query; nothing else talks to the index. Vector ids start with
+`{userId}#{sourceType}#{sourceId}#`, so a user's vectors can be deleted by
+prefix, and user ids containing `#` are rejected so one user's prefix can't
+contain another's. Interview line: *"Isolation isn't a convention callers
+must remember; it's the only API that exists."*
+
+### 20.4 Hallucination control
+Prompting "only use the sources" is not a guarantee, so the guarantee lives
+in code (`apply_citation_guard`): the model can only cite labels it was given,
+labels are normalised (`[S1]`, ` s1 `), anything unverifiable is removed, and
+the model's own "insufficient data" flag is advisory: an answer with nothing
+left after the guard is treated as insufficient. Then **measure** it:
+citation validity should be 100% by construction, and an LLM judge scores
+whether each item is actually supported by the text it cites (§20.7).
+
+### 20.5 Consent and privacy
+- Off by default; nothing is sent to OpenAI until the user opts in.
+- Opt-out sets the flag **first**, then deletes the vectors; a background
+  upload that lands after the purge is undone (§12.12). A failed purge never
+  re-enables AI; Settings offers a retry.
+- Account deletion erases the vectors too. Sentry never receives request
+  bodies, so notes don't leak into error reports.
+
+### 20.6 Cost and reliability
+- **5 preps/day per user**, enforced atomically with a unique index on
+  `{userId, date}` (concurrency-tested); a failed prep is refunded, except on
+  a client timeout, because the model may still be generating (and billing).
+- 10 prep requests/min rate limit; output-token and time caps; request size
+  caps on the service.
+- The free hosting tier sleeps, so the app pings `/health` to wake it and uses
+  longer timeouts for background indexing.
+- A reindex script rebuilds any user's vectors from MongoDB (isolated per
+  user, so one failure doesn't stop the rest).
+
+### 20.7 Evaluation — "how do you know it works?"
+`ai-service/evals/`: 20 hand-labelled cases over a fixture user (8 jobs, 25
+notes). For each case a human listed the sources that *should* be retrieved,
+and whether the right answer is "not enough data".
+
+| Metric | Question it answers |
+|---|---|
+| recall@k | Did retrieval find the sources that matter? |
+| hit rate | Did it find at least one? |
+| citation validity | Does every citation point at something retrieved? |
+| groundedness (LLM judge) | Is each item supported by the text it cites? |
+| insufficient-data accuracy | Does it decline exactly when it should? |
+
+**The measured decision (your strongest AI story):**
+
+| Run | recall@6 | hit | citations | grounded | "not enough data" |
+|---|---|---|---|---|---|
+| Baseline | 0.76 | 94% | 100% | 75% | 90% |
+| + relevance floor | 0.74 | 94% | 100% | 75% | **100%** |
+
+1. **Observe:** both failures were jobs with no data of their own; pass 2
+   still sent 6 unrelated notes from other jobs, and the model used them.
+2. **Diagnose:** I scored every retrieved chunk. Relevant cross-job notes sat
+   at cosine 0.396–0.474; every chunk in the "not enough data" cases was
+   ≤ 0.395.
+3. **Change:** a floor of 0.40 on pass 2 only (`MIN_OTHER_NOTE_SCORE`).
+4. **Measure:** "not enough data" 90% → 100%, and those cases no longer call
+   the model at all. Cost: recall 0.76 → 0.74, because one relevant note at
+   0.396 is now cut. I accepted that: a wrong answer is worse than a missing
+   source.
+5. **Be honest about limits:** 20 cases and single runs; the LLM judge moved
+   individual cases by up to ±20 points between runs, so I treat small changes
+   as noise. The threshold is tied to the embedding model. The fixtures are too
+   short to compare chunk sizes, so `evals.sweep` needs longer fixtures first.
+
+Also from the diagnosis: the top-ranked chunk is usually the job description,
+because the query is "title at company" plus focus. A better query for pass 2
+is the next experiment.
+
+### 20.8 What I'd improve
+Grow the eval set from real, consented failure cases; add a re-ranker and
+test it against the same eval; queue-based indexing with retries; stream the
+prep to the browser instead of waiting for the full answer.
