@@ -21,13 +21,26 @@ export const rateLimitEnabled = Boolean(url && token);
 // lazily and only when Upstash is configured.
 const redis = rateLimitEnabled ? new Redis({ url: url!, token: token! }) : null;
 
-function makeLimiter(tokens: number, window: Parameters<typeof Ratelimit.slidingWindow>[1]) {
+/**
+ * Redis key prefix for one tier. Each tier must have its own: Upstash keys a
+ * window by prefix + identifier, so tiers sharing a prefix share one counter,
+ * and the 10/min AI limit would count every page load's reads too.
+ */
+export function limiterPrefix(tier: string): string {
+    return `trackiq/rl/${tier}`;
+}
+
+function makeLimiter(
+    tier: string,
+    tokens: number,
+    window: Parameters<typeof Ratelimit.slidingWindow>[1]
+) {
     if (!redis) return null;
     return new Ratelimit({
         redis,
         limiter: Ratelimit.slidingWindow(tokens, window),
         analytics: false,
-        prefix: "trackiq/rl",
+        prefix: limiterPrefix(tier),
     });
 }
 
@@ -35,10 +48,10 @@ export type LimitTier = "default" | "mutation" | "billing" | "ai";
 
 // Tiered limits: reads are generous, mutations tighter, billing strictest.
 const limiters: Record<LimitTier, Ratelimit | null> = {
-    default: makeLimiter(120, "1 m"), // 120 req/min per identity
-    mutation: makeLimiter(40, "1 m"), // 40 writes/min
-    billing: makeLimiter(8, "1 m"), // 8 checkout/portal starts/min
-    ai: makeLimiter(10, "1 m"), // 10 AI prep requests/min (used by /api/ai/prep only)
+    default: makeLimiter("default", 120, "1 m"), // 120 req/min per identity
+    mutation: makeLimiter("mutation", 40, "1 m"), // 40 writes/min
+    billing: makeLimiter("billing", 8, "1 m"), // 8 checkout/portal starts/min
+    ai: makeLimiter("ai", 10, "1 m"), // 10 AI prep requests/min (used by /api/ai/prep only)
 };
 
 /** Best-effort client identifier: authenticated userId if present, else IP. */
