@@ -45,16 +45,27 @@ function CitationChip({
         return <span className={chipClass.replace("hover:underline", "")}>{citation.title}</span>;
     }
 
-    if (citation.sourceType === "note") {
+    // Notes have no page of their own: they are listed on their job's page (NotesPanel
+    // gives each one the id note-<id>), or on the notes page when not tied to a job.
+    if (citation.sourceType === "note" && citation.jobId !== currentJobId) {
+        const href =
+            citation.jobId && citation.jobId !== "none"
+                ? `/dashboard/jobs/${citation.jobId}#note-${citation.sourceId}`
+                : "/dashboard/notes";
         return (
-            <Link href={`/dashboard/notes/${citation.sourceId}`} className={chipClass}>
+            <Link href={href} className={chipClass}>
                 {citation.title}
             </Link>
         );
     }
 
     // A source from the job being viewed scrolls to where that text is shown on this page.
-    const anchorId = citation.jobId === currentJobId ? ANCHOR_FOR_SOURCE[citation.sourceType] : undefined;
+    const anchorId =
+        citation.jobId !== currentJobId
+            ? undefined
+            : citation.sourceType === "note"
+              ? `note-${citation.sourceId}`
+              : ANCHOR_FOR_SOURCE[citation.sourceType];
     if (anchorId) {
         return (
             <a

@@ -62,7 +62,9 @@ export default function NotesPanel({ jobId }: NotesPanelProps) {
                     {notes.map((note) => (
                         <li
                             key={note._id}
-                            className="rounded-xl border border-[var(--border)] bg-[var(--surface-2)] p-4"
+                            // Target for a prep citation of this note (see PrepPanel).
+                            id={`note-${note._id}`}
+                            className="scroll-mt-24 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] p-4"
                         >
                             <div className="flex flex-wrap items-center gap-2">
                                 <h3 className="text-sm font-semibold text-[var(--text)]">

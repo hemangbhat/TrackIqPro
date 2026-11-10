@@ -125,7 +125,19 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
             return errorResponse(res, 503, UNAVAILABLE_MESSAGE);
         }
 
-        return successResponse(res, { result: filtered, remaining: usage.remaining });
+        // "Not enough data" gives the user nothing (and usually never reaches the
+        // model), so it doesn't count against the daily cap.
+        let remaining = usage.remaining;
+        if (filtered.insufficientData) {
+            try {
+                await refundPrep(userId, usage.date);
+                remaining += 1;
+            } catch (refundError) {
+                console.error("Prep refund failed:", refundError);
+            }
+        }
+
+        return successResponse(res, { result: filtered, remaining });
     } catch (error) {
         console.error("AI prep error:", error);
         return errorResponse(res, 500, "Failed to generate prep", error);

@@ -140,7 +140,9 @@ describe("PrepPanel", () => {
         await userEvent.click(screen.getByRole("button", { name: "Prep for this interview" }));
 
         const noteLink = await screen.findByRole("link", { name: "Notion system design" });
-        expect(noteLink).toHaveAttribute("href", "/dashboard/notes/n1");
+        // Notes have no page of their own (a /dashboard/notes/<id> link was a 404): a note
+        // from another job opens that job's page at the note.
+        expect(noteLink).toHaveAttribute("href", "/dashboard/jobs/j9#note-n1");
         // Another job's source links to that job; this job's source scrolls to the description.
         expect(screen.getByRole("link", { name: "Other job" })).toHaveAttribute("href", "/dashboard/jobs/j2");
         expect(screen.getByRole("link", { name: "This job" })).toHaveAttribute("href", "#job-description");

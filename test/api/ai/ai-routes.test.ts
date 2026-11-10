@@ -141,7 +141,18 @@ describe("POST /api/ai/prep", () => {
     });
 
     it("returns 429 with the cap copy after 5 preps", async () => {
-        mocked.requestPrep.mockResolvedValue(prepResult());
+        // A real prep (one cited question); "not enough data" results are refunded.
+        mocked.requestPrep.mockResolvedValue(
+            prepResult({
+                likelyQuestions: [
+                    {
+                        question: "q",
+                        why: "w",
+                        citations: [{ sourceType: "job_description", sourceId: jobId, jobId, title: "t" }],
+                    },
+                ],
+            })
+        );
         for (let i = 0; i < 5; i++) expect((await prep({ jobId })).status).toBe(200);
         const r = await prep({ jobId });
         expect(r.status).toBe(429);
@@ -201,13 +212,14 @@ describe("POST /api/ai/prep", () => {
 });
 
 describe("POST /api/ai/prep failure handling", () => {
-    it("treats an empty AI body as insufficient data and keeps the count honest", async () => {
+    it("treats an empty AI body as insufficient data and does not use up a prep", async () => {
         mocked.requestPrep.mockResolvedValue({} as PrepResult);
         const r = await prep({ jobId });
         expect(r.status).toBe(200);
         expect(r.body.result.insufficientData).toBe(true);
-        expect(r.body.remaining).toBe(4);
-        expect(await remainingPreps("u1")).toBe(4);
+        // "Add notes" gives the user nothing, so the daily count is refunded.
+        expect(r.body.remaining).toBe(5);
+        expect(await remainingPreps("u1")).toBe(5);
     });
 
     it("refunds and returns 503 when a citation lookup throws", async () => {
