@@ -863,7 +863,7 @@ team/coach sharing.
 | Load test | 100 concurrent connections, ~360–540 req/s per route, p99 < 430 ms, 0 errors (local) |
 | Eval set | 20 cases over 8 jobs and 25 notes |
 | Retrieval | `text-embedding-3-small` (1536-d), chunks 800/100, k = 6 per pass, two passes |
-| Eval results | **Fill in after `python -m evals.sweep` and `python -m evals.run`** |
+| Eval results | recall@6 0.74, hit 94%, citations 100%, groundedness 75%, "not enough data" 90% → **100%** after the relevance floor (§20.7) |
 | Users | **Fill in from `npm run usage-report`** |
 
 ---

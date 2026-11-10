@@ -181,5 +181,22 @@ deletes its vectors afterwards. Results go to `evals/results/sweep-<timestamp>.j
 Use it to justify `CHUNK_SIZE` and `k` with data: if a different setting wins,
 change it, re-run `evals.run` for groundedness, and record both runs below.
 
-No results recorded yet. Run `python -m evals.sweep`, then `python -m evals.run`,
-with API keys set.
+### Recorded results (2026-11-10, `gpt-4o-mini`, `text-embedding-3-small`, chunks 800/100, k = 6)
+
+| Run | recall@6 | hit rate | citation validity | groundedness | insufficient correct |
+|---|---|---|---|---|---|
+| Baseline | 0.76 | 94% | 1.00 | 75% | 90% |
+| + relevance floor on other-job notes (0.40) | 0.74 | 94% | 1.00 | 75% | **100%** |
+
+What the baseline showed: both failures were jobs with no data of their own,
+where pass 2 still handed the model 6 unrelated notes from other jobs and the
+model wrote prep from them. Scoring every retrieved chunk showed relevant
+cross-job notes at cosine 0.396–0.474 and every chunk in the "not enough data"
+cases at ≤ 0.395, so `MIN_OTHER_NOTE_SCORE = 0.40` (`app/prep.py`) drops the
+noise. Cost: one relevant note at 0.396 is now cut (recall 0.76 → 0.74).
+
+Caveats: 20 cases, single runs; per-case groundedness moved by up to ±20 points
+between runs (LLM-judge noise), so treat differences under ~5 points as noise.
+The threshold is specific to the embedding model, and the fixtures are short
+notes (none over 430 characters), so `evals.sweep` can't yet compare chunk
+sizes: that needs longer fixtures. Raw results: `evals/results/*.json`.
