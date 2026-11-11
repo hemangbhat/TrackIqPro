@@ -102,10 +102,19 @@ async function call(path: string, init: { method: string; body?: unknown; timeou
         });
     } catch (e) {
         // Timeouts and network failures: callers only ever see AiServiceError (status 0 = no HTTP response).
+        // The message names the call so a log line shows where it failed (path holds
+        // at most a user id, never content; the response body is never included).
         const reason = e instanceof Error ? e.name : "unknown";
-        throw new AiServiceError(0, `AI service request failed (${reason})`, reason === "TimeoutError");
+        throw new AiServiceError(
+            0,
+            `AI service ${init.method} ${path} failed (${reason}) — check AI_SERVICE_URL`,
+            reason === "TimeoutError"
+        );
     }
-    if (!res.ok) throw new AiServiceError(res.status);
+    if (!res.ok) {
+        const hint = res.status === 401 ? " — AI_SERVICE_SECRET differs from the service's" : "";
+        throw new AiServiceError(res.status, `AI service ${init.method} ${path} responded with ${res.status}${hint}`);
+    }
     return res;
 }
 
@@ -154,7 +163,10 @@ export async function pingHealth(): Promise<boolean> {
         // /health needs no key, but sending it is harmless.
         await call("/health", { method: "GET", timeoutMs: HEALTH_TIMEOUT_MS });
         return true;
-    } catch {
+    } catch (error) {
+        // A sleeping free-tier service times out here routinely; anything else is
+        // usually a wrong AI_SERVICE_URL, so say so.
+        console.warn("AI service health check failed:", error instanceof Error ? error.message : "unknown");
         return false;
     }
 }

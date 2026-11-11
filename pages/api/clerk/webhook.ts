@@ -75,8 +75,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const secret = process.env.CLERK_WEBHOOK_SECRET;
     if (!secret) {
-        // Not configured — acknowledge so Clerk doesn't retry; do nothing.
-        console.warn("[clerk/webhook] CLERK_WEBHOOK_SECRET not set; skipping verification");
+        // In production this webhook carries account deletion, so a missing secret
+        // must fail loudly (Clerk then retries) instead of silently doing nothing.
+        if (process.env.NODE_ENV === "production") {
+            console.error("[clerk/webhook] CLERK_WEBHOOK_SECRET is not set; refusing events");
+            return res.status(500).json({ error: "Webhook not configured" });
+        }
+        console.warn("[clerk/webhook] CLERK_WEBHOOK_SECRET not set; skipping (development only)");
         return res.status(200).json({ ok: true, skipped: true });
     }
 

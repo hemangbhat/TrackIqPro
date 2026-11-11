@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { EASE_OUT } from "../../lib/motion-tokens";
 import { XIcon } from "./icons";
@@ -17,10 +17,44 @@ export function Modal({
     children: React.ReactNode;
     footer?: React.ReactNode;
 }) {
+    const dialogRef = useRef<HTMLDivElement>(null);
+    const opener = useRef<HTMLElement | null>(null);
+
+    // Like Drawer: move focus into the dialog on open, keep Tab inside it, close
+    // on Escape, and return focus to whatever opened it.
     useEffect(() => {
-        const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-        if (open) document.addEventListener("keydown", onKey);
-        return () => document.removeEventListener("keydown", onKey);
+        if (!open) return;
+        opener.current = document.activeElement as HTMLElement | null;
+        const focusables = () =>
+            Array.from(
+                dialogRef.current?.querySelectorAll<HTMLElement>(
+                    'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+                ) ?? []
+            );
+        // Prefer the footer's first action (e.g. Cancel) over the close icon.
+        const first = focusables();
+        (first.find((el) => el.closest("[data-modal-footer]")) ?? first[0] ?? dialogRef.current)?.focus();
+
+        const onKey = (e: KeyboardEvent) => {
+            if (e.key === "Escape") return onClose();
+            if (e.key !== "Tab") return;
+            const items = focusables();
+            if (items.length === 0) return e.preventDefault();
+            const firstItem = items[0];
+            const lastItem = items[items.length - 1];
+            if (e.shiftKey && document.activeElement === firstItem) {
+                e.preventDefault();
+                lastItem.focus();
+            } else if (!e.shiftKey && document.activeElement === lastItem) {
+                e.preventDefault();
+                firstItem.focus();
+            }
+        };
+        document.addEventListener("keydown", onKey);
+        return () => {
+            document.removeEventListener("keydown", onKey);
+            opener.current?.focus?.();
+        };
     }, [open, onClose]);
 
     return (
@@ -38,6 +72,8 @@ export function Modal({
                         aria-hidden="true"
                     />
                     <motion.div
+                        ref={dialogRef}
+                        tabIndex={-1}
                         role="dialog"
                         aria-modal="true"
                         aria-label={title}
@@ -58,7 +94,7 @@ export function Modal({
                         </div>
                         <div className="px-6 py-5">{children}</div>
                         {footer && (
-                            <div className="flex justify-end gap-3 border-t border-[var(--border)] px-6 py-4">
+                            <div data-modal-footer className="flex justify-end gap-3 border-t border-[var(--border)] px-6 py-4">
                                 {footer}
                             </div>
                         )}

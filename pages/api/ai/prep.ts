@@ -1,8 +1,9 @@
 // pages/api/ai/prep.ts
-// POST /api/ai/prep  { jobId, focus? }  ->  { result, remaining }
-// Enforces, in order: auth, rate limit, AI configured, user opt-in, job
-// ownership, daily cap. Then calls the AI service and drops citations to
-// sources that were deleted since indexing.
+// POST /api/ai/prep  { jobId, focus? }  ->  { result, remaining, savedAt }
+// GET  /api/ai/prep?jobId=…             ->  { saved: { result, focus, savedAt, stale } | null }
+// POST enforces, in order: auth, rate limit, AI configured, user opt-in, job
+// ownership, daily cap. Then calls the AI service, drops citations to sources
+// deleted since indexing, and saves the result so a reload can show it again.
 
 import { NextApiResponse } from "next";
 import mongoose from "mongoose";
@@ -10,6 +11,8 @@ import { connectDB } from "../../../lib/db";
 import CareerProfile from "../../../models/CareerProfile";
 import Job from "../../../models/Job";
 import Note from "../../../models/Note";
+import SavedPrep from "../../../models/SavedPrep";
+import type { PrepResult } from "../../../lib/ai-client";
 import {
     withAuth,
     methodNotAllowed,
@@ -33,8 +36,63 @@ function validObjectIds(ids: string[]): string[] {
     return ids.filter((id) => mongoose.Types.ObjectId.isValid(id));
 }
 
+/** Drop citations to notes/jobs that no longer exist (or aren't this user's). */
+async function dropDeletedCitations(userId: string, result: PrepResult): Promise<PrepResult> {
+    const cited = [
+        ...result.likelyQuestions.flatMap((q) => q.citations),
+        ...result.weakSpots.flatMap((w) => w.citations),
+        ...result.studyPlan.flatMap((s) => s.citations),
+    ];
+    const noteIds = validObjectIds([...new Set(cited.filter((c) => c.sourceType === "note").map((c) => c.sourceId))]);
+    const jobIds = validObjectIds([...new Set(cited.filter((c) => c.sourceType !== "note").map((c) => c.sourceId))]);
+    // Query by userId too, so an id belonging to someone else never counts as existing.
+    const [notes, jobs] = await Promise.all([
+        Note.find({ _id: { $in: noteIds }, userId }).select("_id").lean(),
+        Job.find({ _id: { $in: jobIds }, userId }).select("_id").lean(),
+    ]);
+    return filterStaleCitations(
+        result,
+        new Set(notes.map((n) => String(n._id))),
+        new Set(jobs.map((j) => String(j._id)))
+    );
+}
+
+/** GET: the saved prep for one job, with `stale` set if the job or its notes changed since. */
+async function getSaved(req: AuthenticatedRequest, res: NextApiResponse) {
+    const { userId } = req;
+    if (await enforceRateLimit(req, res, { tier: "default", userId })) return;
+    const jobId = typeof req.query.jobId === "string" ? req.query.jobId.trim() : "";
+    if (!jobId) return errorResponse(res, 400, "jobId is required");
+    try {
+        await connectDB();
+        const saved = (await SavedPrep.findOne({ userId, jobId }).lean()) as {
+            result: PrepResult;
+            focus?: string;
+            updatedAt: Date;
+        } | null;
+        if (!saved) return successResponse(res, { saved: null });
+
+        const savedAt = new Date(saved.updatedAt);
+        const [job, newerNote] = await Promise.all([
+            mongoose.Types.ObjectId.isValid(jobId)
+                ? (Job.findOne({ _id: jobId, userId }).select("updatedAt").lean() as Promise<{ updatedAt?: Date } | null>)
+                : Promise.resolve(null),
+            Note.exists({ userId, jobId, updatedAt: { $gt: savedAt } }),
+        ]);
+        const stale = Boolean(newerNote) || Boolean(job?.updatedAt && new Date(job.updatedAt) > savedAt);
+        const result = await dropDeletedCitations(userId, normalizePrepResult(saved.result));
+        return successResponse(res, {
+            saved: { result, focus: saved.focus ?? "", savedAt: savedAt.toISOString(), stale },
+        });
+    } catch (error) {
+        console.error("Saved prep load failed:", error);
+        return errorResponse(res, 500, "Failed to load saved prep", error);
+    }
+}
+
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
-    if (req.method !== "POST") return methodNotAllowed(res, ["POST"]);
+    if (req.method === "GET") return getSaved(req, res);
+    if (req.method !== "POST") return methodNotAllowed(res, ["GET", "POST"]);
     const { userId } = req;
 
     if (await enforceRateLimit(req, res, { tier: "ai", userId })) return;
@@ -88,26 +146,8 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
                     seniority: profile.seniority ?? "mid",
                 },
             });
-            const result = normalizePrepResult(raw);
-
-            // Drop citations to notes/jobs deleted after indexing. Query by userId too,
-            // so an id belonging to someone else never counts as existing.
-            const cited = [
-                ...result.likelyQuestions.flatMap((q) => q.citations),
-                ...result.weakSpots.flatMap((w) => w.citations),
-                ...result.studyPlan.flatMap((s) => s.citations),
-            ];
-            const noteIds = validObjectIds([...new Set(cited.filter((c) => c.sourceType === "note").map((c) => c.sourceId))]);
-            const jobIds = validObjectIds([...new Set(cited.filter((c) => c.sourceType !== "note").map((c) => c.sourceId))]);
-            const [notes, jobs] = await Promise.all([
-                Note.find({ _id: { $in: noteIds }, userId }).select("_id").lean(),
-                Job.find({ _id: { $in: jobIds }, userId }).select("_id").lean(),
-            ]);
-            filtered = filterStaleCitations(
-                result,
-                new Set(notes.map((n) => String(n._id))),
-                new Set(jobs.map((j) => String(j._id)))
-            );
+            // Drop citations to notes/jobs deleted after indexing.
+            filtered = await dropDeletedCitations(userId, normalizePrepResult(raw));
         } catch (error) {
             console.error("AI prep failed:", error);
             // The user got nothing, so normally give the prep back (on the day it
@@ -137,7 +177,23 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
             }
         }
 
-        return successResponse(res, { result: filtered, remaining });
+        // Keep the last real prep for this job so a reload shows it again. Best
+        // effort: the user already has the result, so a failed save isn't an error.
+        let savedAt: string | null = null;
+        if (!filtered.insufficientData) {
+            try {
+                await SavedPrep.updateOne(
+                    { userId, jobId },
+                    { $set: { focus, result: filtered } },
+                    { upsert: true }
+                );
+                savedAt = new Date().toISOString();
+            } catch (saveError) {
+                console.error("Saving prep failed:", saveError);
+            }
+        }
+
+        return successResponse(res, { result: filtered, remaining, savedAt });
     } catch (error) {
         console.error("AI prep error:", error);
         return errorResponse(res, 500, "Failed to generate prep", error);

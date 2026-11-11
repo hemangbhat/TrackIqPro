@@ -192,7 +192,31 @@ function LivePrepPanel({ jobId }: { jobId: string }) {
     const [result, setResult] = useState<PrepResult | null>(null);
     const [remaining, setRemaining] = useState<number | null>(null);
     const [error, setError] = useState<PrepError | null>(null);
+    const [savedAt, setSavedAt] = useState<string | null>(null);
+    const [stale, setStale] = useState(false);
     const wakeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const enabled = Boolean(status?.enabled);
+
+    // Show the last prep for this job, so a reload doesn't lose it (and doesn't
+    // cost another of the day's preps). Missing or failed loads just show nothing.
+    useEffect(() => {
+        if (!enabled) return;
+        let cancelled = false;
+        fetch(`/api/ai/prep?jobId=${encodeURIComponent(jobId)}`)
+            .then((res) => (res.ok ? res.json() : null))
+            .then((body) => {
+                const saved = body?.saved;
+                if (cancelled || !saved?.result) return;
+                setResult((current) => current ?? (saved.result as PrepResult));
+                setSavedAt(saved.savedAt ?? null);
+                setStale(Boolean(saved.stale));
+                if (saved.focus) setFocus((current) => current || saved.focus);
+            })
+            .catch(() => {});
+        return () => {
+            cancelled = true;
+        };
+    }, [enabled, jobId]);
 
     const clearWakeTimer = () => {
         if (wakeTimer.current) clearTimeout(wakeTimer.current);
@@ -216,6 +240,8 @@ function LivePrepPanel({ jobId }: { jobId: string }) {
             if (res.ok) {
                 setResult(body.result as PrepResult);
                 setRemaining(body.remaining);
+                setSavedAt(body.savedAt ?? null);
+                setStale(false);
             } else if (res.status === 429) {
                 // Daily cap and per-minute rate limit share a status; the body tells them apart.
                 // At the cap, the counter line below shows the cap copy.
@@ -303,6 +329,12 @@ function LivePrepPanel({ jobId }: { jobId: string }) {
                 )}
             </div>
 
+            {result && !requesting && savedAt && (
+                <p className="mt-4 text-xs text-[var(--text-muted)]">
+                    Saved {new Date(savedAt).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}
+                    {stale && " · Your notes or this job changed since. Prep again for an updated version."}
+                </p>
+            )}
             {result && !requesting && <PrepResultView result={result} currentJobId={jobId} plain={false} />}
         </PanelShell>
     );

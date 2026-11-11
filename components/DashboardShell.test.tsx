@@ -28,6 +28,8 @@ vi.mock("./useUserPlan", () => ({
 const usePathnameMock = vi.fn(() => "/dashboard");
 vi.mock("next/navigation", () => ({
   usePathname: () => usePathnameMock(),
+  // The header search box navigates to /dashboard/jobs?q=…
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), prefetch: vi.fn() }),
 }));
 
 import DashboardShell from "./DashboardShell";

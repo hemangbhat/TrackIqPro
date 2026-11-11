@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
 import { ThemeToggle } from "./ThemeToggle";
 import { PlanBadge } from "./PlanBadge";
@@ -109,8 +109,17 @@ function SidebarBody({ onNavigate }: { onNavigate?: () => void }) {
 
 function SearchBox() {
     const [query, setQuery] = useState("");
+    const router = useRouter();
     return (
-        <form role="search" onSubmit={(e) => e.preventDefault()} className="relative hidden sm:block">
+        <form
+            role="search"
+            onSubmit={(e) => {
+                e.preventDefault();
+                const q = query.trim();
+                if (q) router.push(`/dashboard/jobs?q=${encodeURIComponent(q)}`);
+            }}
+            className="relative hidden sm:block"
+        >
             <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-[var(--ink-muted)]">
                 <SearchIcon size={16} aria-hidden />
             </span>
@@ -120,7 +129,7 @@ function SearchBox() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 aria-label="Search applications"
-                placeholder="Search applications, notes, offers"
+                placeholder="Search applications"
                 className="min-h-11 w-48 border border-[var(--hair)] bg-[var(--surface)] py-2 pl-9 pr-3 text-sm text-[var(--ink)] placeholder:text-[var(--ink-muted)] transition-colors duration-150 focus:border-[var(--ultra-text)] focus:outline-none md:w-72"
             />
         </form>

@@ -98,8 +98,10 @@ export async function checkRateLimit(
             res.setHeader("Retry-After", String(retryAfter));
         }
         return r;
-    } catch {
-        // Fail open — never block legitimate traffic on a limiter outage.
+    } catch (error) {
+        // Fail open — never block legitimate traffic on a limiter outage. But say
+        // so: a revoked token or wrong URL otherwise means no limits and no signal.
+        console.error("Rate limiter unavailable, allowing request:", error instanceof Error ? error.message : "unknown");
         return { success: true, limit: 0, remaining: 0, reset: 0 };
     }
 }

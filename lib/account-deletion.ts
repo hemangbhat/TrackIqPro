@@ -9,6 +9,7 @@ import Job from "../models/Job";
 import Note from "../models/Note";
 import Offer from "../models/Offer";
 import AiUsage from "../models/AiUsage";
+import SavedPrep from "../models/SavedPrep";
 import CareerProfile from "../models/CareerProfile";
 import UserPlan from "../models/UserPlan";
 
@@ -22,7 +23,9 @@ const LIVE_STATUSES = new Set(["active", "trialing", "past_due", "unpaid", "inco
  */
 async function cancelSubscriptions(customerId: string): Promise<void> {
     const key = process.env.STRIPE_SECRET_KEY;
-    if (!key) return;
+    // This user has a Stripe customer, so skipping would leave them billed after
+    // deleting their account. Fail, so the webhook returns 500 and Clerk retries.
+    if (!key) throw new Error("STRIPE_SECRET_KEY is not set; cannot cancel subscriptions");
     const stripe = new Stripe(key, { apiVersion: "2025-07-30.basil" });
     const subs = await stripe.subscriptions.list({ customer: customerId, status: "all", limit: 100 });
     for (const sub of subs.data) {
@@ -44,6 +47,7 @@ export async function deleteAccountData(userId: string): Promise<void> {
         Note.deleteMany({ userId }),
         Offer.deleteMany({ userId }),
         AiUsage.deleteMany({ userId }),
+        SavedPrep.deleteMany({ userId }),
         CareerProfile.deleteOne({ userId }),
         UserPlan.deleteOne({ userId }),
     ]);

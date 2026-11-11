@@ -10,6 +10,7 @@ import CareerProfile from "../models/CareerProfile";
 import Job from "../models/Job";
 import Note from "../models/Note";
 import {
+    AiServiceError,
     aiConfigured,
     deleteSources,
     deleteUserVectors,
@@ -37,8 +38,11 @@ function schedule(work: () => Promise<void>, label: string, userId?: string): vo
     const task = work().catch((error) => {
         // Log the error type only: never note content. userId is an id, not content;
         // it lets a failed account purge be cleaned up by hand.
+        // AiServiceError messages name the call and status (no content), so log them
+        // in full; for anything else the type alone is the safe default.
         const who = userId ? ` userId=${userId}` : "";
-        console.error(`AI sync failed (${label})${who}:`, error instanceof Error ? error.name : "unknown");
+        const detail = error instanceof AiServiceError ? error.message : error instanceof Error ? error.name : "unknown";
+        console.error(`AI sync failed (${label})${who}:`, detail);
     });
     waitUntil(task);
 }

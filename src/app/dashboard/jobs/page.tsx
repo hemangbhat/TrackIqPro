@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useJobs } from "../../../../hooks/useJobs";
 import type { JobInput } from "../../../../hooks/useJobs";
 import { useUserPlan } from "../../../../components/useUserPlan";
@@ -21,9 +21,19 @@ import {
     StageFilter,
 } from "../../../../lib/job-filter";
 
+// useSearchParams needs a Suspense boundary in the App Router.
 export default function JobsPage() {
+    return (
+        <Suspense fallback={null}>
+            <JobsPageContent />
+        </Suspense>
+    );
+}
+
+function JobsPageContent() {
     const { jobs, loading, error, fetchJobs, createJob, updateJob, deleteJob } =
         useJobs();
+    const searchParams = useSearchParams();
     const { plan, isPro } = useUserPlan();
     const toast = useToast();
     const router = useRouter();
@@ -56,6 +66,17 @@ export default function JobsPage() {
         setEditingJob(null);
         setDrawerOpen(true);
     }
+
+    // Links elsewhere in the app: "Add job" goes to ?new=1 and the header search
+    // to ?q=…. Apply them, then drop them from the URL so a reload doesn't repeat.
+    useEffect(() => {
+        const wantsNew = searchParams?.get("new") === "1";
+        const q = searchParams?.get("q") ?? null;
+        if (!wantsNew && q === null) return;
+        if (wantsNew) openCreate();
+        if (q !== null) setQuery(q);
+        router.replace("/dashboard/jobs");
+    }, [searchParams, router]);
 
     function openEdit(job: Job) {
         setEditingJob(job);

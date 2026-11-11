@@ -1,5 +1,6 @@
 import { connectDB } from "../../../lib/db";
 import Job from "../../../models/Job";
+import SavedPrep from "../../../models/SavedPrep";
 import { NextApiResponse } from "next";
 import { withAuth, methodNotAllowed, errorResponse, successResponse, AuthenticatedRequest, isObjectId } from "../../../lib/api-helpers";
 import { enforceRateLimit } from "../../../lib/rate-limit";
@@ -92,7 +93,8 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
         if (await enforceRateLimit(req, res, { tier: "mutation", userId })) return;
         try {
             const result = await Job.deleteOne({ _id: id, userId });
-            
+            await SavedPrep.deleteOne({ userId, jobId: id });
+
             if (result.deletedCount === 0) {
                 return errorResponse(res, 404, "Job not found");
             }

@@ -9,6 +9,7 @@ import { NextApiResponse } from "next";
 import { connectDB } from "../../../lib/db";
 import CareerProfile from "../../../models/CareerProfile";
 import Job from "../../../models/Job";
+import SavedPrep from "../../../models/SavedPrep";
 import Note from "../../../models/Note";
 import {
     withAuth,
@@ -110,6 +111,8 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
             { upsert: true, setDefaultsOnInsert: true }
         );
         try {
+            // Saved preps are derived from the notes, so they go with the vectors.
+            await SavedPrep.deleteMany({ userId });
             await deleteUserVectors(userId);
         } catch (error) {
             console.error("AI vector deletion failed:", error);

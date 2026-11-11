@@ -10,12 +10,20 @@ type NotesPanelProps = {
 };
 
 export default function NotesPanel({ jobId }: NotesPanelProps) {
-    const { notes, loading, error, fetchNotes } = useNotes();
+    // Loads only the notes linked to this job (one request, via ?jobId=).
+    const { notes, loading, error, fetchNotes } = useNotes(jobId);
 
-    // Load only the notes linked to this job via the existing ?jobId= filter.
+    // A prep citation can link here as /dashboard/jobs/<id>#note-<id>. The note
+    // doesn't exist yet when the browser handles the hash, so scroll once loaded.
     useEffect(() => {
-        if (jobId) fetchNotes(jobId);
-    }, [jobId, fetchNotes]);
+        if (loading || typeof window === "undefined") return;
+        const hash = window.location.hash.slice(1);
+        if (!hash.startsWith("note-")) return;
+        const target = document.getElementById(hash);
+        if (!target) return;
+        target.scrollIntoView({ block: "start" });
+        target.focus({ preventScroll: true });
+    }, [loading, notes]);
 
     return (
         <Card className="glass-panel gradient-border p-6">
@@ -64,7 +72,8 @@ export default function NotesPanel({ jobId }: NotesPanelProps) {
                             key={note._id}
                             // Target for a prep citation of this note (see PrepPanel).
                             id={`note-${note._id}`}
-                            className="scroll-mt-24 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] p-4"
+                            tabIndex={-1}
+                            className="scroll-mt-24 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 border border-[var(--border)] bg-[var(--surface-2)] p-4"
                         >
                             <div className="flex flex-wrap items-center gap-2">
                                 <h3 className="text-sm font-semibold text-[var(--text)]">

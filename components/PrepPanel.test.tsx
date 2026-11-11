@@ -46,6 +46,8 @@ function json(body: unknown, status = 200) {
 function stubFetch(routes: Record<string, () => Promise<Response>>) {
     const fn = vi.fn((url: string) => {
         const route = routes[url];
+        // The panel loads the job's saved prep on mount; default to "none saved".
+        if (!route && url.startsWith("/api/ai/prep?jobId=")) return json({ saved: null });
         if (!route) throw new Error("unexpected fetch " + url);
         return route();
     });
@@ -128,6 +130,21 @@ describe("PrepPanel", () => {
         renderWithTheme(<PrepPanel jobId="j1" />);
         await userEvent.click(await screen.findByRole("button", { name: "Turn on AI prep" }));
         expect(await screen.findByRole("alert")).toHaveTextContent("Could not send your data");
+    });
+
+    it("shows the job's saved prep after a reload, and says when notes changed since", async () => {
+        const fetchFn = stubFetch({
+            "/api/ai/status": () => json(READY),
+            "/api/ai/prep?jobId=j1": () =>
+                json({ saved: { result: RESULT, focus: "system design", savedAt: "2026-11-10T10:00:00.000Z", stale: true } }),
+        });
+        renderWithTheme(<PrepPanel jobId="j1" />);
+
+        expect(await screen.findByRole("link", { name: "Notion system design" })).toBeInTheDocument();
+        expect(screen.getByText(/Your notes or this job changed since/)).toBeInTheDocument();
+        expect(screen.getByPlaceholderText("e.g. system design round")).toHaveValue("system design");
+        // Showing a saved prep never spends one of the day's preps.
+        expect(fetchFn).not.toHaveBeenCalledWith("/api/ai/prep", expect.anything());
     });
 
     it("renders cited results with note links", async () => {

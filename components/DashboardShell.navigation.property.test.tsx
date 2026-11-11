@@ -23,7 +23,12 @@ import { renderWithTheme, screen } from "../test/render";
 let mockPathname = "/dashboard";
 vi.mock("next/navigation", async (importOriginal) => {
     const actual = await importOriginal<typeof import("next/navigation")>();
-    return { ...actual, usePathname: () => mockPathname };
+    return {
+        ...actual,
+        usePathname: () => mockPathname,
+        // The header search box uses the router; no app router is mounted in tests.
+        useRouter: () => ({ push: () => {}, replace: () => {}, prefetch: () => {} }),
+    };
 });
 
 // Clerk's UserButton/useUser require an auth context that does not exist in the

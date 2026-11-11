@@ -41,7 +41,9 @@ const { jobsData, deleteJob, createJob, updateJob, fetchJobs, push } = vi.hoiste
 }));
 
 vi.mock("next/navigation", () => ({
-    useRouter: () => ({ push }),
+    useRouter: () => ({ push, replace: vi.fn() }),
+    // The page reads ?new=1 and ?q= links from elsewhere in the app.
+    useSearchParams: () => new URLSearchParams(),
 }));
 
 vi.mock("../../../../hooks/useJobs", () => ({

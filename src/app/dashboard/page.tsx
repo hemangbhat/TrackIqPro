@@ -85,7 +85,7 @@ export default function DashboardHome() {
                         Your job search at a glance.
                     </p>
                 </div>
-                <Link href="/dashboard/jobs">
+                <Link href="/dashboard/jobs?new=1">
                     <Button>
                         Add application <ArrowRightIcon size={16} />
                     </Button>
@@ -181,7 +181,7 @@ export default function DashboardHome() {
                             title="No applications yet"
                             description="Add your first job application to see your timeline, stage breakdown, recent activity, and suggested follow-ups here."
                             action={
-                                <Link href="/dashboard/jobs">
+                                <Link href="/dashboard/jobs?new=1">
                                     <Button>
                                         Add your first application{" "}
                                         <ArrowRightIcon size={16} />
