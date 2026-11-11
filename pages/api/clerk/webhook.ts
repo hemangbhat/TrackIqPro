@@ -1,14 +1,15 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { Webhook } from "svix";
 import { sendWelcomeEmail } from "../../../lib/email";
-import { syncUserDeleted } from "../../../lib/ai-sync";
+import { purgeUserVectors } from "../../../lib/ai-sync";
 import { connectDB } from "../../../lib/db";
 import CareerProfile from "../../../models/CareerProfile";
 import { deleteAccountData } from "../../../lib/account-deletion";
 
 // Clerk delivers a raw JSON body that must be verified with Svix using the
 // exact bytes — so disable Next's body parser and read the raw buffer.
-export const config = { api: { bodyParser: false } };
+// maxDuration: the vector purge may wait out a sleeping free-tier AI service.
+export const config = { api: { bodyParser: false }, maxDuration: 60 };
 
 function readRawBody(req: NextApiRequest): Promise<Buffer> {
     return new Promise((resolve, reject) => {
@@ -41,31 +42,50 @@ interface ClerkOtherEvent {
 type ClerkEvent = ClerkUserCreated | ClerkUserDeleted | ClerkOtherEvent;
 
 /**
- * Withdraw a deleted user's AI consent. The profile itself is kept, but with
- * aiEnabled still true the reindex script would re-upload their data. Never
- * throws: a DB failure is logged (id and error type only) and the vector purge
- * still runs.
+ * Withdraw a deleted user's AI consent, so a reindex running meanwhile can't
+ * re-upload their data. No upsert: a user without a profile has nothing to
+ * withdraw. Throws on failure; the caller reports it.
  */
 async function clearAiConsent(userId: string): Promise<void> {
-    try {
-        await connectDB();
-        // No upsert: a user without a profile has nothing to withdraw.
-        await CareerProfile.updateOne({ userId }, { $set: { aiEnabled: false, aiIndexedAt: null } });
-    } catch (err) {
-        const reason = err instanceof Error ? err.name : "unknown";
-        console.error(`[clerk/webhook] could not clear aiEnabled userId=${userId}:`, reason);
+    await connectDB();
+    await CareerProfile.updateOne({ userId }, { $set: { aiEnabled: false, aiIndexedAt: null } });
+}
+
+/**
+ * Erase a deleted user everywhere. Every step runs even if an earlier one
+ * failed (an AI outage must not keep their Mongo data around), and every step
+ * is safe to repeat. Returns the names of the steps that failed.
+ */
+async function eraseAccount(userId: string): Promise<string[]> {
+    const steps: [string, () => Promise<void>][] = [
+        // Consent off first, so the purge below can't be undone by a reindex.
+        ["ai consent", () => clearAiConsent(userId)],
+        ["ai vectors", () => purgeUserVectors(userId)],
+        ["account data", () => deleteAccountData(userId)],
+    ];
+    const failed: string[] = [];
+    for (const [name, run] of steps) {
+        try {
+            await run();
+        } catch (err) {
+            // Id and error type only: never content.
+            const reason = err instanceof Error ? err.name : "unknown";
+            console.error(`[clerk/webhook] erasure step "${name}" failed userId=${userId}:`, reason);
+            failed.push(name);
+        }
     }
+    return failed;
 }
 
 /**
  * Clerk webhook receiver.
  *
  * On `user.deleted` it turns AI prep off, removes the user's AI vectors,
- * cancels their Stripe subscriptions and deletes all their data (a failure
- * returns 500 so Clerk retries). On `user.created` it sends a branded welcome email (best-effort — email
- * failures never fail the webhook, so Clerk won't retry forever). Requires
- * CLERK_WEBHOOK_SECRET; if unset, the endpoint returns 200 and no-ops so an
- * unconfigured environment doesn't error.
+ * cancels their Stripe subscriptions and deletes all their data (any failed
+ * step returns 500 so Clerk retries). On `user.created` it sends a branded
+ * welcome email (best-effort — email failures never fail the webhook, so Clerk
+ * won't retry forever). Requires CLERK_WEBHOOK_SECRET: unset, it refuses events
+ * in production and no-ops in development.
  */
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (req.method !== "POST") {
@@ -105,24 +125,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 email_addresses?.find((e) => e.id === primary_email_address_id) ||
                 email_addresses?.[0];
             if (primary?.email_address) {
-                await sendWelcomeEmail({
+                const result = await sendWelcomeEmail({
                     to: primary.email_address,
                     firstName: first_name ?? undefined,
                 });
+                // send() never throws; a failure only shows up in its result.
+                if (result?.error) {
+                    console.error(`[clerk/webhook] welcome email failed userId=${evt.data.id}:`, result.error);
+                }
             }
         } else if (evt.type === "user.deleted") {
-            // Flag off first, so a reindex running meanwhile can't restore the vectors.
-            await clearAiConsent(evt.data.id);
-            // Vectors are removed in the background, so we still reply promptly.
-            syncUserDeleted(evt.data.id);
-            try {
-                await deleteAccountData(evt.data.id);
-            } catch (err) {
-                // Unlike a welcome email, erasure must finish: a 500 makes Clerk
-                // retry, and every step is safe to repeat.
-                const reason = err instanceof Error ? err.name : "unknown";
-                console.error(`[clerk/webhook] account erasure failed userId=${evt.data.id}:`, reason);
-                return res.status(500).json({ error: "Account erasure failed; will retry" });
+            // Unlike a welcome email, erasure must finish: a 500 makes Clerk retry.
+            const failed = await eraseAccount(evt.data.id);
+            if (failed.length > 0) {
+                return res.status(500).json({ error: "Account erasure failed; will retry", failed });
             }
         }
     } catch (err) {

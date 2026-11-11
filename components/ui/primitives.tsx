@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+import Link from "next/link";
 
 function cx(...classes: (string | false | null | undefined)[]) {
     return classes.filter(Boolean).join(" ");
@@ -12,17 +13,11 @@ type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
     loading?: boolean;
 };
 
+type ButtonStyle = { variant?: ButtonProps["variant"]; size?: ButtonProps["size"]; className?: string };
+
 // Square, 2px, flat: the typographic grid world's controls (docs/DESIGN.md).
 // Hover swaps are gated to fine pointers so a tap never leaves a sticky fill.
-export function Button({
-    variant = "primary",
-    size = "md",
-    loading = false,
-    className,
-    children,
-    disabled,
-    ...props
-}: ButtonProps) {
+function buttonClasses({ variant = "primary", size = "md", className }: ButtonStyle): string {
     const variants: Record<string, string> = {
         primary:
             "border-[var(--ultra)] bg-[var(--ultra)] text-[var(--on-ultra)] [@media(hover:hover)_and_(pointer:fine)]:hover:border-[var(--ink)] [@media(hover:hover)_and_(pointer:fine)]:hover:bg-[var(--ink)] [@media(hover:hover)_and_(pointer:fine)]:hover:text-[var(--paper)]",
@@ -42,22 +37,54 @@ export function Button({
         sm: "min-h-11 px-3 py-1.5 text-sm",
         md: "min-h-11 px-4 py-2 text-[0.9375rem]",
     };
+    return cx(
+        "inline-flex cursor-pointer items-center justify-center gap-2 border-2 font-bold transition-[color,background-color,border-color,transform] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] active:scale-[0.97]",
+        "focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[var(--ultra-text)]",
+        "disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100",
+        variants[variant],
+        sizes[size],
+        className
+    );
+}
+
+export function Button({
+    variant,
+    size,
+    loading = false,
+    className,
+    children,
+    disabled,
+    ...props
+}: ButtonProps) {
     return (
         <button
             disabled={disabled || loading}
-            className={cx(
-                "inline-flex cursor-pointer items-center justify-center gap-2 border-2 font-bold transition-[color,background-color,border-color,transform] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] active:scale-[0.97]",
-                "focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[var(--ultra-text)]",
-                "disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100",
-                variants[variant],
-                sizes[size],
-                className
-            )}
+            className={buttonClasses({ variant, size, className })}
             {...props}
         >
             {loading && <Spinner size={16} />}
             {children}
         </button>
+    );
+}
+
+/**
+ * A link that looks like a Button. Use this for navigation instead of
+ * <Link><Button/></Link>: a button inside a link is invalid HTML, is two tab
+ * stops, and screen readers announce it twice.
+ */
+export function ButtonLink({
+    href,
+    variant,
+    size,
+    className,
+    children,
+    ...props
+}: ButtonStyle & Omit<React.ComponentProps<typeof Link>, "className">) {
+    return (
+        <Link href={href} className={buttonClasses({ variant, size, className })} {...props}>
+            {children}
+        </Link>
     );
 }
 

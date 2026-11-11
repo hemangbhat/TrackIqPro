@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useJobs } from "../../../hooks/useJobs";
 import { useUserPlan } from "../../../components/useUserPlan";
 import {
@@ -11,6 +12,7 @@ import {
     getRecentActivity,
 } from "../../../lib/insights";
 import { resolveViewState } from "../../../lib/view-state";
+import { greetingFor } from "../../../lib/greeting";
 import { computeCareerHealth } from "../../../lib/career-health";
 import { getPriorityQueue } from "../../../lib/follow-up-intelligence";
 import { ScoreRing } from "../../../components/intelligence/ScoreRing";
@@ -24,6 +26,7 @@ import {
     Card,
     Skeleton,
     Button,
+    ButtonLink,
     Badge,
     EmptyState,
     ErrorState,
@@ -39,8 +42,19 @@ import {
     FlameIcon,
 } from "../../../components/ui/icons";
 
+/**
+ * The server can't know the viewer's time zone, so render a neutral greeting
+ * first and switch to the local one after mount (no hydration mismatch).
+ */
+function useGreeting(): string {
+    const [greeting, setGreeting] = useState("Welcome back");
+    useEffect(() => setGreeting(greetingFor(new Date().getHours())), []);
+    return greeting;
+}
+
 export default function DashboardHome() {
     const { jobs, loading, error, fetchJobs } = useJobs();
+    const greeting = useGreeting();
     const { isPro, loading: planLoading } = useUserPlan();
 
     // Derive exactly one View_State (loading | empty | error | ready) from the
@@ -76,7 +90,7 @@ export default function DashboardHome() {
                 <div>
                     <div className="mt-1 flex items-center gap-3">
                         <h1 className="gw-display text-[clamp(2.25rem,4vw,3.5rem)] text-[var(--ink)]">
-                            Good morning
+                            {greeting}
                         </h1>
                         {/* Plan badge reflecting Free or Pro (Requirement 6.7). */}
                         <PlanBadge />
@@ -85,11 +99,9 @@ export default function DashboardHome() {
                         Your job search at a glance.
                     </p>
                 </div>
-                <Link href="/dashboard/jobs?new=1">
-                    <Button>
-                        Add application <ArrowRightIcon size={16} />
-                    </Button>
-                </Link>
+                <ButtonLink href="/dashboard/jobs?new=1">
+                    Add application <ArrowRightIcon size={16} />
+                </ButtonLink>
             </div>
 
             {/* Error: show a load-failure indication and retain the dashboard
@@ -181,12 +193,10 @@ export default function DashboardHome() {
                             title="No applications yet"
                             description="Add your first job application to see your timeline, stage breakdown, recent activity, and suggested follow-ups here."
                             action={
-                                <Link href="/dashboard/jobs?new=1">
-                                    <Button>
-                                        Add your first application{" "}
-                                        <ArrowRightIcon size={16} />
-                                    </Button>
-                                </Link>
+                                <ButtonLink href="/dashboard/jobs?new=1">
+                                    Add your first application{" "}
+                                    <ArrowRightIcon size={16} />
+                                </ButtonLink>
                             }
                         />
                     ) : (

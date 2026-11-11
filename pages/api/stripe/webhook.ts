@@ -3,7 +3,7 @@ import Stripe from "stripe";
 import { buffer } from "micro";
 import { NextApiRequest, NextApiResponse } from "next";
 import { connectDB } from "../../../lib/db";
-import { getPlanSubscriptionId, updateUserPlanInDB } from "../../../lib/stripe";
+import { getPlanSubscriptionId, hasPlanRecord, updateUserPlanInDB } from "../../../lib/stripe";
 import { planFromSubscriptionStatus } from "../../../lib/plans";
 
 export const config = { api: { bodyParser: false } };
@@ -28,6 +28,11 @@ function idOf(ref: string | { id: string } | null | undefined): string | null {
 async function syncFromSubscription(userId: string, subscriptionId: string) {
     const sub = await stripe.subscriptions.retrieve(subscriptionId);
     const { plan, status } = planFromSubscriptionStatus(sub.status);
+    // No row already means Free. Writing one for a non-live subscription would
+    // only resurrect a deleted account's billing data: account deletion cancels
+    // the subscription, then removes the row, and Stripe's "deleted" event for
+    // that cancel arrives afterwards.
+    if (plan === "free" && !(await hasPlanRecord(userId))) return;
     const trialEnd = sub.trial_end ? new Date(sub.trial_end * 1000) : null;
     await updateUserPlanInDB(userId, plan, idOf(sub.customer), status, trialEnd, sub.id);
 }
@@ -43,6 +48,13 @@ async function isCurrentSubscription(userId: string, subscriptionId: string): Pr
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+    const secret = process.env.STRIPE_WEBHOOK_SECRET;
+    if (!secret) {
+        // Without it every event fails verification and nobody's plan updates;
+        // say so rather than answer an unexplained 400.
+        console.error("[stripe/webhook] STRIPE_WEBHOOK_SECRET is not set; refusing events");
+        return res.status(500).send("Webhook not configured");
+    }
     const sig = req.headers["stripe-signature"];
     if (!sig) return res.status(400).send("Missing stripe-signature header");
 
@@ -52,7 +64,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         event = stripe.webhooks.constructEvent(
             rawBody,
             sig,
-            process.env.STRIPE_WEBHOOK_SECRET!
+            secret
         );
     } catch {
         // Don't echo library error text back to the caller.
@@ -75,6 +87,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 if (userId && subscriptionId && paid) {
                     // A new checkout re-binds the plan to the new subscription.
                     await syncFromSubscription(userId, subscriptionId);
+                } else if (!userId || !subscriptionId) {
+                    // A paying user who never gets Pro starts here; log the event id.
+                    console.warn(`[stripe/webhook] ${event.type} ${event.id} skipped: missing ${userId ? "subscription" : "userId metadata"}`);
                 }
                 break;
             }
@@ -84,7 +99,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             case "customer.subscription.deleted": {
                 const sub = event.data.object as Stripe.Subscription;
                 const userId = sub.metadata?.userId;
-                if (userId && (await isCurrentSubscription(userId, sub.id))) {
+                if (!userId) {
+                    console.warn(`[stripe/webhook] ${event.type} ${event.id} skipped: subscription ${sub.id} has no userId metadata`);
+                } else if (await isCurrentSubscription(userId, sub.id)) {
                     await syncFromSubscription(userId, sub.id);
                 }
                 break;

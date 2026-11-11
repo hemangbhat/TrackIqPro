@@ -185,7 +185,7 @@ function PanelShell({ children, badge }: { children: React.ReactNode; badge?: Re
 }
 
 function LivePrepPanel({ jobId }: { jobId: string }) {
-    const { status, loading, enableError, busy, setEnabled } = useAiStatus();
+    const { status, statusError, loading, enableError, busy, refresh, setEnabled } = useAiStatus();
     const [focus, setFocus] = useState("");
     const [requesting, setRequesting] = useState(false);
     const [waking, setWaking] = useState(false);
@@ -245,7 +245,7 @@ function LivePrepPanel({ jobId }: { jobId: string }) {
             } else if (res.status === 429) {
                 // Daily cap and per-minute rate limit share a status; the body tells them apart.
                 // At the cap, the counter line below shows the cap copy.
-                if (body?.error === CAP_COPY) setRemaining(0);
+                if (body?.code === "daily_cap") setRemaining(0);
                 else setError({ message: RATE_LIMIT_COPY, retryable: false });
             } else if (res.status === 503) {
                 setError({ message: body?.error || GENERIC_ERROR_COPY, retryable: true });
@@ -259,6 +259,21 @@ function LivePrepPanel({ jobId }: { jobId: string }) {
             setRequesting(false);
             setWaking(false);
         }
+    }
+
+    // A failed status call is a blip, not "AI isn't set up": offer a retry
+    // instead of making the panel silently vanish.
+    if (statusError) {
+        return (
+            <PanelShell>
+                <div className="mt-3 flex flex-wrap items-center gap-3">
+                    <p className="text-sm text-[var(--text-muted)]">Couldn&apos;t load AI prep.</p>
+                    <Button variant="secondary" size="sm" onClick={() => void refresh()}>
+                        Retry
+                    </Button>
+                </div>
+            </PanelShell>
+        );
     }
 
     if (loading || !status || !status.configured) return null;

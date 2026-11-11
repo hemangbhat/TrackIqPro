@@ -157,6 +157,7 @@ describe("POST /api/ai/prep", () => {
         const r = await prep({ jobId });
         expect(r.status).toBe(429);
         expect(r.body.error).toBe("You've used today's 5 preps, resets tomorrow");
+        expect(r.body.code).toBe("daily_cap");
         expect(mocked.requestPrep).toHaveBeenCalledTimes(5);
     });
 

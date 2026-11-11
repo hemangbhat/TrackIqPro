@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useJobs } from "../../../../../hooks/useJobs";
 import { useToast } from "../../../../../components/ui/Toast";
-import { Button, Skeleton } from "../../../../../components/ui/primitives";
+import { Button, ButtonLink, Skeleton } from "../../../../../components/ui/primitives";
 import { Modal } from "../../../../../components/ui/Modal";
 import {
     ArrowRightIcon,
@@ -29,7 +29,8 @@ export default function JobDetailsPage() {
     const toast = useToast();
     const router = useRouter();
 
-    const { jobs, loading, error, updateJob, deleteJob } = useJobs();
+    // Loads only this job, not the user's whole list.
+    const { jobs, loading, error, updateJob, deleteJob } = useJobs({ id });
 
     // The current job is derived from the jobs hook array.
     const job = id ? jobs.find((j) => j._id === id) : undefined;
@@ -136,9 +137,9 @@ export default function JobDetailsPage() {
                             ? "We couldn't load this application."
                             : "This application could not be found."}
                     </p>
-                    <Link href="/dashboard/jobs" className="mt-4 inline-block">
-                        <Button variant="secondary">Back to applications</Button>
-                    </Link>
+                    <ButtonLink href="/dashboard/jobs" variant="secondary" className="mt-4">
+                        Back to applications
+                    </ButtonLink>
                 </div>
             </div>
         );

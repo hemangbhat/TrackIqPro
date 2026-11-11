@@ -29,6 +29,11 @@ export async function getPlanSubscriptionId(userId: string): Promise<string | nu
     return record?.subscriptionId ?? null;
 }
 
+/** Whether this user has a plan row at all (no row means Free). */
+export async function hasPlanRecord(userId: string): Promise<boolean> {
+    return (await UserPlan.exists({ userId })) !== null;
+}
+
 export async function updateUserPlanInDB(
     userId: string,
     plan: Plan,

@@ -51,7 +51,8 @@ async function dedupeClient(): Promise<DedupeClient | null> {
     try {
         const { Redis } = await import("@upstash/redis");
         return new Redis({ url, token });
-    } catch {
+    } catch (err) {
+        console.error("[cron/follow-up-reminders] dedupe unavailable; reminders may repeat:", err instanceof Error ? err.message : "unknown");
         return null;
     }
 }
@@ -66,8 +67,26 @@ async function claimSend(redis: DedupeClient | null, userId: string): Promise<bo
             ex: COOLDOWN_SECONDS,
         });
         return res === "OK";
-    } catch {
-        return true; // fail open — a dedupe blip shouldn't block reminders
+    } catch (err) {
+        // Fail open — a dedupe blip shouldn't block reminders — but say so.
+        console.error("[cron/follow-up-reminders] dedupe claim failed, sending anyway:", err instanceof Error ? err.message : "unknown");
+        return true;
+    }
+}
+
+/**
+ * Undo claims for users whose email didn't go out, so tomorrow's run (or a
+ * manual re-run) reaches them instead of skipping them for the cooldown.
+ */
+async function releaseClaims(redis: DedupeClient | null, userIds: string[]): Promise<void> {
+    if (!redis || userIds.length === 0) return;
+    try {
+        await redis.del(...userIds.map((id) => `reminded:${id}`));
+    } catch (err) {
+        console.error(
+            `[cron/follow-up-reminders] could not release ${userIds.length} claims; those users wait out the cooldown:`,
+            err instanceof Error ? err.message : "unknown"
+        );
     }
 }
 
@@ -112,6 +131,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const redis = await dedupeClient();
         const appUrl = appBaseUrl(req);
         let emailsSent = 0;
+        let failedBatches = 0;
 
         for (let i = 0; i < candidates.length; i += DIGEST_BATCH_SIZE) {
             const batch = candidates.slice(i, i + DIGEST_BATCH_SIZE);
@@ -142,18 +162,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 }));
             } catch (err) {
                 console.error("[cron/follow-up-reminders] user lookup failed:", err);
+                failedBatches++;
+                await releaseClaims(redis, toSend.map((c) => c.userId));
                 continue;
             }
             // Users missing from the result no longer exist; skip them.
             const byId = new Map(users.map((u) => [u.id, u]));
 
-            const digests: DigestParams[] = toSend.flatMap(({ userId, queue }) => {
+            const digests: (DigestParams & { userId: string })[] = toSend.flatMap(({ userId, queue }) => {
                 const user = byId.get(userId);
                 const email =
                     user?.primaryEmailAddress?.emailAddress ?? user?.emailAddresses?.[0]?.emailAddress;
                 if (!user || !email) return [];
                 return [
                     {
+                        userId,
                         to: email,
                         firstName: user.firstName ?? undefined,
                         unsubscribe: unsubscribeLinks(appUrl, userId) ?? undefined,
@@ -168,14 +191,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     },
                 ];
             });
-            emailsSent += await sendFollowUpDigests(digests);
+            // A chunk is at most one Resend batch, which succeeds or fails whole.
+            const sent = await sendFollowUpDigests(digests.map(({ userId: _u, ...d }) => d));
+            emailsSent += sent;
+            if (sent < digests.length) {
+                failedBatches++;
+                await releaseClaims(redis, digests.map((d) => d.userId));
+            }
         }
 
-        return res.status(200).json({
-            ok: true,
+        // 500 on any failed batch so the run shows as failed in Vercel's cron
+        // logs, instead of a green "ok" that hides missed reminders.
+        return res.status(failedBatches > 0 ? 500 : 200).json({
+            ok: failedBatches === 0,
             usersScanned: byUser.size,
             usersWithFollowUps: candidates.length,
             emailsSent,
+            failedBatches,
         });
     } catch (err) {
         console.error("[cron/follow-up-reminders] error:", err);

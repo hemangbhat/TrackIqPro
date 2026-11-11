@@ -10,8 +10,8 @@ export type AiStatus = { configured: boolean; enabled: boolean; remaining: numbe
  * fetching (demo sample).
  *
  * `statusError` means the status request itself failed. That is different from
- * "not configured": the prep panel stays hidden either way, but Settings shows a
- * retry so the off-switch is always reachable.
+ * "not configured" (which hides the AI UI): both the prep panel and Settings
+ * show a retry, so a blip never silently hides the feature or its off-switch.
  */
 export function useAiStatus(skip = false) {
     const [status, setStatus] = useState<AiStatus | null>(null);

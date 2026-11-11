@@ -166,13 +166,16 @@ export function syncNoteDeleted(userId: string, noteId: string): void {
     }, "note deleted");
 }
 
-/** Account deletion: no profile lookup, so vectors go even if the profile is gone. */
-export function syncUserDeleted(userId: string): void {
-    schedule(async () => {
-        if (!aiConfigured()) return;
-        await pingHealth();
-        await deleteUserVectors(userId, SLOW);
-    }, "user deleted", userId);
+/**
+ * Account deletion: remove every vector the user has. Unlike the helpers above
+ * this is awaited and THROWS on failure, so the Clerk webhook can answer 500
+ * and be retried; erasure must not be lost to a sleeping AI service. No
+ * profile lookup, so vectors go even if the profile is already gone.
+ */
+export async function purgeUserVectors(userId: string): Promise<void> {
+    if (!aiConfigured()) return;
+    await pingHealth();
+    await deleteUserVectors(userId, SLOW);
 }
 
 function noteRef(noteId: { toString(): string }): SourceRef {

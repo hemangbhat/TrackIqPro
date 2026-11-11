@@ -83,9 +83,11 @@ function JobsPageContent() {
         setDrawerOpen(true);
     }
 
+    // Keep editingJob while the drawer slides out: clearing it here switched the
+    // closing drawer to an empty "Add job" form mid-animation. openCreate and
+    // openEdit both set it before the next open.
     function closeDrawer() {
         setDrawerOpen(false);
-        setEditingJob(null);
     }
 
     // Persist via the useJobs mutations. The drawer shows its own success /

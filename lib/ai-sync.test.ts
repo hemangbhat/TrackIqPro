@@ -25,7 +25,7 @@ vi.mock("./ai-client", async () => {
 });
 
 import * as ai from "./ai-client";
-import { syncJobDeleted, syncJobSaved, syncNoteDeleted, syncNoteSaved, syncUserDeleted } from "./ai-sync";
+import { purgeUserVectors, syncJobDeleted, syncJobSaved, syncNoteDeleted, syncNoteSaved } from "./ai-sync";
 
 const mocked = vi.mocked(ai);
 // Background sync waits out a sleeping free-tier service (see ai-sync.ts).
@@ -76,7 +76,7 @@ describe("ai-sync", () => {
         await CareerProfile.create({ userId: "u1", aiEnabled: true });
         mocked.aiConfigured.mockReturnValue(false);
         syncNoteDeleted("u1", "n1");
-        syncUserDeleted("u1");
+        await purgeUserVectors("u1");
         await flush();
         expect(mocked.deleteSources).not.toHaveBeenCalled();
         expect(mocked.deleteUserVectors).not.toHaveBeenCalled();
@@ -199,8 +199,7 @@ describe("ai-sync", () => {
     });
 
     it("user deleted removes vectors even without a profile", async () => {
-        syncUserDeleted("ghost");
-        await flush();
+        await purgeUserVectors("ghost");
         expect(mocked.deleteUserVectors).toHaveBeenCalledWith("ghost", SLOW);
     });
 
@@ -266,10 +265,8 @@ describe("ai-sync", () => {
         expect(sent[0]).toMatchObject({ sourceType: "note", company: "NewCo" });
     });
 
-    it("logs the userId when an account purge fails", async () => {
+    it("an account purge failure reaches the caller, so the webhook can retry", async () => {
         mocked.deleteUserVectors.mockRejectedValue(new ai.AiServiceError(500));
-        syncUserDeleted("user_123");
-        await flush();
-        expect(vi.mocked(console.error).mock.calls[0][0]).toContain("user_123");
+        await expect(purgeUserVectors("user_123")).rejects.toBeInstanceOf(ai.AiServiceError);
     });
 });

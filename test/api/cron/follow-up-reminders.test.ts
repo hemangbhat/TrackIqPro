@@ -3,13 +3,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const getUserList = vi.fn();
 const redisSet = vi.fn();
+const redisDel = vi.fn();
 
 vi.mock("@clerk/nextjs/server", () => ({
     clerkClient: vi.fn(async () => ({ users: { getUserList } })),
 }));
 vi.mock("@upstash/redis", () => ({
     Redis: vi.fn(function () {
-        return { set: redisSet };
+        return { set: redisSet, del: redisDel };
     }),
 }));
 vi.mock("../../../lib/db", () => ({ connectDB: vi.fn() }));
@@ -121,6 +122,36 @@ describe("GET /api/cron/follow-up-reminders", () => {
         const digests = vi.mocked(sendFollowUpDigests).mock.calls[0][0];
         expect(digests.map((d) => d.to)).toEqual(["u0@x.test"]);
         expect(out.body).toMatchObject({ emailsSent: 1 });
+    });
+
+    it("releases the claims and reports failure when a batch's send fails", async () => {
+        process.env.UPSTASH_REDIS_REST_URL = "https://redis.test";
+        process.env.UPSTASH_REDIS_REST_TOKEN = "t";
+        activeJobsFor(2);
+        clerkKnowsAllExcept();
+        redisSet.mockResolvedValue("OK");
+        vi.mocked(sendFollowUpDigests).mockResolvedValueOnce(0);
+
+        const out = await run();
+
+        // Released, so these users are reminded on the next run, not in 20h.
+        expect(redisDel).toHaveBeenCalledWith("reminded:u0", "reminded:u1");
+        expect(out.status).toBe(500);
+        expect(out.body).toMatchObject({ ok: false, failedBatches: 1, emailsSent: 0 });
+    });
+
+    it("releases the claims when the Clerk lookup fails", async () => {
+        process.env.UPSTASH_REDIS_REST_URL = "https://redis.test";
+        process.env.UPSTASH_REDIS_REST_TOKEN = "t";
+        activeJobsFor(1);
+        redisSet.mockResolvedValue("OK");
+        getUserList.mockRejectedValueOnce(new Error("clerk down"));
+
+        const out = await run();
+
+        expect(redisDel).toHaveBeenCalledWith("reminded:u0");
+        expect(sendFollowUpDigests).not.toHaveBeenCalled();
+        expect(out.status).toBe(500);
     });
 
     it("skips users who unsubscribed and gives everyone else a signed unsubscribe link", async () => {

@@ -135,7 +135,19 @@ function AiPrepToggle() {
                     <Button variant="secondary" size="sm" onClick={() => void refresh()}>
                         Retry
                     </Button>
+                    {/* A failed delete followed by a failed re-check must not
+                        hide the way to finish deleting the user's data. */}
+                    {deleteFailed && (
+                        <Button variant="secondary" size="sm" onClick={() => void turnOff()} loading={busy}>
+                            Retry deleting data
+                        </Button>
+                    )}
                 </div>
+                {enableError && (
+                    <p role="alert" className="mt-3 text-sm text-rose-600 dark:text-rose-400">
+                        {enableError}
+                    </p>
+                )}
             </Section>
         );
     }

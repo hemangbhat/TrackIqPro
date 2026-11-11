@@ -12,7 +12,7 @@ import { ReflectionPanel } from "../../../components/intelligence/ReflectionPane
 import { JobFitList } from "../../../components/intelligence/JobFitList";
 import { OfferIntelligence } from "../../../components/intelligence/OfferIntelligence";
 import PrepPanel from "../../../components/PrepPanel";
-import { Button } from "../../../components/ui/primitives";
+import { ButtonLink } from "../../../components/ui/primitives";
 import {
     BriefcaseIcon,
     TargetIcon,
@@ -226,23 +226,21 @@ export default function DemoPage() {
                                 command center. It&rsquo;s free to get started.
                             </p>
                             <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
-                                <Link href="/sign-up">
-                                    <Button
-                                        size="md"
-                                        className="bg-white px-6 py-3 text-base text-indigo-700 hover:bg-indigo-50"
-                                    >
-                                        Create your free account
-                                    </Button>
-                                </Link>
-                                <Link href="/">
-                                    <Button
-                                        variant="ghost"
-                                        size="md"
-                                        className="px-6 py-3 text-base text-white hover:bg-white/10 hover:text-white"
-                                    >
-                                        Back to home
-                                    </Button>
-                                </Link>
+                                <ButtonLink
+                                    href="/sign-up"
+                                    size="md"
+                                    className="bg-white px-6 py-3 text-base text-indigo-700 hover:bg-indigo-50"
+                                >
+                                    Create your free account
+                                </ButtonLink>
+                                <ButtonLink
+                                    href="/"
+                                    variant="ghost"
+                                    size="md"
+                                    className="px-6 py-3 text-base text-white hover:bg-white/10 hover:text-white"
+                                >
+                                    Back to home
+                                </ButtonLink>
                             </div>
                         </div>
                     </div>

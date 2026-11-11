@@ -27,7 +27,8 @@ export interface SendResult {
 async function send(to: string, subject: string, html: string): Promise<SendResult> {
     if (!resend) {
         // No provider configured — no-op (do not throw).
-        console.warn(`[email] RESEND_API_KEY not set; skipped email to ${to} ("${subject}")`);
+        // No recipient in the log: an email address is personal data.
+        console.warn(`[email] RESEND_API_KEY not set; skipped email "${subject}"`);
         return { sent: false, skipped: true };
     }
     try {

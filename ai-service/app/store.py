@@ -138,6 +138,8 @@ class UserStore:
             except Exception as exc:
                 # A namespace that has never held a vector doesn't exist yet, and
                 # Pinecone answers 404: there is nothing to delete, so that's success.
+                # Every batch targets this same namespace, so the later batches
+                # have nothing to delete either; returning here skips no work.
                 if _is_not_found(exc):
                     return
                 raise

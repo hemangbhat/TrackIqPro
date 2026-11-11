@@ -73,13 +73,13 @@ describe("PrepPanel", () => {
         expect(screen.queryByRole("button")).toBeNull();
     });
 
-    it("stays hidden when the status request fails", async () => {
-        const fetchFn = stubFetch({ "/api/ai/status": () => json({}, 500) });
+    it("offers a retry when the status request fails, and recovers", async () => {
+        let calls = 0;
+        stubFetch({ "/api/ai/status": () => (++calls === 1 ? json({}, 500) : json(READY)) });
         renderWithTheme(<PrepPanel jobId="j1" />);
-        await waitFor(() => expect(fetchFn).toHaveBeenCalled());
-        await act(async () => {});
-        expect(screen.queryByRole("heading")).toBeNull();
-        expect(screen.queryByRole("button")).toBeNull();
+        expect(await screen.findByText("Couldn't load AI prep.")).toBeInTheDocument();
+        await userEvent.click(screen.getByRole("button", { name: "Retry" }));
+        expect(await screen.findByRole("button", { name: "Prep for this interview" })).toBeInTheDocument();
     });
 
     it("shows the cap copy and a disabled button when today's preps are used up on load", async () => {
@@ -192,7 +192,7 @@ describe("PrepPanel", () => {
     it("shows the cap copy on a daily-cap 429", async () => {
         stubFetch({
             "/api/ai/status": () => json(READY),
-            "/api/ai/prep": () => json({ error: CAP }, 429),
+            "/api/ai/prep": () => json({ error: CAP, code: "daily_cap" }, 429),
         });
         renderWithTheme(<PrepPanel jobId="j1" />);
         await userEvent.click(await screen.findByRole("button", { name: "Prep for this interview" }));

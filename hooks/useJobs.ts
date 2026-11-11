@@ -1,28 +1,45 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Job } from "../types";
 
 export type JobInput = Partial<Omit<Job, "_id" | "userId">>;
 
-export function useJobs() {
+/**
+ * The user's jobs, plus mutations that keep the list in step. Pass `id` to load
+ * just that one job (the details page) instead of the whole list: `jobs` is
+ * then `[job]`, or `[]` when it doesn't exist or isn't theirs.
+ */
+export function useJobs(opts: { id?: string } = {}) {
+    const { id } = opts;
     const [jobs, setJobs] = useState<Job[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
+    // Each fetch takes a number; only the latest one may write state, so
+    // switching from job A to job B can't end up showing A's late response.
+    const latestRequest = useRef(0);
+
     const fetchJobs = useCallback(async () => {
+        const request = ++latestRequest.current;
+        const current = () => request === latestRequest.current;
         setLoading(true);
         setError(null);
         try {
-            const res = await fetch("/api/jobs");
+            const res = await fetch(id ? `/api/jobs/${encodeURIComponent(id)}` : "/api/jobs");
+            // A missing (or someone else's) job is "not found", not a load error.
+            if (id && (res.status === 404 || res.status === 400)) {
+                if (current()) setJobs([]);
+                return;
+            }
             if (!res.ok) throw new Error("Failed to load jobs");
             const data = await res.json();
-            setJobs(Array.isArray(data) ? data : []);
+            if (current()) setJobs(id ? [data] : Array.isArray(data) ? data : []);
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to load jobs");
+            if (current()) setError(err instanceof Error ? err.message : "Failed to load jobs");
         } finally {
-            setLoading(false);
+            if (current()) setLoading(false);
         }
-    }, []);
+    }, [id]);
 
     useEffect(() => {
         fetchJobs();

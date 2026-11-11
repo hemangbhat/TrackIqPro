@@ -128,7 +128,9 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
         if (!job) return errorResponse(res, 404, "Job not found");
 
         const usage = await consumePrep(userId);
-        if (!usage.allowed) return errorResponse(res, 429, CAP_MESSAGE);
+        // `code` lets the client tell the daily cap from the per-minute rate
+        // limit (both 429) without matching on the wording.
+        if (!usage.allowed) return res.status(429).json({ error: CAP_MESSAGE, code: "daily_cap" });
 
         // Everything until we respond can fail after the prep was consumed, so any
         // throw (AI call, malformed payload, citation lookups) refunds it.
